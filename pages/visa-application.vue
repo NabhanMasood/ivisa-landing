@@ -19,25 +19,35 @@
           @next="handleStepOne"
         />
         
-        <!-- Step 2: Your Info -->
+        <!-- Step 2: Personal Details (Your Info) -->
         <YourInfoForm
-        v-if="currentStep === 2"
-        :destination="destinationCountry"
-        :initial-traveler-count="tripData.applicants"
-        :initial-travelers-data="travelersData.travelers"
-        @next="handleStepTwo"
-        @back="currentStep = 1"
+          v-if="currentStep === 2"
+          :destination="destinationCountry"
+          :initial-traveler-count="tripData.applicants"
+          :initial-travelers-data="travelersData.travelers"
+          @next="handleStepTwo"
+          @back="currentStep = 1"
         />
 
-        <!-- Step 3: Checkout -->
-            <CheckoutForm
-            v-if="currentStep === 3"
-            :destination="destinationCountry"
-            :traveler-count="travelersData.travelers?.length || 0"
-            :government-fee="(travelersData.travelers?.length || 0) * 3667.16"
-            @next="handleStepThree"
-            @back="currentStep = 2"
-            />
+        <!-- Step 3: Passport Details -->
+        <PassportDetailsForm
+          v-if="currentStep === 3"
+          :destination="destinationCountry"
+          :traveler-count="travelersData.travelers?.length || 0"
+          :initial-passport-data="passportData.passportDetails"
+          @next="handleStepThree"
+          @back="currentStep = 2"
+        />
+
+        <!-- Step 4: Processing Time (Checkout) -->
+        <CheckoutForm
+          v-if="currentStep === 4"
+          :destination="destinationCountry"
+          :traveler-count="travelersData.travelers?.length || 0"
+          :government-fee="(travelersData.travelers?.length || 0) * 3667.16"
+          @next="handleStepFour"
+          @back="currentStep = 3"
+        />
 
       </div>
     </div>
@@ -45,12 +55,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'  // Remove watch
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import VisaStepper from '@/components/visa/VisaStepper.vue'
 import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
 import YourInfoForm from '@/components/visa/YourInfoForm.vue'
+import PassportDetailsForm from '@/components/visa/PassportDetailsForm.vue'
 import CheckoutForm from '@/components/visa/CheckoutForm.vue'
 
 const route = useRoute()
@@ -59,6 +70,7 @@ const nationalityCountry = ref('')
 const destinationCountry = ref('')
 const tripData = ref<any>({})
 const travelersData = ref<any>({})
+const passportData = ref<any>({}) // ✅ New state for passport details
 
 const STORAGE_KEY = 'visa_application_data'
 
@@ -68,6 +80,7 @@ const saveToLocalStorage = () => {
     step: currentStep.value,
     tripData: tripData.value,
     travelersData: travelersData.value,
+    passportData: passportData.value, // ✅ Save passport data
     nationalityCountry: nationalityCountry.value,
     destinationCountry: destinationCountry.value
   }
@@ -87,6 +100,7 @@ onMounted(() => {
       currentStep.value = data.step || 1
       tripData.value = data.tripData || {}
       travelersData.value = data.travelersData || {}
+      passportData.value = data.passportData || {} // ✅ Restore passport data
       
       if (data.nationalityCountry) nationalityCountry.value = data.nationalityCountry
       if (data.destinationCountry) destinationCountry.value = data.destinationCountry
@@ -98,36 +112,56 @@ onMounted(() => {
   }
 })
 
+// Step 1: Trip Info
 const handleStepOne = (data: any) => {
   tripData.value = {
     ...data,
-    applicants: parseInt(data.applicants) // Convert to number
+    applicants: parseInt(data.applicants)
   }
   currentStep.value = 2
   saveToLocalStorage()
-  console.log('Step 1 data:', data)
+  console.log('Step 1 data (Trip Info):', data)
 }
 
+// Step 2: Personal Details
 const handleStepTwo = (data: any) => {
   travelersData.value = data
   currentStep.value = 3
-  saveToLocalStorage()  // Save on button click
-  console.log('Step 2 data:', data)
+  saveToLocalStorage()
+  console.log('Step 2 data (Personal Details):', data)
 }
 
+// Step 3: Passport Details
 const handleStepThree = (data: any) => {
-  console.log('Step 3 data:', data)
+  passportData.value = data
+  currentStep.value = 4 
+  saveToLocalStorage()
+  console.log('Step 3 data (Passport Details):', data)
+}
+
+// Step 4: Processing Time/Checkout
+const handleStepFour = (data: any) => {
+  console.log('Step 4 data (Processing Time):', data)
   console.log('Processing type:', data.processingType)
   console.log('Processing fee:', data.processingFee)
   
-  // Here you would redirect to payment or show confirmation
+  // Compile all data for final submission
+  const completeApplication = {
+    tripInfo: tripData.value,
+    personalDetails: travelersData.value,
+    passportDetails: passportData.value,
+    processingInfo: data
+  }
+  
+  console.log('Complete Application Data:', completeApplication)
+  
+  // Here you would send to backend or redirect to payment
   alert(`Application complete!\nProcessing: ${data.processingType}\nFee: Rs ${data.processingFee}`)
   
   // Clear saved data after successful completion
   clearSavedData()
   
-  // Optionally redirect to payment page
-  // router.push('/payment')
+ 
 }
 
 const clearSavedData = () => {

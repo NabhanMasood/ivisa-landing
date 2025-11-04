@@ -115,21 +115,25 @@ import Footer from '@/components/Footer.vue'
 // FAQ Data
 const faqs = ref([
   {
-    question: 'Does Beam fully support popular integrations?',
-    answer: 'Yes, Beam integrates seamlessly with a variety of popular tools and platforms, including CRM systems, marketing software, and payment gateways. Our flexible options let you connect Beam with your existing tools.'
+    question: 'Is it safe to enter my passport and personal data on your website?',
+    answer: 'Yes, it is completely secure. We use bank-level 256-bit SSL encryption for all data transmission. Your passport details are only used for government application submission and are never stored on our servers after the process is complete. We are fully compliant with global data protection laws (including GDPR)'
   },
   {
-    question: 'Is Beam completely optimized for mobile and desktop?',
-    answer: 'Absolutely! Beam is fully responsive and optimized for both mobile and desktop experiences, ensuring smooth performance across all devices.'
+    question: 'Are you affiliated with the government?',
+    answer: 'No, we are a private, independent visa processing agency. We expedite and simplify the application process on your behalf. We charge a service fee for our expert review, 24/7 support, and error protection, a service not provided by government sites.'
   },
   {
-    question: 'How effectively does Beam protect my data?',
-    answer: 'Beam uses industry-standard encryption and security protocols to protect your data. We implement regular security audits and comply with international data protection regulations.'
+    question: 'How can I verify the status of my application?',
+    answer: "Once submitted, you'll receive a unique tracking ID and a link to your personal dashboard. You can check the real-time status (e.g., Under Expert Review, Submitted to Government, Approved) 24/7 on your account."
   },
   {
-    question: 'What flexible pricing options does Beam offer?',
-    answer: 'Beam offers various pricing plans to suit different needs, from individual users to enterprise solutions. Contact our sales team for custom pricing options tailored to your requirements.'
-  }
+    question: "Why is the total cost higher than the government's fee?",
+    answer: 'The price shown includes two parts: the non-negotiable Government Fee and our Service Fee. Our fee covers the convenience, 24/7 support, mobile-friendly forms, and, most importantly, our Error Protection Guarantee, ensuring your time and money aren\'t wasted on unnecessary rejections.'
+  },
+  {
+    question: 'What is your refund policy for rejected applications?',
+    answer: "We are committed to fairness. If your application is rejected due to a demonstrable mistake made by our review team in processing correct data, we will issue a full refund of our service fee. Rejections based on the applicant's ineligibility (e.g., criminal history, insufficient funds) are non-refundable, as our work was successfully performed."
+  },
 ])
 
 // Track which FAQ is open

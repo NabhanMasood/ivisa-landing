@@ -33,19 +33,19 @@
                     <form @submit.prevent="handleApplyNow" class="flex flex-col gap-4">
                         <!-- Where are you from -->
                         <div>
-                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block  ">
                             Where are you from?
                         </label>
                         <div class="relative">
-                            <select 
+                           <select 
                             v-model="formData.from"
-                            class="w-full h-[50px] pl-12 pr-12 border border-white/20 rounded-lg font-manrope font-normal text-sm leading-6 bg-white/10 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
+                            class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
                             >
                             <option value="" class="text-gray-400" disabled>Select country</option>
-                            <option value="United States" class="text-gray-900">United States</option>
-                            <option value="United Kingdom" class="text-gray-900">United Kingdom</option>
-                            <option value="Canada" class="text-gray-900">Canada</option>
-                            <option value="Australia" class="text-gray-900">Australia</option>
+                            <option value="United States" class="text-[#71717B]">United States</option>
+                            <option value="United Kingdom" class="text-[#71717B]">United Kingdom</option>
+                            <option value="Canada" class="text-[#71717B]">Canada</option>
+                            <option value="Australia" class="text-[#71717B]">Australia</option>
                             </select>
                             <!-- Flag Icon: 20x20 - Default USA flag -->
                             <img 
@@ -55,7 +55,7 @@
                             alt="USA flag"
                             />
                             <!-- Dropdown Icon: width: 20, height: 20 -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
@@ -63,54 +63,57 @@
 
                         <!-- Where are you going -->
                         <div>
-                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                          <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
                             Where are you going?
-                        </label>
-                        <div class="relative">
+                          </label>
+                          <div class="relative">
                             <select 
-                            v-model="formData.to"
-                            class="w-full h-[50px] pl-12 pr-12 border border-white/20 rounded-lg font-manrope font-normal text-sm leading-6 bg-white/10 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
+                              v-model="formData.to"
+                              class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
                             >
-                            <option value="" class="text-gray-400" disabled>Select destination</option>
-                            <option :value="countryData.name" class="text-gray-900">{{ countryData.name }}</option>
+                              <option value="" class="text-gray-400" disabled>Select destination</option>
+                              <option value="Turkey" class="text-[#71717B]">Turkey</option>
                             </select>
-                            <!-- Flag Icon: 20x20 - Default Turkey flag -->
+                            
+                            <!-- Flag Icon: Always show Turkey flag since it's the only option -->
                             <img 
-                            v-if="formData.to === 'Turkey' || (formData.to === '' && countryData.name === 'Turkey')" 
-                            src="/svg/flags/TR.svg" 
-                            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                            alt="Turkey flag"
+                              src="/svg/flags/TR.svg" 
+                              class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
+                              alt="Turkey flag"
                             />
-                            <!-- Dropdown Icon: width: 20, height: 20 -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            
+                            <!-- Dropdown Icon -->
+                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
-                        </div>
+                          </div>
                         </div>
 
                         <!-- Apply Button: width: 535, height: 46, border-radius: 10px, bg: #00D474 -->
                         <button
-                        type="submit"
-                        class="w-[535px] h-[46px] rounded-[10px] bg-[#00D474] hover:bg-[#00D474]/90 font-manrope font-bold text-lg leading-6 text-white text-center flex items-center justify-center gap-2"
+                          type="submit"
+                          class="w-[535px] h-[46px] rounded-[10px] bg-[#00D474] hover:bg-[#00D474]/90 font-manrope font-bold text-lg leading-6 text-white text-center flex items-center justify-center gap-2"
                         >
-                        <span>➜</span>
-                        <span>Apply Now!</span>
+                          <span>➜</span>
+                          <span>Apply Now!</span>
                         </button>
-                    </form>
-                    </div>
+                        </form>
+                        </div>
 
                     <!-- Right Section: width: 373, height: 154, gap: 20px -->
-                    <div class="w-[373px] h-[154px] flex flex-col gap-5">
-                    <!-- Heading: width: 373, height: 56 -->
-                    <div class="w-[373px] h-[56px]">
-                        <h1 class="text-white text-5xl font-bold">CC</h1>
+                <div class="w-[373px] flex flex-col gap-5">
+                    <!-- Heading -->
+                    <div class="w-[373px]">
+                        <h1 class="text-white text-5xl font-bold leading-tight">
+                            Apply now for your Schengen Visa
+                        </h1>
                     </div>
                     
-                    <!-- Text under heading: width: 373, height: 78, font-size: 20px, line-height: 26px -->
-                    <p class="w-[373px] h-[78px] font-manrope font-medium text-[20px] leading-[26px] text-white">
-                        Plan your trip to {{ countryData.name }} confidently, easy, online, and optimised for travellers just like you.
+                    <!-- Text under heading -->
+                    <p class="w-[373px] font-manrope font-medium text-[20px] leading-[26px] text-white">
+                        Plan your trip to Schengen confidently, easy, online, and optimised for travellers just like you.
                     </p>
-                    </div>
+                </div>
 
                 </div>
                 </div>
@@ -229,90 +232,90 @@
 <!-- Features Grid - Same for all countries -->
 <section class="py-16 bg-white">
   <div class="container mx-auto px-6 lg:px-8">
-    <!-- Main Container: width: 1200, height: 476, gap: 24px -->
+    <!-- Main Container -->
     <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
       
-      <!-- First Row: width: 1200, height: 226, gap: 24px -->
-      <div class="flex gap-6 h-[226px]">
+      <!-- First Row -->
+      <div class="flex gap-6">
         <!-- Feature 1 Card -->
-        <div class="flex-1 flex flex-col p-[35px] bg-[#F1F9FC] rounded-lg">
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
           <!-- Icon: width: 61.875, height: 60 -->
-          <div class="w-[61.875px] h-[60px] mb-4">
-            <img src="/svg/clock.svg" alt="visa alerts" class="w-full h-full" />
+          <div class="w-[61.875px] h-[60px]">
+            <img src="/svg/protect.svg" alt="visa alerts" class="w-full h-full" />
           </div>
           
-          <!-- Text Container: width: 518, height: 80, gap: 8px -->
-          <div class="flex flex-col gap-2 max-w-[518px]">
-            <!-- Heading: width: 518, height: 24, font-size: 18px, line-height: 24px, letter-spacing: -0.24px -->
+          <!-- Text Container -->
+          <div class="flex flex-col gap-2">
+            <!-- Heading -->
             <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
-              Fresh visa alerts
+              Risk-Free Applications
             </h3>
-            <!-- Subheading: width: 518, height: 48, font-size: 16px, line-height: 24px, letter-spacing: -0.08px -->
+            <!-- Subheading -->
             <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
-              Be notified instantly of important visa changes that could impact your journey.
+              If your visa isn't approved, you don't lose a thing. With Visa123's Application Protection, you can apply with total confidence and zero financial risk.
             </p>
           </div>
         </div>
 
         <!-- Feature 2 Card -->
-        <div class="flex-1 flex flex-col p-[35px] bg-[#F1F9FC] rounded-lg">
-          <!-- Icon: width: 61.875, height: 60 -->
-          <div class="w-[61.875px] h-[60px] mb-4">
-            <img src="/svg/clock.svg" alt="travel guidance" class="w-full h-full" />
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
+          <!-- Icon -->
+          <div class="w-[61.875px] h-[60px]">
+            <img src="/svg/check-2.svg" alt="travel guidance" class="w-full h-full" />
           </div>
           
-          <!-- Text Container: width: 518, height: 80, gap: 8px -->
-          <div class="flex flex-col gap-2 max-w-[518px]">
-            <!-- Heading: width: 518, height: 24, font-size: 18px, line-height: 24px, letter-spacing: -0.24px -->
+          <!-- Text Container -->
+          <div class="flex flex-col gap-2">
+            <!-- Heading -->
             <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
-              Smart travel guidance
+              17+ Years of Experience
             </h3>
-            <!-- Subheading: width: 518, height: 48, font-size: 16px, line-height: 24px, letter-spacing: -0.08px -->
+            <!-- Subheading -->
             <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
-              Get insider tips that make your trips simpler, safer, and more enjoyable.
+             Our visa experts have been helping travelers navigate global visa processes for over 17 years. Every application is carefully reviewed by our experienced team to ensure accuracy and approval readiness
             </p>
           </div>
         </div>
       </div>
 
-      <!-- Second Row: width: 1200, height: 226, gap: 24px -->
-      <div class="flex gap-6 h-[226px]">
+      <!-- Second Row -->
+      <div class="flex gap-6">
         <!-- Feature 3 Card -->
-        <div class="flex-1 flex flex-col p-[35px] bg-[#F1F9FC] rounded-lg">
-          <!-- Icon: width: 61.875, height: 60 -->
-          <div class="w-[61.875px] h-[60px] mb-4">
-            <img src="/svg/clock.svg" alt="visa alerts" class="w-full h-full" />
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
+          <!-- Icon -->
+          <div class="w-[61.875px] h-[60px]">
+            <img src="/svg/doc.svg" alt="visa alerts" class="w-full h-full" />
           </div>
           
-          <!-- Text Container: width: 518, height: 80, gap: 8px -->
-          <div class="flex flex-col gap-2 max-w-[518px]">
-            <!-- Heading: width: 518, height: 24, font-size: 18px, line-height: 24px, letter-spacing: -0.24px -->
+          <!-- Text Container -->
+          <div class="flex flex-col gap-2">
+            <!-- Heading -->
             <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
-              Fresh visa alerts
+            60+ Global Destinations
             </h3>
-            <!-- Subheading: width: 518, height: 48, font-size: 16px, line-height: 24px, letter-spacing: -0.08px -->
+            <!-- Subheading -->
             <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
-              Be notified instantly of important visa changes that could impact your journey.
+             Visa123 supports visa processing for more than 60 countries worldwide. Wherever you're headed, our team provides the right guidance to make your travel plans simple and stress-free.
             </p>
           </div>
         </div>
 
         <!-- Feature 4 Card -->
-        <div class="flex-1 flex flex-col p-[35px] bg-[#F1F9FC] rounded-lg">
-          <!-- Icon: width: 61.875, height: 60 -->
-          <div class="w-[61.875px] h-[60px] mb-4">
-            <img src="/svg/clock.svg" alt="travel guidance" class="w-full h-full" />
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
+          <!-- Icon -->
+          <div class="w-[61.875px] h-[60px]">
+            <img src="/svg/audience.svg" alt="travel guidance" class="w-full h-full" />
           </div>
           
-          <!-- Text Container: width: 518, height: 80, gap: 8px -->
-          <div class="flex flex-col gap-2 max-w-[518px]">
-            <!-- Heading: width: 518, height: 24, font-size: 18px, line-height: 24px, letter-spacing: -0.24px -->
+          <!-- Text Container -->
+          <div class="flex flex-col gap-2">
+            <!-- Heading -->
             <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
-              Smart travel guidance
+             10K+ Successful Consultations
             </h3>
-            <!-- Subheading: width: 518, height: 48, font-size: 16px, line-height: 24px, letter-spacing: -0.08px -->
+            <!-- Subheading -->
             <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
-              Get insider tips that make your trips simpler, safer, and more enjoyable.
+              Over 10,000 travelers have trusted Visa123 to guide their applications. We tailor each consultation to your unique travel goals and personal circumstances, ensuring the best possible outcome.
             </p>
           </div>
         </div>
@@ -321,8 +324,6 @@
     </div>
   </div>
 </section>
-
-
         <!-- Application Form Section -->
         <section class="py-16 bg-white">
         <div class="container mx-auto px-6 lg:px-8">
@@ -480,19 +481,19 @@ import ApplicationForm from '@/components/ApplicationForm.vue'
 
 const route = useRoute()
 
-// Form data
-const formData = ref({
-  from: 'United States',
-  to: ''
-})
-
 // Get country from route parameter
 const countrySlug = computed(() => route.params.country as string || 'turkey')
 const countryData = computed(() => getCountryData(countrySlug.value))
 
+// Form data - initialize with computed value
+const formData = ref({
+  from: 'United States',
+  to: countryData.value?.name || 'Turkey'  // ← Use countryData.value.name or fallback to 'Turkey'
+})
+
 // Watch for route changes and update form
 watchEffect(() => {
-  if (countryData.value) {
+  if (countryData.value && countryData.value.name) {
     formData.value.to = countryData.value.name
   }
 })

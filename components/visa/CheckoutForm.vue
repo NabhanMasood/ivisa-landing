@@ -16,18 +16,18 @@
       <!-- Processing Options Card -->
       <div class="border rounded-xl p-6" style="border-color: #E5E7EB;">
         
-        <!-- Passport Details Header -->
-        <div class="mb-6">
-          <h3 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-            Passport Details
-          </h3>
-          <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-            Enter the details as they appear on your passport.
-          </p>
-        </div>
+            <!-- Passport Details Header -->
+            <div class="mb-6 max-w-[588px] mx-auto">
+            <h3 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+                Passport Details
+            </h3>
+            <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
+                Enter the details as they appear on your passport.
+            </p>
+            </div>
 
         <!-- Processing Time Options -->
-        <div class="space-y-4">
+        <div class="space-y-4 flex flex-col items-center">
           
           <!-- Standard Option -->
           <button

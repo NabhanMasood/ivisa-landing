@@ -95,7 +95,7 @@ const emit = defineEmits<{
 const formData = ref({
   nationality: props.nationality,
   visaType: '180-single',
-  applicants: '3'
+  applicants: '1'
 })
 
 // Watch for prop changes and update formData
