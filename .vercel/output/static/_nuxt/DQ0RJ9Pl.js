@@ -1,0 +1,1 @@
+import{c as a}from"./2dOUpm6k.js";import{g as n,c as s,G as t,n as o,m as r,o as c}from"./Ctk2bxby.js";const l=n({__name:"CardContent",setup(m){return(e,p)=>(c(),s("div",{class:o(r(a)("p-6",e.$attrs.class??""))},[t(e.$slots,"default")],2))}}),C=Object.assign(l,{__name:"UiCardContent"});export{C as default};

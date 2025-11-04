@@ -1,0 +1,1 @@
+import{u as a}from"./DpbnFzTh.js";import{g as o,A as r,w as s,a0 as n,a1 as t,m as p,o as u,G as m}from"./Ctk2bxby.js";const c=o({__name:"DropdownMenu",setup(d){return(e,i)=>(u(),r(p(a),n(t(e.$attrs)),{default:s(()=>[m(e.$slots,"default")]),_:3},16))}}),l=Object.assign(c,{__name:"UiDropdownMenu"});export{l as default};

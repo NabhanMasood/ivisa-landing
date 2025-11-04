@@ -235,5 +235,9 @@ export interface VisaType {
   }
   
   export const getCountryData = (slug: string): CountryData => {
-    return visaCountries[slug] ?? visaCountries.Turkey
+    const country = visaCountries[slug]
+    if (!country) {
+      return visaCountries['Turkey'] as CountryData
+    }
+    return country
   }
