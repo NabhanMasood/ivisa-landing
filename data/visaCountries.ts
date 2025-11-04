@@ -24,39 +24,45 @@ export interface VisaType {
   }
   
   export const visaCountries: Record<string, CountryData> = {
-    turkey: {
-      name: 'Turkey',
-      flag: '🇹🇷',
+    Turkey: {
+      name: 'Schengen',
+      flag: '🇪🇺',
       heroImage: '/images/turkey-article.jpg',
-      title: 'Discover Turkey with Confidence',
-      introduction: 'Dreaming of exploring Turkey? From Istanbul\'s historic sites to Cappadocia\'s stunning landscapes, Turkey offers an unforgettable experience for every traveler.',
+      title: 'Discover Europe with One Visa',
+      introduction: "Dreaming of your next European adventure? Whether it's gliding through Venice's canals, attending a conference in Paris, or reuniting with loved ones in Spain — the Schengen Visa (Type C) is your single ticket to 29 European countries.",
       sections: {
         whatIs: {
-          title: 'What is a Turkey Visa?',
-          content: 'The Turkey e-Visa allows travelers to visit Turkey for tourism or business purposes. It\'s a quick and convenient online process that lets you obtain your visa before departure.'
+          title: 'What is a Schengen Visa (Type C)?',
+          content: "The Schengen Visa (Type C) lets you travel freely across all countries in the Schengen Zone with one application. It's designed for travelers from nations that don't have visa-free access to Europe, allowing short stays for tourism, business, or personal visits."
         },
         documents: [
-          'A valid passport (valid for at least 6 months)',
-          'A completed online visa application',
-          'A valid email address',
-          'Payment method for visa fee',
-          'Return flight ticket',
-          'Hotel reservation or accommodation proof'
+          'A completed visa application form',
+          'A valid passport (issued within the last 10 years and valid at least 3 months beyond your stay)',
+          'Two recent passport-size photos',
+          'Travel insurance covering at least €30,000',
+          'Confirmed flight booking or travel itinerary',
+          'Proof of accommodation (hotel reservation or invitation letter)',
+          'Evidence of financial stability (bank statements or payslips)',
+          'A brief cover letter explaining your travel purpose',
+          'Additional documents depending on your visit type'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for vacations and sightseeing' },
-          { name: 'Business Visa', description: 'for business meetings and conferences' },
-          { name: 'Transit Visa', description: 'for passing through Turkey' }
+          { name: 'Tourist Visa', description: 'for vacations and sightseeing across Europe' },
+          { name: 'Business Visa', description: 'for meetings, events, and conferences' },
+          { name: 'Family Visit Visa', description: 'for visiting relatives or friends' },
+          { name: 'Cultural/Sports Visa', description: 'for attending events, performances, or competitions' },
+          { name: 'Medical Visa', description: 'for receiving medical treatment in Europe' }
         ],
         howToApply: [
-          'Visit the Turkey e-Visa website',
-          'Fill out the online application form',
-          'Upload required documents',
-          'Pay the visa fee online',
-          'Receive your e-Visa via email',
-          'Print your e-Visa and carry it with you'
+          "Identify the country where you'll spend most of your trip and apply through its embassy or visa center.",
+          'Collect all the required documents listed above.',
+          'Fill out the Schengen visa application form carefully.',
+          'Book your appointment at the relevant visa center.',
+          'Attend your appointment and submit your biometrics.',
+          'Pay the visa fee as per embassy guidelines.',
+          'Wait for your visa decision.'
         ],
-        whyVisa123: 'Visa123 simplifies your Turkey visa application with expert guidance, quick processing, and 24/7 support to ensure a smooth experience.'
+        whyVisa123: 'Visa123 simplifies the entire process with step-by-step guidance, document checks, and expert support — making your Schengen visa application faster and easier than ever.'
       }
     },
   
@@ -229,5 +235,9 @@ export interface VisaType {
   }
   
   export const getCountryData = (slug: string): CountryData => {
-    return visaCountries[slug] ?? visaCountries.turkey
+    const country = visaCountries[slug]
+    if (!country) {
+      return visaCountries['Turkey'] as CountryData
+    }
+    return country
   }

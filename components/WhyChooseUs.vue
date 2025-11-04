@@ -51,7 +51,7 @@
         <div class="relative">
           <Card class="!rounded-[24px] overflow-hidden shadow-2xl border-0">
             <img
-              src="/images/choose-us.png"
+              src="/png/choose-us.png"
               alt="Traveler exploring historic architecture"
               class="w-full h-[500px] lg:h-[600px] object-cover"
             />

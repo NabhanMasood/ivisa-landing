@@ -60,7 +60,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-                  src="/png/get-visa.png" 
+                  src="/svg/get-visa-1.svg" 
                   alt="visa alert icon"
                   class="w-full h-full"
                 />
@@ -87,7 +87,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-                  src="/png/globe.png" 
+                  src="/svg/get-visa-2.svg" 
                   alt="travel guidance icon"
                   class="w-full h-full"
                 />
@@ -114,7 +114,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-                  src="/png/deal.png" 
+                  src="/svg/get-visa-3.svg" 
                   alt="special deals icon"
                   class="w-full h-full"
                 />

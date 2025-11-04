@@ -63,10 +63,10 @@
                         <span>United States</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="India">
+                    <SelectItem value="Pakistan">
                       <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇮🇳</span>
-                        <span>India</span>
+                        <span class="text-2xl">🇵🇰</span>
+                        <span>Pakistan</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -110,6 +110,15 @@
                         <span>Canada</span>
                       </div>
                     </SelectItem>
+
+                     <SelectItem value="Morocco">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">🇲🇦</span>
+                        <span>Morocco</span>
+                      </div>
+                    </SelectItem>
+
+
                   </SelectContent>
                 </Select>
               </div>
@@ -214,7 +223,7 @@ const getCountryFlag = (country: string) => {
   const flags: Record<string, string> = {
     'United Arab Emirates': '🇦🇪',
     'United States': '🇺🇸',
-    'India': '🇮🇳',
+    'Pakistan': '🇵🇰',
     'United Kingdom': '🇬🇧',
     'Canada': '🇨🇦'
   }

@@ -1,0 +1,1 @@
+import{c as e}from"./2dOUpm6k.js";import{g as r,c as s,n as o,m as n,G as t,o as c}from"./Ctk2bxby.js";const d=r({__name:"Card",setup(l){return(a,m)=>(c(),s("div",{class:o(n(e)("rounded-lg border bg-card text-card-foreground shadow-sm",a.$attrs.class??""))},[t(a.$slots,"default")],2))}}),p=Object.assign(d,{__name:"UiCard"});export{p as default};
