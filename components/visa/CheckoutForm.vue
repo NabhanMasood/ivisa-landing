@@ -202,7 +202,6 @@
           </p>
         </div>
       </div>
-
     </div>
   </div>
 </template>
