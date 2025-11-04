@@ -60,11 +60,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-<<<<<<< HEAD
                   src="/svg/get-visa-1.svg" 
-=======
-                  src="/png/get-visa.png" 
->>>>>>> bf111265684bc0b1a63cc6f624e77dc6fdcd334d
                   alt="visa alert icon"
                   class="w-full h-full"
                 />
@@ -91,11 +87,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-<<<<<<< HEAD
                   src="/svg/get-visa-2.svg" 
-=======
-                  src="/png/globe.png" 
->>>>>>> bf111265684bc0b1a63cc6f624e77dc6fdcd334d
                   alt="travel guidance icon"
                   class="w-full h-full"
                 />
@@ -122,11 +114,7 @@
               <!-- png Icon: width: 61.875px, height: 60px -->
               <div class="w-[61.875px] h-[60px]">
                 <img 
-<<<<<<< HEAD
                   src="/svg/get-visa-3.svg" 
-=======
-                  src="/png/deal.png" 
->>>>>>> bf111265684bc0b1a63cc6f624e77dc6fdcd334d
                   alt="special deals icon"
                   class="w-full h-full"
                 />

@@ -115,7 +115,6 @@ import Footer from '@/components/Footer.vue'
 // FAQ Data
 const faqs = ref([
   {
-<<<<<<< HEAD
     question: 'Is it safe to enter my passport and personal data on your website?',
     answer: 'Yes, it is completely secure. We use bank-level 256-bit SSL encryption for all data transmission. Your passport details are only used for government application submission and are never stored on our servers after the process is complete. We are fully compliant with global data protection laws (including GDPR)'
   },
@@ -135,23 +134,6 @@ const faqs = ref([
     question: 'What is your refund policy for rejected applications?',
     answer: "We are committed to fairness. If your application is rejected due to a demonstrable mistake made by our review team in processing correct data, we will issue a full refund of our service fee. Rejections based on the applicant's ineligibility (e.g., criminal history, insufficient funds) are non-refundable, as our work was successfully performed."
   },
-=======
-    question: 'Does Beam fully support popular integrations?',
-    answer: 'Yes, Beam integrates seamlessly with a variety of popular tools and platforms, including CRM systems, marketing software, and payment gateways. Our flexible options let you connect Beam with your existing tools.'
-  },
-  {
-    question: 'Is Beam completely optimized for mobile and desktop?',
-    answer: 'Absolutely! Beam is fully responsive and optimized for both mobile and desktop experiences, ensuring smooth performance across all devices.'
-  },
-  {
-    question: 'How effectively does Beam protect my data?',
-    answer: 'Beam uses industry-standard encryption and security protocols to protect your data. We implement regular security audits and comply with international data protection regulations.'
-  },
-  {
-    question: 'What flexible pricing options does Beam offer?',
-    answer: 'Beam offers various pricing plans to suit different needs, from individual users to enterprise solutions. Contact our sales team for custom pricing options tailored to your requirements.'
-  }
->>>>>>> bf111265684bc0b1a63cc6f624e77dc6fdcd334d
 ])
 
 // Track which FAQ is open
