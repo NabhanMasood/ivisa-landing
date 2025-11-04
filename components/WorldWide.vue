@@ -25,7 +25,7 @@
         <Card class="group relative overflow-hidden rounded-[16px] border-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl">
           <div class="relative h-[450px] w-[364px] max-w-full rounded-[16px] overflow-hidden">
             <img
-              src="/images/Turkey.jpg"
+              src="/svg/countries/Schengen.svg"
               alt="Schengen destination with autumn scenery"
               class="absolute inset-0 w-full h-full object-cover rounded-[16px]"
             />
@@ -51,7 +51,7 @@
         <Card class="group relative overflow-hidden rounded-[16px] border-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl">
           <div class="relative h-[450px] w-[364px] max-w-full rounded-[16px] overflow-hidden">
             <img
-              src="/images/Morocco.png"
+              src="/svg/countries/lasVegas.svg"
               alt="United States destination"
               class="absolute inset-0 w-full h-full object-cover rounded-[16px]"
             />
@@ -77,7 +77,7 @@
         <Card class="group relative overflow-hidden rounded-[16px] border-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl">
           <div class="relative h-[450px] w-[364px] max-w-full rounded-[16px] overflow-hidden">
             <img
-              src="/images/Thailand.jpg"
+              src="/svg/countries/England.svg"
               alt="England destination"
               class="absolute inset-0 w-full h-full object-cover rounded-[16px]"
             />
