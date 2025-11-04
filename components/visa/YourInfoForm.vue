@@ -463,7 +463,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import Button from "@/components/ui/Button.vue";
+import Button from "@/components/ui/button.vue";
 import Input from "@/components/ui/input.vue";
 import Label from "@/components/ui/label/Label.vue";
 import Select from "@/components/ui/select/Select.vue";

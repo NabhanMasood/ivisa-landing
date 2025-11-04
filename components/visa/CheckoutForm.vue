@@ -394,7 +394,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import Button from "@/components/ui/Button.vue";
+import Button from "@/components/ui/button.vue";
 
 const props = defineProps<{
   destination: string;
