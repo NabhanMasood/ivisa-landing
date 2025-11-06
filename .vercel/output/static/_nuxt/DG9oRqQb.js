@@ -1,0 +1,1 @@
+import{c as s}from"./2dOUpm6k.js";import{g as e,c as r,s as o,q as n,H as t,o as c}from"./BG_ufDYK.js";const d=e({__name:"Card",setup(l){return(a,m)=>(c(),r("div",{class:o(n(s)("rounded-lg border bg-card text-card-foreground shadow-sm",a.$attrs.class??""))},[t(a.$slots,"default")],2))}}),p=Object.assign(d,{__name:"UiCard"});export{p as default};

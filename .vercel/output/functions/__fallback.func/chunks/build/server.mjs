@@ -389,7 +389,12 @@ const _routes = [
   {
     name: "index",
     path: "/",
-    component: () => import('./index-CC9rYzmf.mjs')
+    component: () => import('./index-BQXx4lKp.mjs')
+  },
+  {
+    name: "sign-up",
+    path: "/sign-up",
+    component: () => import('./sign-up-BzZxIPeY.mjs')
   },
   {
     name: "about-us",
@@ -402,24 +407,64 @@ const _routes = [
     component: () => import('./contact-us-CbyZcDcq.mjs')
   },
   {
+    name: "additional-info",
+    path: "/additional-info",
+    component: () => import('./additional-info-p1cgRLSi.mjs')
+  },
+  {
     name: "get-visa-updates",
     path: "/get-visa-updates",
     component: () => import('./get-visa-updates-DUe-ZNSR.mjs')
   },
   {
+    name: "my-account",
+    path: "/my-account",
+    component: () => import('./index-BafiGR3C.mjs')
+  },
+  {
     name: "visa-application",
     path: "/visa-application",
-    component: () => import('./visa-application-BQsZVzMF.mjs')
+    component: () => import('./visa-application-C0lynxaN.mjs')
   },
   {
     name: "terms-and-conditions",
     path: "/terms-and-conditions",
-    component: () => import('./terms-and-conditions-Cw54X6qj.mjs')
+    component: () => import('./terms-and-conditions-DEGkWnFt.mjs')
   },
   {
     name: "travel-article-country",
     path: "/travel-article/:country()",
-    component: () => import('./_country_-C1GssVp7.mjs')
+    component: () => import('./_country_-CIr2x6hl.mjs')
+  },
+  {
+    name: "my-account-my-orders-id",
+    path: "/my-account/my-orders/:id()",
+    component: () => import('./_id_-CG8JBB-t.mjs')
+  },
+  {
+    name: "my-account-my-orders",
+    path: "/my-account/my-orders",
+    component: () => import('./index-wdPocmAt.mjs')
+  },
+  {
+    name: "my-account-personal-details",
+    path: "/my-account/personal-details",
+    component: () => import('./personal-details-Dmj-T4Oj.mjs')
+  },
+  {
+    name: "my-account-security-privacy",
+    path: "/my-account/security-privacy",
+    component: () => import('./security-privacy-CfM6WaSB.mjs')
+  },
+  {
+    name: "my-account-payment-methods",
+    path: "/my-account/payment-methods",
+    component: () => import('./index-CypIJO0q.mjs')
+  },
+  {
+    name: "my-account-payment-methods-add-card",
+    path: "/my-account/payment-methods/add-card",
+    component: () => import('./add-card-PGcNEVhm.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -760,9 +805,9 @@ const revive_payload_server_FAqXkbYDqJKsdJv4i_bidlsvRR2jBwFwdYsUH1emDCQ = /* @__
 });
 const LazyApplicationForm = defineAsyncComponent(() => import('./ApplicationForm-CdKLkvp9.mjs').then((r) => r["default"] || r.default || r));
 const LazyFooter = defineAsyncComponent(() => import('./Footer-BoaBZxuy.mjs').then((r) => r["default"] || r.default || r));
-const LazyHeader = defineAsyncComponent(() => import('./Header-D3q8Jzw4.mjs').then((r) => r["default"] || r.default || r));
+const LazyHeader = defineAsyncComponent(() => import('./Header-D8DSIz8l.mjs').then((r) => r["default"] || r.default || r));
 const LazyHeaderLoggedIn = defineAsyncComponent(() => import('./HeaderLoggedIn-B8RzWlof.mjs').then((r) => r["default"] || r.default || r));
-const LazyHero = defineAsyncComponent(() => import('./Hero-CHyeV3Uw.mjs').then((r) => r["default"] || r.default || r));
+const LazyHero = defineAsyncComponent(() => import('./Hero-BrxSgcbi.mjs').then((r) => r["default"] || r.default || r));
 const LazyWhyChooseUs = defineAsyncComponent(() => import('./WhyChooseUs-YMFMLc7F.mjs').then((r) => r["default"] || r.default || r));
 const LazyWorldWide = defineAsyncComponent(() => import('./WorldWide-1DNIW1Qq.mjs').then((r) => r["default"] || r.default || r));
 const LazyLibsUtils = defineAsyncComponent(() => import('./utils-B-5jxtHY.mjs').then((r) => r["default"] || r.default || r));
@@ -771,6 +816,11 @@ const LazyUiBadge = defineAsyncComponent(() => import('./badge-ChVCm8qh.mjs').th
 const LazyUiButton = defineAsyncComponent(() => import('./button-Cy1RM3F0.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiCard = defineAsyncComponent(() => import('./Card-CXXOLw0c.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiCardContent = defineAsyncComponent(() => import('./CardContent-DLRaKZzq.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiDialog = defineAsyncComponent(() => import('./Dialog-B31xGaki.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiDialogDialogcontent = defineAsyncComponent(() => import('./Dialogcontent-Vjwp0JDb.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiDialogDialogdescription = defineAsyncComponent(() => import('./Dialogdescription-BjIwAc9o.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiDialogDialogheader = defineAsyncComponent(() => import('./Dialogheader-z5W8MBmq.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiDialogDialogtitle = defineAsyncComponent(() => import('./Dialogtitle-IOxRdQ2i.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiDropdownMenu = defineAsyncComponent(() => import('./DropdownMenu-C-dUPqGY.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiDropdownMenuContent = defineAsyncComponent(() => import('./DropdownMenuContent-BPx_eUMr.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiDropdownMenuItem = defineAsyncComponent(() => import('./DropdownMenuItem-D2DqBvlk.mjs').then((r) => r["default"] || r.default || r));
@@ -779,18 +829,27 @@ const LazyUiDropdownMenuTrigger = defineAsyncComponent(() => import('./DropdownM
 const LazyUiInput = defineAsyncComponent(() => import('./input-BjW8rXgt.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiLabel = defineAsyncComponent(() => import('./label-Du92n_Nj.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiSelect = defineAsyncComponent(() => import('./Select-BT9XQi4a.mjs').then((r) => r["default"] || r.default || r));
-const LazyUiSelectContent = defineAsyncComponent(() => import('./SelectContent-BwhOjIc3.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiSelectContent = defineAsyncComponent(() => import('./SelectContent-BojwDvXK.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiSelectItem = defineAsyncComponent(() => import('./SelectItem-RYQOH1xm.mjs').then((r) => r["default"] || r.default || r));
-const LazyUiSelectTrigger = defineAsyncComponent(() => import('./SelectTrigger-CiNhqUX3.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiSelectTrigger = defineAsyncComponent(() => import('./SelectTrigger-BwVa_K9-.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiSelectValue = defineAsyncComponent(() => import('./SelectValue-BEkb05o4.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiSeparator = defineAsyncComponent(() => import('./separator-b0uZ_nsg.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTable = defineAsyncComponent(() => import('./Table-0-dkKYVh.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTableTablebody = defineAsyncComponent(() => import('./Tablebody-CLcMcatf.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTableTablecell = defineAsyncComponent(() => import('./Tablecell-CoezOhNd.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTableTablehead = defineAsyncComponent(() => import('./Tablehead-DWB4F9eG.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTableTableheader = defineAsyncComponent(() => import('./Tableheader-DMBcOO0j.mjs').then((r) => r["default"] || r.default || r));
+const LazyUiTableTablerow = defineAsyncComponent(() => import('./Tablerow-BlJM8gji.mjs').then((r) => r["default"] || r.default || r));
 const LazyUiTextarea = defineAsyncComponent(() => import('./textarea-DG7dQPHw.mjs').then((r) => r["default"] || r.default || r));
-const LazyVisaCheckoutForm = defineAsyncComponent(() => import('./CheckoutForm-BwpbxOdb.mjs').then((r) => r["default"] || r.default || r));
-const LazyVisaPassportDetailsForm = defineAsyncComponent(() => import('./PassportDetailsForm-BexLPiCS.mjs').then((r) => r["default"] || r.default || r));
-const LazyVisaTripInfoForm = defineAsyncComponent(() => import('./TripInfoForm-FYFMAowu.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaCheckoutForm = defineAsyncComponent(() => import('./CheckoutForm-DA2rNJ-e.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaPassportDetailsForm = defineAsyncComponent(() => import('./PassportDetailsForm-DyDRgEEd.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaPaymentModal = defineAsyncComponent(() => import('./PaymentModal-n9wLBWjS.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaReviewOrder = defineAsyncComponent(() => import('./ReviewOrder-vAt9vsg2.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaSuccessmodal = defineAsyncComponent(() => import('./Successmodal-CvcEugtr.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaTripInfoForm = defineAsyncComponent(() => import('./TripInfoForm-I-u0cI84.mjs').then((r) => r["default"] || r.default || r));
 const LazyVisaStats = defineAsyncComponent(() => import('./VisaStats-Cew3JOII.mjs').then((r) => r["default"] || r.default || r));
-const LazyVisaStepper = defineAsyncComponent(() => import('./VisaStepper-AXHsCKlR.mjs').then((r) => r["default"] || r.default || r));
-const LazyVisaYourInfoForm = defineAsyncComponent(() => import('./YourInfoForm-xoL2eVn8.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaStepper = defineAsyncComponent(() => import('./VisaStepper-DGWUEsRX.mjs').then((r) => r["default"] || r.default || r));
+const LazyVisaYourInfoForm = defineAsyncComponent(() => import('./YourInfoForm-CFzt2ueG.mjs').then((r) => r["default"] || r.default || r));
 const lazyGlobalComponents = [
   ["ApplicationForm", LazyApplicationForm],
   ["Footer", LazyFooter],
@@ -805,6 +864,11 @@ const lazyGlobalComponents = [
   ["UiButton", LazyUiButton],
   ["UiCard", LazyUiCard],
   ["UiCardContent", LazyUiCardContent],
+  ["UiDialog", LazyUiDialog],
+  ["UiDialogDialogcontent", LazyUiDialogDialogcontent],
+  ["UiDialogDialogdescription", LazyUiDialogDialogdescription],
+  ["UiDialogDialogheader", LazyUiDialogDialogheader],
+  ["UiDialogDialogtitle", LazyUiDialogDialogtitle],
   ["UiDropdownMenu", LazyUiDropdownMenu],
   ["UiDropdownMenuContent", LazyUiDropdownMenuContent],
   ["UiDropdownMenuItem", LazyUiDropdownMenuItem],
@@ -818,9 +882,18 @@ const lazyGlobalComponents = [
   ["UiSelectTrigger", LazyUiSelectTrigger],
   ["UiSelectValue", LazyUiSelectValue],
   ["UiSeparator", LazyUiSeparator],
+  ["UiTable", LazyUiTable],
+  ["UiTableTablebody", LazyUiTableTablebody],
+  ["UiTableTablecell", LazyUiTableTablecell],
+  ["UiTableTablehead", LazyUiTableTablehead],
+  ["UiTableTableheader", LazyUiTableTableheader],
+  ["UiTableTablerow", LazyUiTableTablerow],
   ["UiTextarea", LazyUiTextarea],
   ["VisaCheckoutForm", LazyVisaCheckoutForm],
   ["VisaPassportDetailsForm", LazyVisaPassportDetailsForm],
+  ["VisaPaymentModal", LazyVisaPaymentModal],
+  ["VisaReviewOrder", LazyVisaReviewOrder],
+  ["VisaSuccessmodal", LazyVisaSuccessmodal],
   ["VisaTripInfoForm", LazyVisaTripInfoForm],
   ["VisaStats", LazyVisaStats],
   ["VisaStepper", LazyVisaStepper],
@@ -842,7 +915,7 @@ const plugins = [
   components_plugin_4kY4pyzJIYX99vmMAAIorFf3CnAaptHitJgf7JxiED8
 ];
 const layouts = {
-  default: defineAsyncComponent(() => import('./default-DBM8wNRU.mjs').then((m) => m.default || m))
+  default: defineAsyncComponent(() => import('./default-Q4Eq4abB.mjs').then((m) => m.default || m))
 };
 const LayoutLoader = defineComponent({
   name: "LayoutLoader",

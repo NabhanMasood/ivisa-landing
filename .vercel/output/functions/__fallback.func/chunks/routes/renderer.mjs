@@ -74,7 +74,7 @@ function createHead(options = {}) {
   return head;
 }
 
-const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[{"rel":"icon","type":"image/x-icon","href":"/logoMark.svg"},{"rel":"icon","type":"image/svg+xml","href":"/logo/Visa123logo.svg"}],"style":[],"script":[],"noscript":[],"title":"iVisa - Management System"};
+const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[{"rel":"icon","type":"image/x-icon","href":"/logoMark.svg"},{"rel":"icon","type":"image/svg+xml","href":"/logo/Visa123logo.svg"},{"rel":"preconnect","href":"https://fonts.googleapis.com"},{"rel":"preconnect","href":"https://fonts.gstatic.com","crossorigin":""},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"},{"rel":"preload","href":"/svg/payment-strip.svg","as":"image","type":"image/svg+xml"}],"style":[],"script":[],"noscript":[],"title":"iVisa - Management System"};
 
 const appRootTag = "div";
 

@@ -1,1 +1,0 @@
-import{d as e}from"./DpbnFzTh.js";import{A as a,o as s,w as o,G as t,H as n,m as p}from"./Ctk2bxby.js";const c={__name:"UiDropdownMenuTrigger",setup(d){return(r,l)=>(s(),a(p(e),n({"as-child":""},r.$attrs),{default:o(()=>[t(r.$slots,"default")]),_:3},16))}};export{c as default};

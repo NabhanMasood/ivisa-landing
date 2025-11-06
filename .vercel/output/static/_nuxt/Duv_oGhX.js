@@ -1,0 +1,1 @@
+import{g as e,c as o,H as a,s as n,o as t}from"./BG_ufDYK.js";const l={name:"DialogContent"},c=e({...l,props:{class:{}},setup(r){return(s,p)=>(t(),o("div",{class:n(["p-8",s.$props.class])},[a(s.$slots,"default")],2))}}),_=Object.assign(c,{__name:"UiDialogDialogcontent"});export{_ as default};

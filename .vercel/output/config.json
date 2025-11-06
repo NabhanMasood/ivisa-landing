@@ -57,6 +57,34 @@
       "dest": "/terms-and-conditions"
     },
     {
+      "src": "/sign-up",
+      "dest": "/sign-up"
+    },
+    {
+      "src": "/my-account/security-privacy",
+      "dest": "/my-account/security-privacy"
+    },
+    {
+      "src": "/my-account/personal-details",
+      "dest": "/my-account/personal-details"
+    },
+    {
+      "src": "/my-account/payment-methods/add-card",
+      "dest": "/my-account/payment-methods/add-card"
+    },
+    {
+      "src": "/my-account/payment-methods",
+      "dest": "/my-account/payment-methods"
+    },
+    {
+      "src": "/my-account/my-orders",
+      "dest": "/my-account/my-orders"
+    },
+    {
+      "src": "/my-account",
+      "dest": "/my-account"
+    },
+    {
       "src": "/get-visa-updates",
       "dest": "/get-visa-updates"
     },
@@ -67,6 +95,10 @@
     {
       "src": "/contact-us",
       "dest": "/contact-us"
+    },
+    {
+      "src": "/additional-info",
+      "dest": "/additional-info"
     },
     {
       "src": "/about-us",
@@ -83,6 +115,10 @@
     {
       "src": "/travel-article/(?<country>[^/]+)",
       "dest": "/travel-article/[country]"
+    },
+    {
+      "src": "/my-account/my-orders/(?<id>[^/]+)",
+      "dest": "/my-account/my-orders/[id]"
     },
     {
       "src": "/__nuxt_island/(?:.*)",

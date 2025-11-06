@@ -1,0 +1,1 @@
+import{c as l}from"./2dOUpm6k.js";import{c as r,o,H as t,s as c,q as n}from"./BG_ufDYK.js";const d={__name:"UiTableTablecell",props:{class:{type:String,default:""}},setup(e){const s=e;return(a,p)=>(o(),r("td",{class:c(n(l)("p-4 align-middle [&:has([role=checkbox])]:pr-0",s.class))},[t(a.$slots,"default")],2))}};export{d as default};

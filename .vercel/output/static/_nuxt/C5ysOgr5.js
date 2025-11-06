@@ -1,0 +1,1 @@
+import{u as a}from"./BJ9K3oKP.js";import{g as o,z as r,w as s,a1 as n,a2 as t,q as p,o as u,H as c}from"./BG_ufDYK.js";const d=o({__name:"DropdownMenu",setup(i){return(e,m)=>(u(),r(p(a),n(t(e.$attrs)),{default:s(()=>[c(e.$slots,"default")]),_:3},16))}}),l=Object.assign(d,{__name:"UiDropdownMenu"});export{l as default};

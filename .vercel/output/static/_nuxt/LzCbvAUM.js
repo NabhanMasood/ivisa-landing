@@ -1,1 +1,0 @@
-import{a}from"./DpbnFzTh.js";import{g as t,A as s,w as o,a0 as r,a1 as n,m as l,o as c,G as u}from"./Ctk2bxby.js";const m=t({__name:"SelectValue",setup(p){return(e,i)=>(c(),s(l(a),r(n(e.$attrs)),{default:o(()=>[u(e.$slots,"default")]),_:3},16))}}),d=Object.assign(m,{__name:"UiSelectValue"});export{d as default};

@@ -1,0 +1,1 @@
+import{c as s}from"./2dOUpm6k.js";import{g as a,c as n,H as t,s as o,q as r,o as c}from"./BG_ufDYK.js";const l=a({__name:"CardContent",setup(m){return(e,p)=>(c(),n("div",{class:o(r(s)("p-6",e.$attrs.class??""))},[t(e.$slots,"default")],2))}}),C=Object.assign(l,{__name:"UiCardContent"});export{C as default};
