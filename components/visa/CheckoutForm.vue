@@ -9,22 +9,12 @@
           Choose your processing time
         </h2>
         <p style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #757579;">
-          Enter the details as they appear on your passport.
+          Select how quickly you need your visa processed.
         </p>
       </div>
 
       <!-- Processing Options Card -->
       <div class="border rounded-xl p-6" style="border-color: #E5E7EB;">
-        
-            <!-- Passport Details Header -->
-            <div class="mb-6 max-w-[588px] mx-auto">
-            <h3 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                Passport Details
-            </h3>
-            <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-                Enter the details as they appear on your passport.
-            </p>
-            </div>
 
         <!-- Processing Time Options -->
         <div class="space-y-4 flex flex-col items-center">
@@ -190,7 +180,7 @@
         class="w-full h-12"
         style="background-color: #1ECE84; color: white; border-radius: 6px; font-family: Geist; font-weight: 500; font-size: 14px; line-height: 24px;"
       >
-        Save & Countinue
+        Save & Continue
       </Button>
 
       <!-- Security Message -->
@@ -198,7 +188,7 @@
         <div class="flex items-start gap-3">
           <img src="/svg/union.svg" alt="Security" style="width: 19.2px; height: 19.2px;" />
           <p style="font-family: Geist; font-weight: 500; font-size: 16px; line-height: 20px; color: #3E3E3E;">
-            We take strong measuresto protect your information
+            We take strong measures to protect your information
           </p>
         </div>
       </div>
@@ -207,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import Button from '@/components/ui/Button.vue'
 
 const props = defineProps<{

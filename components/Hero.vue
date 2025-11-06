@@ -26,9 +26,9 @@
         </div>
 
         <!-- Search Card with enhanced transparency -->
-        <Card 
-          class="!rounded-[24px] shadow-2xl max-w-4xl mx-auto" 
-          style="background: rgba(231, 238, 233, 0.87); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 0;"
+       <Card 
+          class="!rounded-[24px] shadow-2xl mx-auto" 
+          style="width: 1008px; height: 204.5px; background: rgba(231, 238, 233, 0.87); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 0;"
         >
           <CardContent class="p-8 lg:p-10">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
@@ -38,18 +38,20 @@
                   Where am I from?
                 </Label>
                 <Select v-model="selectedFrom">
-                  <SelectTrigger 
-                    id="from" 
-                    class="w-full !h-[52px] !bg-white/90 !rounded-[20px] !border-2 !border-gray-200 hover:!border-gray-300 transition-all"
-                  >
-                    <SelectValue>
-                      <div class="flex items-center gap-3" v-if="selectedFrom">
-                        <span class="text-2xl">{{ getCountryFlag(selectedFrom) }}</span>
-                        <span class="text-base">{{ selectedFrom }}</span>
-                      </div>
-                      <span v-else class="text-gray-500">Select a country</span>
-                    </SelectValue>
-                  </SelectTrigger>
+            <SelectTrigger 
+              id="from" 
+              class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+              style="width: 299.33px;"
+            >
+                  <SelectValue>
+                    <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedFrom">
+                      <span class="text-2xl">{{ getCountryFlag(selectedFrom) }}</span>
+                      <span class="text-base">{{ selectedFrom }}</span>
+                    </div>
+                    <span v-else class="text-gray-500 py-3 pl-2">Select a country</span>
+                  </SelectValue>
+                  <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
+                </SelectTrigger>
                   <SelectContent class="!rounded-[20px] !bg-white">
                     <SelectItem value="United Arab Emirates">
                       <div class="flex items-center gap-3">
@@ -79,18 +81,20 @@
                   Where am I going?
                 </Label>
                 <Select v-model="selectedTo">
-                  <SelectTrigger 
-                    id="to" 
-                    class="w-full !h-[52px] !bg-white/90 !rounded-[20px] !border-2 !border-gray-200 hover:!border-gray-300 transition-all"
-                  >
-                    <SelectValue>
-                      <div class="flex items-center gap-3" v-if="selectedTo">
-                        <span class="text-2xl">{{ getCountryFlag(selectedTo) }}</span>
-                        <span class="text-base">{{ selectedTo }}</span>
-                      </div>
-                      <span v-else class="text-gray-500">Select a country</span>
-                    </SelectValue>
-                  </SelectTrigger>
+             <SelectTrigger 
+                id="to" 
+                class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                style="width: 299.33px;"
+              >
+                  <SelectValue>
+                    <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedTo">
+                      <span class="text-2xl">{{ getCountryFlag(selectedTo) }}</span>
+                      <span class="text-base">{{ selectedTo }}</span>
+                    </div>
+                    <span v-else class="text-gray-500 py-3 pl-2">Select a country</span>
+                  </SelectValue>
+                  <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
+                </SelectTrigger>
                   <SelectContent class="!rounded-[20px] !bg-white">
                     <SelectItem value="United Kingdom">
                       <div class="flex items-center gap-3">
@@ -225,7 +229,8 @@ const getCountryFlag = (country: string) => {
     'United States': '🇺🇸',
     'Pakistan': '🇵🇰',
     'United Kingdom': '🇬🇧',
-    'Canada': '🇨🇦'
+    'Canada': '🇨🇦',
+    'Morocco': '🇲🇦'
   }
   return flags[country] || '🏳️'
 }
@@ -233,6 +238,7 @@ const getCountryFlag = (country: string) => {
 const handleGetStarted = () => {
   console.log('From:', selectedFrom.value)
   console.log('To:', selectedTo.value)
-  navigateTo(`/visa-application?from=${selectedFrom.value}&to=${selectedTo.value}`)
+  // Pass nationality (from) and destination (to) as query parameters
+  navigateTo(`/visa-application?nationality=${encodeURIComponent(selectedFrom.value)}&destination=${encodeURIComponent(selectedTo.value)}`)
 }
 </script>

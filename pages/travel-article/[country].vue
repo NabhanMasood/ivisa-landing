@@ -67,7 +67,7 @@
                             Where are you going?
                           </label>
                           <div class="relative">
-                            <select 
+                           <select 
                               v-model="formData.to"
                               class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
                             >
@@ -488,15 +488,10 @@ const countryData = computed(() => getCountryData(countrySlug.value))
 // Form data - initialize with computed value
 const formData = ref({
   from: 'United States',
-  to: countryData.value?.name || 'Turkey'  // ← Use countryData.value.name or fallback to 'Turkey'
+  to: 'Turkey'
 })
 
-// Watch for route changes and update form
-watchEffect(() => {
-  if (countryData.value && countryData.value.name) {
-    formData.value.to = countryData.value.name
-  }
-})
+
 
 // Handle form submission
 const handleApplyNow = () => {

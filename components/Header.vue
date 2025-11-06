@@ -1,6 +1,91 @@
 <!-- components/Header.vue -->
 <template>
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+  <!-- My Account Header (for /my-account routes) -->
+  <header v-if="isMyAccountRoute" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+    <div class="px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left Section - Logo and Search Bar -->
+        <div class="flex items-center gap-4">
+          <!-- Logo Section -->
+          <div class="flex items-center flex-shrink-0">
+            <NuxtLink to="/" class="inline-flex items-center">
+              <img 
+                src="/logos/logo.png" 
+                alt="VISA123" 
+                style="width: 161.05px; height: 50px;"
+              />
+            </NuxtLink>
+          </div>
+
+          <!-- Vertical Divider -->
+          <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
+
+          <!-- Search Bar -->
+          <div class="relative" style="width: 384px;">
+            <input
+              type="text"
+              placeholder="Search..."
+              class="w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1ECE84] focus:border-transparent text-sm pl-4 pr-12"
+              style="height: 36px;"
+              v-model="searchQuery"
+            />
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center bg-gray-50 rounded" style="width: 30px; height: 24px; border-radius: 4px; padding: 4px;">
+              <img 
+                src="/svg/my-account/search-bar.svg" 
+                alt="Search" 
+                style="width: 100%; height: 100%;"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Section - Notifications & Avatar -->
+        <div class="flex items-center flex-shrink-0" style="gap: 10px;">
+          <!-- Notification Bell -->
+          <button class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+            <img 
+              src="/svg/my-account/bell.svg" 
+              alt="Notifications" 
+              class="w-5 h-5"
+            />
+            <span class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+          </button>
+
+          <!-- Vertical Divider -->
+          <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
+
+          <!-- User Avatar -->
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button class="rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+                <img 
+                  src="/svg/my-account/user.svg" 
+                  alt="User" 
+                  class="w-9 h-9 rounded-full"
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-56">
+              <div class="px-2 py-1.5 text-sm font-semibold">My Account</div>
+              <DropdownMenuItem @click="navigateTo('/my-account')" class="cursor-pointer">
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="navigateTo('/my-account/settings')" class="cursor-pointer">
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem class="cursor-pointer text-red-600">
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Original Header (for other routes) -->
+ <header v-else class="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200">
+
     <div class="container mx-auto max-w-7xl px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
         <!-- Logo Section -->
@@ -10,13 +95,12 @@
               src="/logos/logo.png" 
               alt="VISA123" 
               style="width: 161px; height: 50px;"
-
             />
           </NuxtLink>
         </div>
 
         <!-- Right Section -->
-        <div class="flex items-center gap-20">
+        <div class="flex items-center" :class="showAuthButtons ? 'gap-20' : 'gap-6'">
           <!-- Language/Currency Dropdown -->
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -41,9 +125,9 @@
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <!-- Group Login and Sign Up together -->
-          <div class="flex items-center gap-4">
-            <!-- Login Button using shadcn Button -->
+          <!-- Auth Buttons (conditionally shown) -->
+          <div v-if="showAuthButtons" class="flex items-center gap-4">
+            <!-- Login Button -->
             <Button 
               variant="ghost" 
               size="sm"
@@ -53,7 +137,7 @@
               Login
             </Button>
 
-            <!-- Sign Up Button using shadcn Button with custom styling -->
+            <!-- Sign Up Button -->
             <Button 
               size="sm"
               class="!bg-[#1ECE84] hover:!bg-[#1AB876] !text-white !rounded-full !h-[34px] !px-5 !min-w-[95px] !font-medium !border-0"
@@ -68,22 +152,40 @@
   </header>
   
   <!-- Spacer to prevent content from going under fixed header -->
-  <div class="h-20"></div>
+  <div :class="isMyAccountRoute ? 'h-16' : 'h-20'"></div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { ChevronDown } from 'lucide-vue-next'
-
-// Import Button component
 import Button from '@/components/ui/button.vue'
-
-// Import dropdown components
 import DropdownMenu from '@/components/ui/dropdown-menu/DropdownMenu.vue'
 import DropdownMenuTrigger from '@/components/ui/dropdown-menu/DropdownMenuTrigger.vue'
 import DropdownMenuContent from '@/components/ui/dropdown-menu/DropdownMenuContent.vue'
 import DropdownMenuItem from '@/components/ui/dropdown-menu/DropdownMenuItem.vue'
 
+// Props
+interface Props {
+  showAuthButtons?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showAuthButtons: true
+})
+
+// Get current route
+const route = useRoute()
+
+// Check if current route is a my-account route
+const isMyAccountRoute = computed(() => {
+  return route.path.startsWith('/my-account')
+})
+
+// Search query for my-account header
+const searchQuery = ref('')
+
+// Language for original header
 const currentLanguage = ref('EN | د.إ AED')
 
 const setLanguage = (lang: string) => {
