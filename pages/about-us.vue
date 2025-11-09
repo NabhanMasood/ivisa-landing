@@ -123,7 +123,7 @@
         </h3>
         <!-- Subheading: font-size: 14px, line-height: 22px -->
         <p class="font-manrope font-bold text-sm leading-[22px] tracking-normal text-[#0B3947]">
-          contact@visa123.com
+          support@visa123.com
         </p>
       </div>
     </div>

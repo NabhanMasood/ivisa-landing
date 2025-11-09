@@ -16,7 +16,7 @@ const route = useRoute()
 
 // Hide header on specific routes
 const hideHeader = computed(() => {
-  return route.path === '/sign-up' || route.path === '/signup'
+  return route.path === '/sign-up' || route.path === '/login'
 })
 
 // Show/hide auth buttons based on route
@@ -29,9 +29,12 @@ const showAuthButtons = computed(() => {
 const hideFooter = computed(() => {
   return route.path === '/visa-application' || 
          route.path.includes('/visa-') || 
+         route.path === '/login' || 
          route.path === '/sign-up' || 
          route.path === '/signup' ||
          route.path === '/additional-info' ||
-         route.path === '/my-account'
+         route.path.startsWith('/my-account')
+
+
 })
 </script>

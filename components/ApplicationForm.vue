@@ -5,7 +5,6 @@
     style="background: linear-gradient(90deg, #31B560 0%, #0582A2 33.14%, #2567BE 51.18%, #5051DA 69.41%, #2C229B 100%);"
   >
     <div class="w-full h-full relative">
-      <!-- Logo in top right corner -->
       <!-- Logo in top right corner with high z-index, moved more right -->
       <div class="absolute top-0 -right-2 lg:-right-4 w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] z-50">
         <img
@@ -41,63 +40,83 @@
                 Start your application
               </h2>
 
-              <!-- Country Selectors Row -->
-              <div class="grid grid-cols-2 gap-4 mb-6">
-                <!-- From Country Dropdown -->
-                <div class="relative">
-                  <select 
-                    v-model="fromCountry"
-                    class="w-full h-[48px] px-4 py-2 pr-8 bg-white border border-gray-200 rounded-[10px] text-gray-700 text-[15px] font-manrope appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
-                  >
-                    <option value="United States">🇺🇸 United States</option>
-                    <option value="Canada">🇨🇦 Canada</option>
-                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
-                    <option value="Germany">🇩🇪 Germany</option>
-                    <option value="France">🇫🇷 France</option>
-                    <option value="Australia">🇦🇺 Australia</option>
-                    <option value="Japan">🇯🇵 Japan</option>
-                    <option value="India">🇮🇳 India</option>
-                    <option value="Pakistan">🇵🇰 Pakistan</option>
-                    <option value="China">🇨🇳 China</option>
-                  </select>
-                  <!-- Custom Dropdown Arrow -->
-                  <svg class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="12" height="8" viewBox="0 0 12 8" fill="none">
-                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-
-                <!-- To Country Dropdown -->
-                <div class="relative">
-                  <select 
-                    v-model="toCountry"
-                    class="w-full h-[48px] px-4 py-2 pr-8 bg-white border border-gray-200 rounded-[10px] text-gray-700 text-[15px] font-manrope appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
-                  >
-                    <option value="Turkey">🇹🇷 Turkey</option>
-                    <option value="Thailand">🇹🇭 Thailand</option>
-                    <option value="Morocco">🇲🇦 Morocco</option>
-                    <option value="Egypt">🇪🇬 Egypt</option>
-                    <option value="United Arab Emirates">🇦🇪 UAE</option>
-                    <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
-                    <option value="Indonesia">🇮🇩 Indonesia</option>
-                    <option value="Malaysia">🇲🇾 Malaysia</option>
-                    <option value="Singapore">🇸🇬 Singapore</option>
-                    <option value="Vietnam">🇻🇳 Vietnam</option>
-                  </select>
-                  <!-- Custom Dropdown Arrow -->
-                  <svg class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="12" height="8" viewBox="0 0 12 8" fill="none">
-                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
+              <!-- Loading State -->
+              <div v-if="isLoading" class="flex items-center justify-center py-8">
+                <div class="text-gray-600">Loading countries...</div>
               </div>
 
-              <!-- Apply Now Button -->
-              <button
-                @click="handleApply"
-                class="w-full h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-base rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-              >
-                <span class="text-lg">→</span>
-                <span>Apply Now!</span>
-              </button>
+              <!-- Error State -->
+              <div v-else-if="error" class="flex items-center justify-center py-8">
+                <div class="text-red-600">{{ error }}</div>
+              </div>
+
+              <!-- Form Content -->
+              <div v-else>
+                <!-- Country Selectors Row -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                  <!-- From Country Dropdown -->
+                  <div class="space-y-2">
+                    <Select v-model="fromCountryId">
+                      <SelectTrigger 
+                        class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                      >
+                        <SelectValue placeholder="Select country">
+                          <span v-if="fromCountryId" class="text-[15px] text-gray-700 pl-4">{{ getCountryName(fromCountryId) }}</span>
+                        </SelectValue>
+                        <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
+                          <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </SelectTrigger>
+                      <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
+                        <SelectItem 
+                          v-for="country in countries" 
+                          :key="country.id" 
+                          :value="String(country.id)"
+                          class="pl-4"
+                        >
+                          <span>{{ country.countryName }}</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <!-- To Country Dropdown -->
+                  <div class="space-y-2">
+                    <Select v-model="toCountryId">
+                      <SelectTrigger 
+                        class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                      >
+                        <SelectValue placeholder="Select country">
+                          <span v-if="toCountryId" class="text-[15px] text-gray-700 pl-4">{{ getCountryName(toCountryId) }}</span>
+                        </SelectValue>
+                        <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
+                          <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </SelectTrigger>
+                      <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
+                        <SelectItem 
+                          v-for="country in countries" 
+                          :key="country.id" 
+                          :value="String(country.id)"
+                          class="pl-4"
+                        >
+                          <span>{{ country.countryName }}</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <!-- Apply Now Button -->
+                <button
+                  @click="handleApply"
+                  :disabled="!fromCountryId || !toCountryId || isLoading"
+                  class="w-full h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-base rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span class="text-lg">→</span>
+                  <span>Apply Now!</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -108,27 +127,73 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
+import SelectContent from '@/components/ui/select/SelectContent.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import SelectValue from '@/components/ui/select/SelectValue.vue'
+import { useCountriesApi, type Country } from '@/composables/useCountries'
 
-// Initialize router
-const router = useRouter()
+// State
+const countries = ref<Country[]>([])
+const fromCountryId = ref<string>('')
+const toCountryId = ref<string>('')
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
-// Default selected countries
-const fromCountry = ref('United States')
-const toCountry = ref('Turkey')
+// API
+const { getCountries } = useCountriesApi()
+
+const getCountryName = (countryId: string) => {
+  const country = countries.value.find(c => String(c.id) === countryId)
+  return country?.countryName || ''
+}
+
+const fetchCountries = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    const response = await getCountries()
+    
+    if (response.success && response.data) {
+      countries.value = response.data
+      
+      // Set default values to the first two countries if available
+      if (countries.value.length >= 2) {
+        fromCountryId.value = String(countries.value[0].id)
+        toCountryId.value = String(countries.value[1].id)
+      } else if (countries.value.length === 1) {
+        fromCountryId.value = String(countries.value[0].id)
+      }
+    } else {
+      error.value = response.message || 'Failed to load countries'
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load countries'
+    console.error('Error fetching countries:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Handle apply button click
 const handleApply = () => {
-  // Navigate to application with selected countries
-  router.push({
-    path: '/apply',
-    query: {
-      from: fromCountry.value,
-      to: toCountry.value
-    }
-  })
+  const fromCountry = getCountryName(fromCountryId.value)
+  const toCountry = getCountryName(toCountryId.value)
+  
+  console.log('From:', fromCountry, '(ID:', fromCountryId.value, ')')
+  console.log('To:', toCountry, '(ID:', toCountryId.value, ')')
+  
+  // Pass both country IDs and names as query parameters
+  navigateTo(`/visa-application?fromId=${fromCountryId.value}&toId=${toCountryId.value}&nationality=${encodeURIComponent(fromCountry)}&destination=${encodeURIComponent(toCountry)}`)
 }
+
+// Fetch countries on component mount
+onMounted(() => {
+  fetchCountries()
+})
 </script>
 
 <style scoped>

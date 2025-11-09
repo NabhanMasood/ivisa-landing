@@ -1,6 +1,6 @@
 <template>
-  <div class="w-[1040px] h-[104px] border rounded-xl mb-6" style="border-color: #BDBDBD; border-width: 1px; gap: 24px; padding: 30px 20px;">
-    <div class="w-[1000px] h-11 flex justify-between items-center">
+  <div class="w-full border rounded-xl mb-6" style="border-color: #BDBDBD; border-width: 1px; padding: 30px 20px;">
+    <div class="w-full flex justify-between items-center">
       <h2 style="font-family: Manrope, sans-serif; font-weight: 700; font-size: 20px; line-height: 28px; color: #0B3947;">
         {{ destination }} Visa
       </h2>

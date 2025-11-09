@@ -1,1 +1,0 @@
-import{g as a,c as s,H as o,s as l,o as r}from"./BG_ufDYK.js";const n={name:"DialogHeader"},t=a({...n,props:{class:{}},setup(c){return(e,i)=>(r(),s("div",{class:l(["mb-6",e.$props.class])},[o(e.$slots,"default")],2))}}),_=Object.assign(t,{__name:"UiDialogDialogheader"});export{_ as default};

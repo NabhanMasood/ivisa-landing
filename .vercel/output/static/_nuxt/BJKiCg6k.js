@@ -1,1 +1,0 @@
-import{c as t}from"./2dOUpm6k.js";import{c as o,o as l,a as r,H as c,s as n,q as p}from"./BG_ufDYK.js";const f={class:"relative w-full overflow-auto"},d={__name:"UiTable",props:{class:{type:String,default:""}},setup(s){const e=s;return(a,i)=>(l(),o("div",f,[r("table",{class:n(p(t)("w-full caption-bottom text-sm",e.class))},[c(a.$slots,"default")],2)]))}};export{d as default};

@@ -165,7 +165,7 @@
                       +971 585743188
                     </p>
                     <p class="font-manrope font-normal text-base leading-7 text-[#3F3F46]">
-                      contact@visa123.com
+                      support@visa123.com
                     </p>
                   </div>
                 </div>

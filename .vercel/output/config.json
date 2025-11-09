@@ -85,6 +85,10 @@
       "dest": "/my-account"
     },
     {
+      "src": "/login",
+      "dest": "/login"
+    },
+    {
       "src": "/get-visa-updates",
       "dest": "/get-visa-updates"
     },

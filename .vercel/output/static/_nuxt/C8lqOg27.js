@@ -1,1 +1,0 @@
-import{c as r}from"./2dOUpm6k.js";import{c as t,o,H as l,s as c,q as n}from"./BG_ufDYK.js";const f={__name:"UiTableTablebody",props:{class:{type:String,default:""}},setup(s){const a=s;return(e,p)=>(o(),t("tbody",{class:c(n(r)("[&_tr:last-child]:border-0",a.class))},[l(e.$slots,"default")],2))}};export{f as default};

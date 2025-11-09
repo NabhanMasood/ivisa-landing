@@ -144,17 +144,19 @@
   </div>
 
   <!-- Payment Modal -->
-  <PaymentModal 
-    :is-open="showPaymentModal"
-    :amount="totalAmount"
-    @close="showPaymentModal = false"
-    @success="handlePaymentSuccess"
-  />
+    <PaymentModal 
+      :is-open="showPaymentModal"
+      :amount="totalAmount"
+      :application-data="applicationData"
+      @close="showPaymentModal = false"
+      @success="handlePaymentSuccess"
+    />
+    
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Button from '@/components/ui/Button.vue'
+import Button from '@/components/ui/button.vue'
 import PaymentModal from '@/components/visa/PaymentModal.vue'
 
 const props = defineProps<{
@@ -167,10 +169,11 @@ const props = defineProps<{
     maxStay: string
     entries: string
   }
+  applicationData: any  
 }>()
 
 const emit = defineEmits<{
-  next: []
+  next: [result: any]
   back: []
 }>()
 
@@ -187,14 +190,16 @@ const expectedDeliveryDate = computed(() => {
 })
 
 const handleContinueToPayment = () => {
+  console.log('🔵 ReviewOrder: Opening payment modal')
+  console.log('🔵 Application Data:', props.applicationData)
   showPaymentModal.value = true
 }
 
-const handlePaymentSuccess = (paymentData: any) => {
-  console.log('Payment successful:', paymentData)
+const handlePaymentSuccess = (result: any) => {
+  console.log('✅ ReviewOrder: Received success from PaymentModal:', result)
   showPaymentModal.value = false
   
-  // Emit next event with payment data
-  emit('next', paymentData)
+  // Emit to parent (apply page) - optional, just for cleanup
+  emit('next', result)
 }
 </script>

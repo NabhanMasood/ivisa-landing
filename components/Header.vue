@@ -1,6 +1,5 @@
 <!-- components/Header.vue -->
 <template>
-  <!-- My Account Header (for /my-account routes) -->
   <header v-if="isMyAccountRoute" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
     <div class="px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
@@ -8,7 +7,7 @@
         <div class="flex items-center gap-4">
           <!-- Logo Section -->
           <div class="flex items-center flex-shrink-0">
-            <NuxtLink to="/" class="inline-flex items-center">
+            <NuxtLink to="/my-account" class="inline-flex items-center">
               <img 
                 src="/logos/logo.png" 
                 alt="VISA123" 
@@ -66,13 +65,6 @@
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-56">
-              <div class="px-2 py-1.5 text-sm font-semibold">My Account</div>
-              <DropdownMenuItem @click="navigateTo('/my-account')" class="cursor-pointer">
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="navigateTo('/my-account/settings')" class="cursor-pointer">
-                <span>Settings</span>
-              </DropdownMenuItem>
               <DropdownMenuItem class="cursor-pointer text-red-600">
                 <span>Logout</span>
               </DropdownMenuItem>
@@ -109,7 +101,7 @@
                 <ChevronDown class="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-48">
+            <DropdownMenuContent align="end" class="w-48 z-[110]">
               <DropdownMenuItem @click="setLanguage('EN')" class="cursor-pointer">
                 <span class="flex w-full justify-between">
                   <span>English</span>
@@ -201,6 +193,6 @@ const handleLogin = () => {
 }
 
 const handleSignUp = () => {
-  navigateTo('/signup')
+  navigateTo('/sign-up')
 }
 </script>

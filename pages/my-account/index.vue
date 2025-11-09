@@ -96,6 +96,9 @@
 import { useRouter } from 'vue-router'
 import Card from '@/components/ui/card/Card.vue'
 
+const { currentUser, isAuthenticated } = useAuthApi()
+
+
 const router = useRouter()
 
 const navigateTo = (path) => {

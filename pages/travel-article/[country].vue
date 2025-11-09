@@ -30,74 +30,49 @@
                     </h2>
                     
                     <!-- Form -->
-                    <form @submit.prevent="handleApplyNow" class="flex flex-col gap-4">
-                        <!-- Where are you from -->
-                        <div>
-                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block  ">
-                            Where are you from?
-                        </label>
-                        <div class="relative">
-                           <select 
-                            v-model="formData.from"
-                            class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
-                            >
-                            <option value="" class="text-gray-400" disabled>Select country</option>
-                            <option value="United States" class="text-[#71717B]">United States</option>
-                            <option value="United Kingdom" class="text-[#71717B]">United Kingdom</option>
-                            <option value="Canada" class="text-[#71717B]">Canada</option>
-                            <option value="Australia" class="text-[#71717B]">Australia</option>
-                            </select>
-                            <!-- Flag Icon: 20x20 - Default USA flag -->
-                            <img 
-                            v-if="formData.from === 'United States' || formData.from === ''" 
-                            src="/svg/flags/US.svg" 
-                            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                            alt="USA flag"
-                            />
-                            <!-- Dropdown Icon: width: 20, height: 20 -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                        </div>
+                <!-- Where are you from -->
+                <div>
+                  <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                    Where are you from?
+                  </label>
+                  <Select v-model="fromCountryId">
+                    <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                      <SelectValue placeholder="Select country" class="pl-4" />
+                    </SelectTrigger>
+                    <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
+                      <SelectItem 
+                        v-for="country in countries" 
+                        :key="country.id" 
+                        :value="String(country.id)"
+                        class="pl-4"
+                      >
+                        <span>{{ country.countryName }}</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                        <!-- Where are you going -->
-                        <div>
-                          <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
-                            Where are you going?
-                          </label>
-                          <div class="relative">
-                           <select 
-                              v-model="formData.to"
-                              class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
-                            >
-                              <option value="" class="text-gray-400" disabled>Select destination</option>
-                              <option value="Turkey" class="text-[#71717B]">Turkey</option>
-                            </select>
-                            
-                            <!-- Flag Icon: Always show Turkey flag since it's the only option -->
-                            <img 
-                              src="/svg/flags/TR.svg" 
-                              class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                              alt="Turkey flag"
-                            />
-                            
-                            <!-- Dropdown Icon -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                          </div>
-                        </div>
-
-                        <!-- Apply Button: width: 535, height: 46, border-radius: 10px, bg: #00D474 -->
-                        <button
-                          type="submit"
-                          class="w-[535px] h-[46px] rounded-[10px] bg-[#00D474] hover:bg-[#00D474]/90 font-manrope font-bold text-lg leading-6 text-white text-center flex items-center justify-center gap-2"
-                        >
-                          <span>➜</span>
-                          <span>Apply Now!</span>
-                        </button>
-                        </form>
+            <!-- Where are you going -->
+            <div>
+              <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                Where are you going?
+              </label>
+              <Select v-model="toCountryId">
+                <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                  <SelectValue placeholder="Select destination" class="pl-4" />
+                </SelectTrigger>
+                <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
+                  <SelectItem 
+                    v-for="country in countries" 
+                    :key="country.id" 
+                    :value="String(country.id)"
+                    class="pl-4"
+                  >
+                    <span>{{ country.countryName }}</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
                         </div>
 
                     <!-- Right Section: width: 373, height: 154, gap: 20px -->
@@ -478,6 +453,12 @@ import HeaderLoggedIn from '@/components/HeaderLoggedIn.vue'
 import Footer from '@/components/Footer.vue'
 import Button from '@/components/ui/button.vue'
 import ApplicationForm from '@/components/ApplicationForm.vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
+import SelectContent from '@/components/ui/select/SelectContent.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import SelectValue from '@/components/ui/select/SelectValue.vue'
+import { useCountriesApi, type Country } from '@/composables/useCountries'
 
 const route = useRoute()
 
@@ -485,23 +466,62 @@ const route = useRoute()
 const countrySlug = computed(() => route.params.country as string || 'turkey')
 const countryData = computed(() => getCountryData(countrySlug.value))
 
-// Form data - initialize with computed value
-const formData = ref({
-  from: 'United States',
-  to: 'Turkey'
-})
+// Form data for Hero section
+// Form data for Hero section
+const fromCountryId = ref<string>('')
+const toCountryId = ref<string>('')
+const countries = ref<Country[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
+// API
+const { getCountries } = useCountriesApi()
 
+const getCountryName = (countryId: string) => {
+  const country = countries.value.find(c => String(c.id) === countryId)
+  return country?.countryName || ''
+}
 
-// Handle form submission
-const handleApplyNow = () => {
-  if (formData.value.from && formData.value.to) {
-    console.log('Application submitted:', formData.value)
-    alert(`Applying for visa from ${formData.value.from} to ${formData.value.to}`)
-  } else {
-    alert('Please select both countries')
+const fetchCountries = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    const response = await getCountries()
+    
+    if (response.success && response.data) {
+      countries.value = response.data
+      
+      if (countries.value.length >= 2) {
+        fromCountryId.value = String(countries.value[0].id)
+        toCountryId.value = String(countries.value[1].id)
+      }
+    } else {
+      error.value = response.message || 'Failed to load countries'
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load countries'
+    console.error('Error fetching countries:', err)
+  } finally {
+    isLoading.value = false
   }
 }
+
+onMounted(() => {
+  fetchCountries()
+})
+
+// Handle Hero form submission
+const handleApplyNowHero = () => {
+  const fromCountry = getCountryName(fromCountryId.value)
+  const toCountry = getCountryName(toCountryId.value)
+  
+  console.log('From:', fromCountry, '(ID:', fromCountryId.value, ')')
+  console.log('To:', toCountry, '(ID:', toCountryId.value, ')')
+  
+  navigateTo(`/visa-application?fromId=${fromCountryId.value}&toId=${toCountryId.value}&nationality=${encodeURIComponent(fromCountry)}&destination=${encodeURIComponent(toCountry)}`)
+}
+
 </script>
 
 <style scoped>

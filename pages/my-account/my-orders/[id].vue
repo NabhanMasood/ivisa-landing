@@ -22,53 +22,6 @@
           </Button>
         </div>
 
-        <!-- Tabs -->
-        <div class="inline-flex h-10 items-center justify-start rounded-md bg-[#F1F5F9] p-1 w-full lg:w-[425px] overflow-x-auto">
-          <button
-            @click="activeTab = 'application'"
-            :class="[
-              'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 font-geist flex-shrink-0',
-              activeTab === 'application'
-                ? 'bg-white text-[#27272B] shadow-sm'
-                : 'text-[#64748B] hover:text-[#27272B]'
-            ]"
-          >
-            Application Details
-          </button>
-          <button
-            @click="activeTab = 'travelers'"
-            :class="[
-              'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 font-geist flex-shrink-0',
-              activeTab === 'travelers'
-                ? 'bg-white text-[#27272B] shadow-sm'
-                : 'text-[#64748B] hover:text-[#27272B]'
-            ]"
-          >
-            Travelers
-          </button>
-          <button
-            @click="activeTab = 'documents'"
-            :class="[
-              'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 font-geist flex-shrink-0',
-              activeTab === 'documents'
-                ? 'bg-white text-[#27272B] shadow-sm'
-                : 'text-[#64748B] hover:text-[#27272B]'
-            ]"
-          >
-            Documents
-          </button>
-          <button
-            @click="activeTab = 'payment'"
-            :class="[
-              'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 font-geist flex-shrink-0',
-              activeTab === 'payment'
-                ? 'bg-white text-[#27272B] shadow-sm'
-                : 'text-[#64748B] hover:text-[#27272B]'
-            ]"
-          >
-            Payment
-          </button>
-        </div>
 
         <!-- Search Bar -->
         <div>
@@ -82,8 +35,8 @@
         </div>
 
         <!-- Table -->
-        <div class="border rounded-lg bg-white overflow-x-auto w-full">
-          <Table>
+        <div class="border border-[#E5E7EB] rounded-lg bg-white overflow-x-auto w-full">
+                    <Table>
             <TableHeader>
               <TableRow class="bg-white hover:bg-white border-b">
                 <TableHead class="w-[50px]">

@@ -49,8 +49,8 @@
                 @click="showPassword = !showPassword"
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <EyeOff v-if="showPassword" class="h-5 w-5" />
-                <Eye v-else class="h-5 w-5" />
+                <Eye v-if="showPassword" class="h-5 w-5" />
+                <EyeOff v-else class="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -73,8 +73,8 @@
                 @click="showRepeatPassword = !showRepeatPassword"
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <EyeOff v-if="showRepeatPassword" class="h-5 w-5" />
-                <Eye v-else class="h-5 w-5" />
+                <Eye v-if="showRepeatPassword" class="h-5 w-5" />
+                <EyeOff v-else class="h-5 w-5" />
               </button>
             </div>
           </div>

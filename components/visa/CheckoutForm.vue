@@ -17,14 +17,15 @@
       <div class="border rounded-xl p-6" style="border-color: #E5E7EB;">
 
         <!-- Processing Time Options -->
-        <div class="space-y-4 flex flex-col items-center">
+        <div class="space-y-4">
+
           
           <!-- Standard Option -->
           <button
             @click="selectedProcessing = 'standard'"
             class="text-left transition-all"
             :style="{
-              width: '588px',
+              width: '100%',
               height: '70px',
               borderWidth: '1px',
               gap: '10px',
@@ -58,7 +59,7 @@
             @click="selectedProcessing = 'rush'"
             class="text-left transition-all"
             :style="{
-              width: '588px',
+              width: '100%',
               height: '70px',
               borderWidth: '1px',
               gap: '10px',
@@ -92,7 +93,7 @@
             @click="selectedProcessing = 'super-rush'"
             class="text-left transition-all"
             :style="{
-              width: '588px',
+              width: '100%',
               height: '70px',
               borderWidth: '1px',
               gap: '10px',

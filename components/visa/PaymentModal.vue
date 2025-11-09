@@ -81,6 +81,10 @@
   <!-- Success Modal -->
   <SuccessModal 
     :is-open="showSuccessModal"
+    :application-number="applicationNumber"
+    :customer-id="customerId"
+    :user-email="userEmail"
+    :user-full-name="userFullName"
     @close="handleSuccessClose"
   />
   </div>
@@ -100,15 +104,20 @@ import SuccessModal from '@/components/visa/SuccessModal.vue'
 const props = defineProps<{
   isOpen: boolean
   amount: number
+  applicationData: any  // ← Receives all form data from parent
 }>()
 
 const emit = defineEmits<{
   close: []
-  success: [paymentData: any]
+  success: [result: any]
 }>()
 
 const isProcessing = ref(false)
 const showSuccessModal = ref(false)
+const applicationNumber = ref('')
+const customerId = ref<number>(0)
+const userEmail = ref('')
+const userFullName = ref('')
 
 const cardDetails = reactive({
   cardholderName: '',
@@ -152,18 +161,81 @@ const handleOpenChange = (value: boolean) => {
 }
 
 const handlePayment = async () => {
+  console.log('💳 PaymentModal: Starting payment...')
+  console.log('💳 Application Data received:', props.applicationData)
+  
   isProcessing.value = true
   
   try {
+    // Validate applicationData exists
+    if (!props.applicationData) {
+      throw new Error('Application data is missing')
+    }
+    
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // Prepare payment data
     const paymentData = {
       cardholderName: cardDetails.cardholderName,
-      cardNumberLast4: cardDetails.cardNumber.slice(-4),
-      amount: props.amount,
-      timestamp: new Date().toISOString()
+      cardLast4: cardDetails.cardNumber.replace(/\s/g, '').slice(-4),
+      cardBrand: 'visa',
+      transactionId: `txn_${Date.now()}`
+    }
+    
+    console.log('💳 Payment successful:', paymentData)
+    
+    // Combine application data with payment data
+    const completeData = {
+      visaProductId: props.applicationData.visaProductId || 1,
+      nationality: props.applicationData.nationality,
+      destinationCountry: props.applicationData.destinationCountry,
+      visaType: props.applicationData.visaType,
+      numberOfTravelers: props.applicationData.numberOfTravelers,
+      travelers: props.applicationData.travelers,
+      processingType: props.applicationData.processingType,
+      processingFee: props.applicationData.processingFee,
+      payment: paymentData,
+      notes: props.applicationData.notes || ''
+    }
+    
+    console.log('📤 Complete data being sent:', completeData)
+    console.log('🌐 Making API call to submit application...')
+    
+    // Call API to submit application
+    const response = await fetch('http://localhost:5001/visa-applications/submit-complete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(completeData)
+    })
+    
+    console.log('📥 API Response status:', response.status)
+    console.log('📥 API Response ok:', response.ok)
+    
+    const result = await response.json()
+    console.log('📥 API Response data:', result)
+    
+    if (!response.ok || !result.status) {
+      throw new Error(result.message || 'Failed to submit application')
+    }
+    
+    console.log('✅ Application submitted successfully:', result)
+    
+    // Store application details for success modal
+    applicationNumber.value = result.data.application.applicationNumber
+    customerId.value = result.data.customerId
+    
+    console.log('📋 Application Number:', applicationNumber.value)
+    console.log('👤 Customer ID:', customerId.value)
+    
+    // Extract user info from first traveler
+    if (props.applicationData.travelers && props.applicationData.travelers.length > 0) {
+      const firstTraveler = props.applicationData.travelers[0]
+      userEmail.value = firstTraveler.email
+      userFullName.value = `${firstTraveler.firstName} ${firstTraveler.lastName}`
+      console.log('👤 User info extracted:', { email: userEmail.value, name: userFullName.value })
     }
     
     // Reset form
@@ -172,25 +244,29 @@ const handlePayment = async () => {
     cardDetails.cvv = ''
     cardDetails.cardNumber = ''
     
-    // Show success modal
+    console.log('✅ About to show success modal...')
+    
+    // Emit success to parent (optional - for any cleanup)
+    emit('success', result.data)
+    
+    // Show success modal with all data
     showSuccessModal.value = true
     
-  } catch (error) {
-    console.error('Payment failed:', error)
-    alert('Payment failed. Please try again.')
+    console.log('✅ Success modal should be visible now:', showSuccessModal.value)
+    
+  } catch (error: any) {
+    console.error('❌ Submission failed:', error)
+    console.error('❌ Error details:', error.message, error.stack)
+    alert(`Failed to submit application: ${error.message}`)
   } finally {
     isProcessing.value = false
+    console.log('🏁 Payment processing finished')
   }
 }
 
 const handleSuccessClose = () => {
+  console.log('✅ Success modal closed')
   showSuccessModal.value = false
   emit('close')
-  // Emit success after user closes the success modal
-  emit('success', {
-    cardholderName: cardDetails.cardholderName,
-    amount: props.amount,
-    timestamp: new Date().toISOString()
-  })
 }
 </script>

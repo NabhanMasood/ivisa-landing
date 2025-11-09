@@ -30,7 +30,7 @@
             </Label>
             <div class="relative mt-2">
               <Select v-model="passportDetails[0].nationality">
-                <SelectTrigger>
+                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                   <SelectValue placeholder="Select nationality" />
                 </SelectTrigger>
                 <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -69,7 +69,7 @@
             </Label>
             <div class="grid grid-cols-3 gap-4 mt-2">
               <Select v-model="passportDetails[0].expiryDate">
-                <SelectTrigger>
+                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                   <SelectValue placeholder="Date" />
                 </SelectTrigger>
                 <SelectContent class="max-h-[180px] overflow-y-auto" position="popper">
@@ -80,7 +80,7 @@
               </Select>
 
               <Select v-model="passportDetails[0].expiryMonth">
-                <SelectTrigger>
+                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                   <SelectValue placeholder="Month" />
                 </SelectTrigger>
                 <SelectContent class="max-h-[250px] overflow-y-auto" position="popper">
@@ -100,7 +100,7 @@
               </Select>
 
               <Select v-model="passportDetails[0].expiryYear">
-                <SelectTrigger>
+                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -122,7 +122,7 @@
             </Label>
             <div class="relative mt-2">
               <Select v-model="passportDetails[0].residenceCountry">
-                <SelectTrigger>
+                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -146,7 +146,7 @@
               Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?
             </Label>
             <Select v-model="passportDetails[0].hasSchengenVisa">
-              <SelectTrigger>
+              <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -205,7 +205,7 @@
                 </Label>
                 <div class="relative mt-2">
                   <Select v-model="traveler.nationality">
-                    <SelectTrigger>
+                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                       <SelectValue placeholder="Select nationality" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -244,7 +244,7 @@
                 </Label>
                 <div class="grid grid-cols-3 gap-4 mt-2">
                   <Select v-model="traveler.expiryDate">
-                    <SelectTrigger>
+                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                       <SelectValue placeholder="Date" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[180px] overflow-y-auto" position="popper">
@@ -255,7 +255,7 @@
                   </Select>
 
                   <Select v-model="traveler.expiryMonth">
-                    <SelectTrigger>
+                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[250px] overflow-y-auto" position="popper">
@@ -275,7 +275,7 @@
                   </Select>
 
                   <Select v-model="traveler.expiryYear">
-                    <SelectTrigger>
+                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -297,7 +297,7 @@
                 </Label>
                 <div class="relative mt-2">
                   <Select v-model="traveler.residenceCountry">
-                    <SelectTrigger>
+                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
@@ -321,7 +321,7 @@
                   Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?
                 </Label>
                 <Select v-model="traveler.hasSchengenVisa">
-                  <SelectTrigger>
+                  <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent position="popper">
@@ -413,7 +413,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Button from '@/components/ui/Button.vue'
+import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Label from '@/components/ui/label/Label.vue'
 import Select from '@/components/ui/select/Select.vue'

@@ -1,1 +1,0 @@
-import{c as a}from"./2dOUpm6k.js";import{c as r,o,H as l,s as c,q as n}from"./BG_ufDYK.js";const u={__name:"UiTableTablerow",props:{class:{type:String,default:""}},setup(e){const s=e;return(t,m)=>(o(),r("tr",{class:c(n(a)("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",s.class))},[l(t.$slots,"default")],2))}};export{u as default};

@@ -12,20 +12,24 @@
         <Label htmlFor="nationality" style="font-family: Manrope, sans-serif; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
           What's your nationality?
         </Label>
-        <select 
-          id="nationality" 
-          v-model="formData.nationality"
-          class="w-full mt-2 h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style="font-family: Manrope, sans-serif; font-size: 14px;"
-        >
-          <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
-          <option value="United States">🇺🇸 United States</option>
-          <option value="India">🇮🇳 India</option>
-          <option value="United Kingdom">🇬🇧 United Kingdom</option>
-          <option value="Canada">🇨🇦 Canada</option>
-          <option value="Pakistan">🇵🇰 Pakistan</option>
-          <option value="Morocco">🇲🇦 Morocco</option>
-        </select>
+        <Select v-model="formData.nationality">
+          <SelectTrigger 
+            variant="form"
+            class="w-full mt-2 h-10"
+            style="font-family: Manrope, sans-serif; font-size: 14px; padding-left: 0.75rem !important; padding-right: 1rem !important;"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="United Arab Emirates">🇦🇪 United Arab Emirates</SelectItem>
+            <SelectItem value="United States">🇺🇸 United States</SelectItem>
+            <SelectItem value="India">🇮🇳 India</SelectItem>
+            <SelectItem value="United Kingdom">🇬🇧 United Kingdom</SelectItem>
+            <SelectItem value="Canada">🇨🇦 Canada</SelectItem>
+            <SelectItem value="Pakistan">🇵🇰 Pakistan</SelectItem>
+            <SelectItem value="Morocco">🇲🇦 Morocco</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <!-- Visa Type -->
@@ -35,16 +39,20 @@
             Applying for
           </a>
         </Label>
-        <select 
-          id="visaType" 
-          v-model="formData.visaType"
-          class="w-full mt-2 h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style="font-family: Manrope, sans-serif; font-size: 14px;"
-        >
-          <option value="180-single">{{ destination }} Visa - 180 days, Single entry</option>
-          <option value="180-multiple">{{ destination }} Visa - 180 days, Multiple entry</option>
-          <option value="90-single">{{ destination }} Visa - 90 days, Single entry</option>
-        </select>
+        <Select v-model="formData.visaType">
+          <SelectTrigger 
+            variant="form"
+            class="w-full mt-2 h-10"
+            style="font-family: Manrope, sans-serif; font-size: 14px; padding-left: 0.75rem !important; padding-right: 1rem !important;"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="180-single">{{ destination }} Visa - 180 days, Single entry</SelectItem>
+            <SelectItem value="180-multiple">{{ destination }} Visa - 180 days, Multiple entry</SelectItem>
+            <SelectItem value="90-single">{{ destination }} Visa - 90 days, Single entry</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <!-- Number of Applicants -->
@@ -79,6 +87,11 @@ import { ref, watch } from 'vue'
 import Button from '@/components/ui/button.vue'
 import Label from '@/components/ui/label.vue'
 import Input from '@/components/ui/input.vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectContent from '@/components/ui/select/SelectContent.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
+import SelectValue from '@/components/ui/select/SelectValue.vue'
 
 const props = defineProps<{
   nationality: string

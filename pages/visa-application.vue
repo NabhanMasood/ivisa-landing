@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen ">
+  <div class="min-h-screen">
     <div class="flex items-start justify-center px-4 py-8">
       <div class="w-full max-w-[1200px] rounded-xl shadow-sm bg-white p-8">
         
@@ -8,9 +8,8 @@
           <button
             v-if="currentStep > 1"
             @click="handleBack"
-            class="flex items-center justify-center w-8 h-8 rounded-full border transition-colors hover:bg-gray-50"
+            class="rounded-md w-[42px] h-[36px] border border-[#E4E4E8] flex items-center justify-center"
             style="border-color: #E5E7EB;"
-            type="button"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12.5 15L7.5 10L12.5 5" stroke="#0B3947" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -18,7 +17,7 @@
           </button>
           
           <h1 style="font-family: Geist, sans-serif; font-weight: 600; font-size: 24px; line-height: 32px; letter-spacing: -0.6px; color: #0B3947;">
-            {{ currentStep === 5 ? 'Review you order' : `Apply now for your ${destinationCountry} e VISA` }}
+            {{ currentStep === 5 ? 'Review your order' : `Apply now for your ${destinationCountry} e VISA` }}
           </h1>
         </div>
 
@@ -39,7 +38,6 @@
           v-if="currentStep === 2"
           :destination="destinationCountry"
           :initial-traveler-count="tripData.applicants"
-          :initial-travelers-data="travelersData.travelers"
           @next="handleStepTwo"
           @back="currentStep = 1"
         />
@@ -49,7 +47,6 @@
           v-if="currentStep === 3"
           :destination="destinationCountry"
           :traveler-count="travelersData.travelers?.length || 0"
-          :initial-passport-data="passportData.passportDetails"
           @next="handleStepThree"
           @back="currentStep = 2"
         />
@@ -72,9 +69,18 @@
           :government-fee="(travelersData.travelers?.length || 0) * 3667.16"
           :processing-fee="processingData.processingFee || 0"
           :visa-details="getVisaDetails()"
+          :application-data="completeApplicationData"
           @next="handleStepFive"
           @back="currentStep = 4"
         />
+
+        <!-- Loading Overlay -->
+        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1ECE84] mx-auto mb-4"></div>
+            <p class="text-lg font-semibold">Submitting your application...</p>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -82,8 +88,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useApplication } from '@/composables/useApplication'
 import VisaStepper from '@/components/visa/VisaStepper.vue'
 import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
@@ -94,6 +101,8 @@ import ReviewOrder from '@/components/visa/ReviewOrder.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { submitCompleteApplication, loading, error } = useApplication()
+
 const currentStep = ref(1)
 const nationalityCountry = ref('')
 const destinationCountry = ref('')
@@ -101,37 +110,6 @@ const tripData = ref<any>({})
 const travelersData = ref<any>({})
 const passportData = ref<any>({})
 const processingData = ref<any>({})
-
-const STORAGE_KEY = 'visa_application_data'
-
-// Update URL based on current step
-const updateURL = () => {
-  const stepParam = currentStep.value <= 1 ? 'step-1' : 
-                    currentStep.value <= 3 ? 'step-2' : 
-                    'step-3'
-  
-  router.push({
-    query: {
-      ...route.query,
-      step: stepParam
-    }
-  })
-}
-
-// Helper function to save data
-const saveToLocalStorage = () => {
-  const dataToSave = {
-    step: currentStep.value,
-    tripData: tripData.value,
-    travelersData: travelersData.value,
-    passportData: passportData.value,
-    processingData: processingData.value,
-    nationalityCountry: nationalityCountry.value,
-    destinationCountry: destinationCountry.value
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
-  console.log('Saved to localStorage:', dataToSave)
-}
 
 // Get traveler names for review page
 const getTravelerNames = () => {
@@ -165,37 +143,18 @@ const getVisaDetails = () => {
 }
 
 onMounted(() => {
-  nationalityCountry.value = (route.query.from as string) || 'Pakistan'
-  destinationCountry.value = (route.query.to as string) || 'Morocco'
+  // Get country values from URL query parameters
+  const fromQuery = (route.query.from || route.query.nationality) as string
+  const toQuery = (route.query.to || route.query.destination) as string
   
-  // Restore from localStorage
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    try {
-      const data = JSON.parse(saved)
-      currentStep.value = data.step || 1
-      tripData.value = data.tripData || {}
-      travelersData.value = data.travelersData || {}
-      passportData.value = data.passportData || {}
-      processingData.value = data.processingData || {}
-      
-      if (data.nationalityCountry) nationalityCountry.value = data.nationalityCountry
-      if (data.destinationCountry) destinationCountry.value = data.destinationCountry
-      
-      console.log('Restored data from localStorage:', data)
-    } catch (e) {
-      console.error('Failed to restore data from localStorage:', e)
-    }
+  if (fromQuery && toQuery) {
+    nationalityCountry.value = fromQuery
+    destinationCountry.value = toQuery
+  } else {
+    // Use defaults if no query params
+    nationalityCountry.value = 'Pakistan'
+    destinationCountry.value = 'Morocco'
   }
-  
-  // Set initial URL
-  updateURL()
-})
-
-// Watch for step changes to update URL
-watch(currentStep, () => {
-  updateURL()
-  saveToLocalStorage()
 })
 
 // Handle back button
@@ -204,6 +163,39 @@ const handleBack = () => {
     currentStep.value--
   }
 }
+
+const completeApplicationData = computed(() => {
+  if (!travelersData.value.travelers || !passportData.value.passportDetails) {
+    return null
+  }
+  
+  return {
+    visaProductId: 1,
+    nationality: tripData.value.nationality,
+    destinationCountry: destinationCountry.value,
+    visaType: tripData.value.visaType,
+    numberOfTravelers: travelersData.value.travelers.length,
+    
+    travelers: travelersData.value.travelers.map((traveler: any, index: number) => {
+      const passport = passportData.value.passportDetails[index]
+      return {
+        firstName: traveler.firstName,
+        lastName: traveler.lastName,
+        email: traveler.email,
+        dateOfBirth: `${traveler.birthYear}-${traveler.birthMonth.padStart(2, '0')}-${traveler.birthDate.padStart(2, '0')}`,
+        passportNationality: passport.nationality,
+        passportNumber: passport.passportNumber,
+        passportExpiryDate: `${passport.expiryYear}-${passport.expiryMonth.padStart(2, '0')}-${passport.expiryDate.padStart(2, '0')}`,
+        residenceCountry: passport.residenceCountry,
+        hasSchengenVisa: passport.hasSchengenVisa === 'yes'
+      }
+    }),
+    
+    processingType: processingData.value.processingType,
+    processingFee: processingData.value.processingFee,
+    notes: 'Application submitted via web form'
+  }
+})
 
 // Step 1: Trip Info
 const handleStepOne = (data: any) => {
@@ -236,35 +228,69 @@ const handleStepFour = (data: any) => {
   console.log('Step 4 data (Processing Time):', data)
 }
 
-// Step 5: Review Order
-const handleStepFive = (paymentData: any) => {
-  console.log('Payment completed:', paymentData)
-  
-  // Compile all data for final submission
-  const completeApplication = {
-    tripInfo: tripData.value,
-    personalDetails: travelersData.value,
-    passportDetails: passportData.value,
-    processingInfo: processingData.value,
-    paymentInfo: paymentData
+// Step 5: Review Order & Submit Application
+const handleStepFive = async (paymentData: any) => {
+  try {
+    console.log('Payment completed:', paymentData)
+    
+    // Transform data to match backend API format
+    const applicationData = {
+      // No customerId - will be auto-created from first traveler
+      visaProductId: 1, // You can make this dynamic based on destination/visa type
+      nationality: tripData.value.nationality,
+      destinationCountry: destinationCountry.value,
+      visaType: tripData.value.visaType as '180-single' | '180-multiple' | '90-single',
+      numberOfTravelers: travelersData.value.travelers.length,
+      
+      // Transform travelers data
+      travelers: travelersData.value.travelers.map((traveler: any, index: number) => {
+        const passport = passportData.value.passportDetails[index]
+        return {
+          firstName: traveler.firstName,
+          lastName: traveler.lastName,
+          email: traveler.email,
+          dateOfBirth: `${traveler.birthYear}-${traveler.birthMonth.padStart(2, '0')}-${traveler.birthDate.padStart(2, '0')}`,
+          passportNationality: passport.nationality,
+          passportNumber: passport.passportNumber,
+          passportExpiryDate: `${passport.expiryYear}-${passport.expiryMonth.padStart(2, '0')}-${passport.expiryDate.padStart(2, '0')}`,
+          residenceCountry: passport.residenceCountry,
+          hasSchengenVisa: passport.hasSchengenVisa === 'yes'
+        }
+      }),
+      
+      processingType: processingData.value.processingType as 'standard' | 'rush' | 'super-rush',
+      processingFee: processingData.value.processingFee,
+      
+      payment: {
+        cardholderName: paymentData.cardholderName,
+        cardLast4: paymentData.cardNumberLast4,
+        transactionId: `txn_${Date.now()}`,
+        paymentGateway: 'stripe'
+      },
+      
+      notes: 'Application submitted via web form'
+    }
+    
+    console.log('Submitting application:', applicationData)
+    
+    // Submit to backend
+    const result = await submitCompleteApplication(applicationData)
+    
+    console.log('Application submitted successfully:', result)
+        
+    // Redirect to success page with application details
+    router.push({
+      name: 'application-success',
+      params: {
+        applicationNumber: result.application.applicationNumber
+      },
+      query: {
+        customerId: result.customerId
+      }
+    })
+    
+  } catch (err) {
+    console.error('Application submission failed:', err)
   }
-  
-  console.log('Complete Application Data:', completeApplication)
-  
-  
-  alert('Payment successful! Your visa application has been submitted.')
-  
-  // Clear saved data after successful completion
-  clearSavedData()
-  
-  // Redirect to success page or dashboard
-  // router.push('/application-success')
 }
-
-const clearSavedData = () => {
-  localStorage.removeItem(STORAGE_KEY)
-  console.log('Cleared saved data')
-}
-
-defineExpose({ clearSavedData })
 </script>
