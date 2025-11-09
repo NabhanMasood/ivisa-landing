@@ -30,7 +30,6 @@
                     </h2>
                     
                     <!-- Form -->
-<<<<<<< HEAD
                 <!-- Where are you from -->
                 <div>
                   <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
@@ -74,76 +73,6 @@
                 </SelectContent>
               </Select>
             </div>
-=======
-                    <form @submit.prevent="handleApplyNow" class="flex flex-col gap-4">
-                        <!-- Where are you from -->
-                        <div>
-                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block  ">
-                            Where are you from?
-                        </label>
-                        <div class="relative">
-                           <select 
-                            v-model="formData.from"
-                            class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
-                            >
-                            <option value="" class="text-gray-400" disabled>Select country</option>
-                            <option value="United States" class="text-[#71717B]">United States</option>
-                            <option value="United Kingdom" class="text-[#71717B]">United Kingdom</option>
-                            <option value="Canada" class="text-[#71717B]">Canada</option>
-                            <option value="Australia" class="text-[#71717B]">Australia</option>
-                            </select>
-                            <!-- Flag Icon: 20x20 - Default USA flag -->
-                            <img 
-                            v-if="formData.from === 'United States' || formData.from === ''" 
-                            src="/svg/flags/US.svg" 
-                            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                            alt="USA flag"
-                            />
-                            <!-- Dropdown Icon: width: 20, height: 20 -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                        </div>
-
-                        <!-- Where are you going -->
-                        <div>
-                          <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
-                            Where are you going?
-                          </label>
-                          <div class="relative">
-                            <select 
-                              v-model="formData.to"
-                              class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
-                            >
-                              <option value="" class="text-gray-400" disabled>Select destination</option>
-                              <option value="Turkey" class="text-[#71717B]">Turkey</option>
-                            </select>
-                            
-                            <!-- Flag Icon: Always show Turkey flag since it's the only option -->
-                            <img 
-                              src="/svg/flags/TR.svg" 
-                              class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                              alt="Turkey flag"
-                            />
-                            
-                            <!-- Dropdown Icon -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                          </div>
-                        </div>
-
-                        <!-- Apply Button: width: 535, height: 46, border-radius: 10px, bg: #00D474 -->
-                        <button
-                          type="submit"
-                          class="w-[535px] h-[46px] rounded-[10px] bg-[#00D474] hover:bg-[#00D474]/90 font-manrope font-bold text-lg leading-6 text-white text-center flex items-center justify-center gap-2"
-                        >
-                          <span>➜</span>
-                          <span>Apply Now!</span>
-                        </button>
-                        </form>
->>>>>>> origin/main
                         </div>
 
                     <!-- Right Section: width: 373, height: 154, gap: 20px -->
@@ -537,7 +466,6 @@ const route = useRoute()
 const countrySlug = computed(() => route.params.country as string || 'turkey')
 const countryData = computed(() => getCountryData(countrySlug.value))
 
-<<<<<<< HEAD
 // Form data for Hero section
 // Form data for Hero section
 const fromCountryId = ref<string>('')
@@ -545,20 +473,6 @@ const toCountryId = ref<string>('')
 const countries = ref<Country[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-=======
-// Form data - initialize with computed value
-const formData = ref({
-  from: 'United States',
-  to: countryData.value?.name || 'Turkey'  // ← Use countryData.value.name or fallback to 'Turkey'
-})
-
-// Watch for route changes and update form
-watchEffect(() => {
-  if (countryData.value && countryData.value.name) {
-    formData.value.to = countryData.value.name
-  }
-})
->>>>>>> origin/main
 
 // API
 const { getCountries } = useCountriesApi()
