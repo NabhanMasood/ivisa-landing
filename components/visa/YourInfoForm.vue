@@ -198,76 +198,18 @@
     </div>
 
     <!-- Right Side - Summary Card -->
-    <div class="w-[400px] space-y-4">
-      
-      <!-- Price Summary Card -->
-      <div class="border-2 rounded-xl p-6" style="border-color: #1ECE84;">
-        <div class="space-y-4">
-          <!-- Visa Info -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              {{ destination }} Visa
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                {{ travelers.length }} traveler{{ travelers.length > 1 ? 's' : '' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Government Fee -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 20px; color: #0B3947;">
-              Government Fee
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                Rs {{ governmentFee.toFixed(2) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="border-t" style="border-color: #E5E7EB;"></div>
-
-          <!-- Total -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Manrope; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              Total
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: geist; font-weight: 500; font-size: 14px; line-height: 20px; color: #27272B;">
-                Calculated at checkout
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Save & Continue Button -->
-      <Button 
-        @click="handleSaveAndContinue"
-        class="w-full h-12"
-        style="background-color: #1ECE84; color: white; border-radius: 6px; font-family: Geist; font-weight: 500; font-size: 14px; line-height: 24px;"
-      >
-        Save & Continue
-      </Button>
-
-      <!-- Security Message -->
-      <div class="border rounded-xl p-4" style="border-color: #E5E7EB;">
-        <div class="flex items-start gap-3">
-          <img src="/svg/union.svg" alt="Max stay" style="width: 19.2px; height: 19.2px;" />
-          <p style="font-family: Geist; font-weight: 500; font-size: 16px; line-height: 20px; color: #3E3E3E;">
-            We take strong measures to protect your information
-          </p>
-        </div>
-      </div>
-    </div>
+    <PriceSummaryCard
+      :destination="destination"
+      :traveler-count="travelers.length"
+      :product-details="props.productDetails"
+      button-text="Save & Continue"
+      @continue="handleSaveAndContinue"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Label from '@/components/ui/label/Label.vue'
@@ -277,16 +219,22 @@ import SelectContent from '@/components/ui/select/SelectContent.vue'
 import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
 import Checkbox from '@/components/ui/Checkbox.vue'
+import PriceSummaryCard from '@/components/visa/price-card.vue'
+
 
 const props = defineProps<{
   destination: string
   initialTravelerCount?: number
   initialTravelersData?: Traveler[]
+  productDetails?: any 
+
 }>()
 
 const emit = defineEmits<{
   next: [data: any]
   back: []
+  update: [data: any]  
+
 }>()
 
 interface Traveler {
@@ -308,18 +256,82 @@ const currentYear = new Date().getFullYear()
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 const GOVERNMENT_FEE_PER_TRAVELER = 3667.16
 
+
+watch(() => props.initialTravelerCount, (newCount, oldCount) => {
+  if (newCount && newCount !== oldCount) {
+    console.log('🔄 Traveler count changed:', { 
+      oldCount, 
+      newCount, 
+      currentCount: travelers.value.length 
+    })
+    
+    if (newCount > travelers.value.length) {
+      // User increased applicants - add more empty traveler forms
+      const toAdd = newCount - travelers.value.length
+      console.log(`➕ Adding ${toAdd} more travelers`)
+      
+      for (let i = 0; i < toAdd; i++) {
+        const newIndex = travelers.value.length
+        travelers.value.push(createEmptyTraveler())
+        expandedTravelers.value[newIndex] = true // Expand newly added
+      }
+    } else if (newCount < travelers.value.length) {
+      // User decreased applicants - remove extra travelers
+      // Keep existing data for remaining travelers
+      console.log(`➖ Removing ${travelers.value.length - newCount} travelers`)
+      travelers.value = travelers.value.slice(0, newCount)
+      
+      // Clean up expanded state
+      const newExpanded: Record<number, boolean> = {}
+      for (let i = 0; i < newCount; i++) {
+        newExpanded[i] = expandedTravelers.value[i] || (i === 0)
+      }
+      expandedTravelers.value = newExpanded
+    }
+  }
+})
+
+
+
+
 // Initialize travelers
 const initializeTravelers = () => {
   if (props.initialTravelersData?.length) {
+    // Use existing traveler data (when going back with filled data)
     travelers.value = props.initialTravelersData
+    console.log('✅ Restored existing travelers:', travelers.value.length)
   } else {
+    // Create new empty travelers (first time or no saved data)
     const count = props.initialTravelerCount || 1
     travelers.value = Array.from({ length: count }, createEmptyTraveler)
+    console.log('✅ Created new travelers:', count)
   }
   
   // Expand first traveler by default
   expandedTravelers.value = { 0: true }
 }
+
+
+// Auto-save as user types
+watch(
+  () => travelers.value,
+  (newTravelers) => {
+    emit('update', { travelers: newTravelers })
+  },
+  { deep: true }
+)
+
+// Auto-save when adding/removing travelers
+watch(
+  () => travelers.value.length,
+  (newLength, oldLength) => {
+    if (oldLength !== undefined) {
+      console.log('👥 Travelers count changed:', newLength)
+      emit('update', { travelers: travelers.value })
+    }
+  }
+)
+
 
 const createEmptyTraveler = (): Traveler => ({
   firstName: '',
@@ -341,35 +353,60 @@ const toggleTraveler = (index: number) => {
 
 const addTraveler = () => {
   const newIndex = travelers.value.length
+  console.log('➕ Adding new traveler, new count:', newIndex + 1)
+  
   travelers.value.push(createEmptyTraveler())
   expandedTravelers.value[newIndex] = true
+  
+  console.log('💾 Emitting update with', travelers.value.length, 'travelers')
+  emit('update', { travelers: travelers.value })
 }
 
 const removeTraveler = (index: number) => {
-  travelers.value.splice(index, 1)
-  
-  // Rebuild expanded state
-  const newExpanded: Record<number, boolean> = {}
-  Object.keys(expandedTravelers.value).forEach(key => {
-    const keyNum = parseInt(key)
-    if (keyNum < index) {
-      newExpanded[keyNum] = expandedTravelers.value[keyNum]
-    } else if (keyNum > index) {
-      newExpanded[keyNum - 1] = expandedTravelers.value[keyNum]
-    }
-  })
-  expandedTravelers.value = newExpanded
+  if (travelers.value.length > 1) {  // ✅ Add safety check
+    travelers.value.splice(index, 1)
+    
+    // Rebuild expanded state
+    const newExpanded: Record<number, boolean> = {}
+    Object.keys(expandedTravelers.value).forEach(key => {
+      const keyNum = parseInt(key)
+      if (keyNum < index) {
+        newExpanded[keyNum] = expandedTravelers.value[keyNum]
+      } else if (keyNum > index) {
+        newExpanded[keyNum - 1] = expandedTravelers.value[keyNum]
+      }
+    })
+    expandedTravelers.value = newExpanded
+    
+    // ✅ NEW: Explicitly emit update after removal
+    console.log('👥 Traveler removed, new count:', travelers.value.length)
+    emit('update', { travelers: travelers.value })
+  }
 }
 
 const isFormValid = () => {
-  return travelers.value.every(t => 
-    t.firstName.trim() && 
-    t.lastName.trim() && 
-    t.birthDate && 
-    t.birthMonth && 
-    t.birthYear && 
-    t.email.trim()
-  )
+  for (let i = 0; i < travelers.value.length; i++) {
+    const t = travelers.value[i]
+    
+    // Type guard
+    if (!t) continue
+    
+    // Check required fields for all travelers
+    if (!t.firstName.trim() || 
+        !t.lastName.trim() || 
+        !t.birthDate || 
+        !t.birthMonth || 
+        !t.birthYear) {
+      return false
+    }
+    
+    // Only check email for first traveler
+    if (i === 0 && !t.email.trim()) {
+      return false
+    }
+  }
+  
+  return true
 }
 
 const handleSaveAndContinue = () => {

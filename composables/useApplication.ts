@@ -1,7 +1,6 @@
 // composables/useApplication.ts
 import { ref } from 'vue'
-
-const API_BASE_URL = 'http://localhost:5001'
+import { useRuntimeConfig } from '#app'
 
 export interface TravelerData {
   firstName: string
@@ -28,7 +27,7 @@ export interface PaymentData {
 }
 
 export interface CompleteApplicationData {
-  customerId?: number // Optional - will be created from first traveler if not provided
+  customerId?: number
   visaProductId: number
   nationality: string
   destinationCountry: string
@@ -45,12 +44,12 @@ export const useApplication = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  /**
-   * Create customer from first traveler data
-   */
   const createCustomerFromTraveler = async (traveler: TravelerData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/customers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,17 +74,16 @@ export const useApplication = () => {
     }
   }
 
-  /**
-   * Submit complete application (creates customer automatically if not provided)
-   */
   const submitCompleteApplication = async (data: CompleteApplicationData) => {
     loading.value = true
     error.value = null
 
     try {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
       let customerId = data.customerId
 
-      // If no customerId provided, create customer from first traveler
       if (!customerId && data.travelers.length > 0) {
         const firstTraveler = data.travelers[0]
         if (!firstTraveler) {
@@ -99,8 +97,7 @@ export const useApplication = () => {
         throw new Error('Unable to create or find customer')
       }
 
-      // Submit complete application
-      const response = await fetch(`${API_BASE_URL}/visa-applications/submit-complete`, {
+      const response = await fetch(`${baseUrl}/visa-applications/submit-complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +116,7 @@ export const useApplication = () => {
 
       return {
         ...result.data,
-        customerId, // Return the customer ID for potential later use
+        customerId,
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred'
@@ -129,15 +126,15 @@ export const useApplication = () => {
     }
   }
 
-  /**
-   * Get all applications
-   */
   const getAllApplications = async (search?: string) => {
     loading.value = true
     error.value = null
 
     try {
-      const url = new URL(`${API_BASE_URL}/visa-applications`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const url = new URL(`${baseUrl}/visa-applications`)
       if (search) {
         url.searchParams.append('search', search)
       }
@@ -158,15 +155,15 @@ export const useApplication = () => {
     }
   }
 
-  /**
-   * Get single application by ID
-   */
   const getApplication = async (id: number) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/visa-applications/${id}`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/visa-applications/${id}`)
       const result = await response.json()
 
       if (!response.ok || !result.status) {
@@ -182,15 +179,15 @@ export const useApplication = () => {
     }
   }
 
-  /**
-   * Get applications by customer ID
-   */
   const getCustomerApplications = async (customerId: number, search?: string) => {
     loading.value = true
     error.value = null
 
     try {
-      const url = new URL(`${API_BASE_URL}/visa-applications/customer/${customerId}`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const url = new URL(`${baseUrl}/visa-applications/customer/${customerId}`)
       if (search) {
         url.searchParams.append('search', search)
       }
@@ -211,15 +208,15 @@ export const useApplication = () => {
     }
   }
 
-  /**
-   * Get application summary statistics
-   */
   const getApplicationSummary = async () => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/visa-applications/summary`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/visa-applications/summary`)
       const result = await response.json()
 
       if (!response.ok || !result.status) {

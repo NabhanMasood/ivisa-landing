@@ -1,7 +1,7 @@
 import { useApi, handleApiError, type ApiResponse } from './useApi'
 
 /**
- * Country interface for backend (visa service countries)
+ * Country interface for backend (database countries with flags)
  */
 export interface Country {
   id?: number | string
@@ -12,33 +12,6 @@ export interface Country {
   description?: string
   createdAt?: string
   updatedAt?: string
-}
-
-/**
- * World Country interface from REST Countries API
- * Used for "Where am I from?" field
- */
-export interface WorldCountry {
-  name: {
-    common: string
-    official: string
-  }
-  cca2: string // 2-letter country code
-  cca3: string // 3-letter country code
-  flags: {
-    png: string
-    svg: string
-  }
-}
-
-/**
- * Simplified World Country for UI
- */
-export interface SimpleWorldCountry {
-  id: string // Using cca2 as ID
-  name: string
-  code: string
-  flag: string
 }
 
 /**
@@ -62,50 +35,19 @@ interface BackendApiResponse<T> {
 
 /**
  * Countries API Service
- * Provides access to both world countries (REST Countries API) and visa service countries (backend)
+ * Provides access to countries from the database (all have flags stored as logoUrl)
  */
 export const useCountriesApi = () => {
   const api = useApi()
   const config = useRuntimeConfig()
 
-  /**
-   * Get all world countries from REST Countries API
-   * Use this for "Where am I from?" field
-   */
-  const getWorldCountries = async (): Promise<ApiResponse<SimpleWorldCountry[]>> => {
-    try {
-      const response = await $fetch<WorldCountry[]>(
-        'https://restcountries.com/v3.1/all?fields=name,cca2,cca3,flags'
-      )
-      
-      // Transform and sort the data
-      const countries: SimpleWorldCountry[] = response
-        .map(country => ({
-          id: country.cca2,
-          name: country.name.common,
-          code: country.cca2,
-          flag: country.flags.svg || country.flags.png,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name))
-      
-      return {
-        data: countries,
-        message: 'World countries retrieved successfully',
-        success: true,
-      }
-    } catch (error) {
-      console.error('Error fetching world countries:', error)
-      return {
-        data: [],
-        message: error instanceof Error ? error.message : 'Failed to fetch world countries',
-        success: false,
-      }
-    }
-  }
 
+
+  
   /**
-   * Get visa service countries from backend
-   * Use this for "Where am I going?" field (countries admin provides visa services for)
+   * Get all countries from database
+   * These countries have flags stored in the logoUrl field
+   * Use this for both "Where am I from?" and "Where am I going?" fields
    */
   const getVisaCountries = async (): Promise<ApiResponse<Country[]>> => {
     try {
@@ -131,11 +73,13 @@ export const useCountriesApi = () => {
   }
 
   /**
-   * Legacy method - now points to visa countries
-   * @deprecated Use getVisaCountries() instead
+   * Alias for getVisaCountries - for backward compatibility
    */
   const getCountries = getVisaCountries
 
+
+
+  
   /**
    * Get a single country by ID
    * GET http://localhost:5000/countries/:id
@@ -160,9 +104,9 @@ export const useCountriesApi = () => {
   }
 
   return {
-    getWorldCountries,
     getVisaCountries,
-    getCountries, // Legacy support
+    getCountries,
     getCountryById,
   }
 }
+

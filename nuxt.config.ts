@@ -20,7 +20,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "iVisa - Management System",
+      title: "Visa123 - Management System",
       link: [
         { rel: "icon", type: "image/x-icon", href: "/logoMark.svg" },
         { rel: "icon", type: "image/svg+xml", href: "/logo/Visa123logo.svg" },
@@ -56,6 +56,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: process.env.API_BASE_URL ?? 'https://ivisa123-backend-production.up.railway.app',
+      currencyApiUrl: process.env.NUXT_PUBLIC_CURRENCY_API_URL,
+      currencyApiKey: process.env.NUXT_PUBLIC_CURRENCY_API_KEY,
+
     },
   },
 });

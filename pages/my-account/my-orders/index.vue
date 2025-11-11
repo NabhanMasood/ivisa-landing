@@ -100,7 +100,7 @@
               <TableCell class="font-geist text-[#27272B]">{{ getCustomerName(order) }}</TableCell>
               <TableCell class="font-geist text-[#27272B]">{{ order.destinationCountry }}</TableCell>
               <TableCell class="font-geist text-[#27272B]">{{ order.numberOfTravelers }}</TableCell>
-              <TableCell class="font-geist text-[#27272B]">PKR {{ order.totalAmount.toFixed(2) }}</TableCell>
+              <TableCell class="font-geist text-[#27272B]">{{ formatPrice(order.totalAmount) }}</TableCell>
               <TableCell>
                 <span 
                   class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium font-geist"
@@ -130,6 +130,9 @@
           <div class="text-sm text-[#64748B] font-geist">
             {{ selectedOrders.length }} of {{ filteredOrders.length }} row(s) selected.
           </div>
+          <div class="text-xs text-[#64748B] font-geist">
+            Prices shown in {{ selectedCurrency.code }}
+          </div>
         </div>
       </div>
     </div>
@@ -152,6 +155,9 @@ import TableRow from '@/components/ui/table/Tablerow.vue'
 const router = useRouter()
 const { getMyApplications, formatStatus } = useVisaApplications()
 const { currentUser } = useAuthApi()
+
+// Currency conversion
+const { formatPrice, selectedCurrency } = useCurrency()
 
 const selectedOrders = ref<number[]>([])
 const searchQuery = ref('')

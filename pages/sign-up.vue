@@ -58,37 +58,7 @@
           <!-- Inputs Container -->
           <div class="space-y-4">
 
-            <!-- Full Name Input -->
-            <div>
-              <Input
-                v-model="formData.fullName"
-                type="text"
-                placeholder="Full Name"
-                required
-                :readonly="!!route.query.fullName"
-                class="w-full h-12 border-gray-200"
-                :class="{ 'bg-gray-50': !!route.query.fullName }"
-              />
-              <p v-if="route.query.fullName" class="text-xs text-gray-600 mt-1">
-                ℹ️ Pre-filled from your visa application
-              </p>
-            </div>
-
-            <!-- Email Input -->
-            <div>
-              <Input
-                v-model="formData.email"
-                type="email"
-                placeholder="Email Address"
-                required
-                :readonly="!!route.query.email"
-                class="w-full h-12 border-gray-200"
-                :class="{ 'bg-gray-50': !!route.query.email }"
-              />
-              <p v-if="route.query.email" class="text-xs text-gray-600 mt-1">
-                ℹ️ Pre-filled from your visa application
-              </p>
-            </div>
+     
 
             <!-- Password Input -->
             <div>

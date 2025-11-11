@@ -1,6 +1,7 @@
 <template>
   <div>
-    <Dialog :open="isOpen && !showSuccessModal" @update:open="handleOpenChange">
+    <!-- Payment Dialog - only show when NOT showing success -->
+    <Dialog v-if="!showSuccessModal" :open="isOpen && !showSuccessModal" @update:open="handleOpenChange">
       <DialogContent class="w-[440px]">
         <DialogHeader>
           <DialogTitle>Card Details</DialogTitle>
@@ -71,14 +72,14 @@
           style="height: 36px; border-radius: 6px; padding: 8px 24px; background-color: #1ECE84;"
           :disabled="isProcessing"
         >
-          {{ isProcessing ? 'Processing...' : `Pay PKR ${amount.toFixed(2)}` }}
+          {{ isProcessing ? 'Processing...' : `Pay ${formatPrice(amount)}` }}
         </Button>
 
       </form>
     </DialogContent>
   </Dialog>
 
-  <!-- Success Modal -->
+  <!-- Success Modal - Render independently -->
   <SuccessModal 
     :is-open="showSuccessModal"
     :application-number="applicationNumber"
@@ -91,7 +92,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
+import { useRuntimeConfig } from '#app'
 import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
@@ -104,7 +106,7 @@ import SuccessModal from '@/components/visa/SuccessModal.vue'
 const props = defineProps<{
   isOpen: boolean
   amount: number
-  applicationData: any  // ← Receives all form data from parent
+  applicationData: any
 }>()
 
 const emit = defineEmits<{
@@ -112,6 +114,10 @@ const emit = defineEmits<{
   success: [result: any]
 }>()
 
+// Currency conversion
+const { formatPrice } = useCurrency()
+
+const config = useRuntimeConfig()
 const isProcessing = ref(false)
 const showSuccessModal = ref(false)
 const applicationNumber = ref('')
@@ -130,8 +136,6 @@ const cardDetails = reactive({
 const formatCardNumber = (event: Event) => {
   const input = event.target as HTMLInputElement
   let value = input.value.replace(/\s/g, '').replace(/\D/g, '')
-  
-  // Add space every 4 digits
   const formatted = value.match(/.{1,4}/g)?.join(' ') || value
   cardDetails.cardNumber = formatted
 }
@@ -140,11 +144,9 @@ const formatCardNumber = (event: Event) => {
 const formatExpiryDate = (event: Event) => {
   const input = event.target as HTMLInputElement
   let value = input.value.replace(/\D/g, '')
-  
   if (value.length >= 2) {
     value = value.slice(0, 2) + '/' + value.slice(2, 4)
   }
-  
   cardDetails.expiryDate = value
 }
 
@@ -155,13 +157,140 @@ const formatCVV = (event: Event) => {
 }
 
 const handleOpenChange = (value: boolean) => {
-  if (!value && !isProcessing.value) {
+  console.log('🔄 PaymentModal: handleOpenChange called with:', value)
+  
+  // Only allow closing if not processing and not showing success modal
+  if (!value && !isProcessing.value && !showSuccessModal.value) {
+    console.log('✅ Allowing payment modal to close')
     emit('close')
+  } else {
+    console.log('⛔ Preventing payment modal close - processing:', isProcessing.value, 'showingSuccess:', showSuccessModal.value)
   }
+}
+
+// Transform application data to match backend DTO
+const transformApplicationData = (applicationData: any) => {
+  console.log('🔄 Transforming application data...')
+  console.log('📥 Raw data received:', applicationData)
+
+  // Transform visa type: "30 Days|single" -> "30-single"
+  let visaType = ''
+  if (applicationData.visaType && applicationData.visaType.includes('|')) {
+    const [productName, entryType] = applicationData.visaType.split('|')
+    const duration = productName.match(/\d+/)?.[0] || ''
+    visaType = `${duration}-${entryType}`
+  }
+
+  console.log('✅ Visa type:', visaType)
+
+  // Use processing type as-is from backend (no transformation)
+  const processingType = applicationData.processingType || 'standard'
+  
+  console.log('✅ Processing type (from backend):', processingType)
+
+  // Get travelers count
+  const travelers = applicationData.travelers || []
+  const numberOfTravelers = travelers.length
+
+  console.log('👥 Number of travelers:', numberOfTravelers)
+
+  // ✅✅✅ CRITICAL: Extract PER-TRAVELER fees and multiply by number of travelers
+  const govtFeePerTraveler = Number(applicationData.govtFee) || 0
+  const serviceFeePerTraveler = Number(applicationData.serviceFee) || 0
+  const processingFeePerTraveler = Number(applicationData.processingFee) || 0
+
+  // Calculate TOTALS by multiplying by number of travelers
+  const totalGovtFee = govtFeePerTraveler * numberOfTravelers
+  const totalServiceFee = serviceFeePerTraveler * numberOfTravelers
+  const totalProcessingFee = processingFeePerTraveler * numberOfTravelers
+  const calculatedTotalAmount = totalGovtFee + totalServiceFee + totalProcessingFee
+
+  // ✅ Check if there's a discount applied
+  const discountAmount = applicationData.discountAmount || 0
+  const couponCode = applicationData.couponCode || null
+  const originalAmount = applicationData.originalAmount || calculatedTotalAmount
+  const finalAmount = props.amount // This is the discounted amount from ReviewOrder
+
+  console.log('💰 Fee Calculation:', {
+    numberOfTravelers,
+    perTraveler: {
+      govtFee: govtFeePerTraveler,
+      serviceFee: serviceFeePerTraveler,
+      processingFee: processingFeePerTraveler
+    },
+    totals: {
+      govtFee: totalGovtFee,
+      serviceFee: totalServiceFee,
+      processingFee: totalProcessingFee,
+      calculatedTotal: calculatedTotalAmount
+    },
+    discount: {
+      discountAmount,
+      couponCode,
+      originalAmount,
+      finalAmount: finalAmount
+    }
+  })
+
+  console.log('💰 Expected payment amount from props:', props.amount)
+  console.log('💰 Calculated total (before discount):', calculatedTotalAmount)
+  console.log('💰 Discount amount:', discountAmount)
+  console.log('💰 Final amount (after discount):', finalAmount)
+  
+  // Use the discounted amount from props (which is the final amount after discount)
+  const totalAmountToUse = finalAmount
+
+  if (Math.abs(calculatedTotalAmount - originalAmount) > 0.01 && originalAmount !== calculatedTotalAmount) {
+    console.warn('⚠️ Original amount mismatch, using calculated total as base')
+  }
+
+  // Build the final payload with TOTAL amounts
+  const payload = {
+    visaProductId: applicationData.visaProductId || null,
+    nationality: applicationData.nationality || '',
+    destinationCountry: applicationData.destinationCountry || '',
+    visaType: visaType,
+    numberOfTravelers: numberOfTravelers,
+    processingType: processingType, // ✅ Use as-is from backend
+    processingTime: applicationData.processingTime || '',
+    processingFee: totalProcessingFee,        // ✅ TOTAL
+    processingFeeId: applicationData.processingFeeId || null,
+    govtFee: totalGovtFee,                    // ✅ TOTAL
+    serviceFee: totalServiceFee,              // ✅ TOTAL
+    totalAmount: totalAmountToUse,            // ✅ USE DISCOUNTED AMOUNT
+    couponCode: couponCode,                   // ✅ Include coupon code if applied
+    discountAmount: discountAmount > 0 ? discountAmount : undefined, // ✅ Include discount if applied
+    travelers: travelers,
+    paymentMethod: 'stripe',
+    paymentStatus: 'pending',
+    notes: applicationData.notes || ''
+  }
+
+  console.log('✅ Final payload:', payload)
+
+  // Validate only the essential fields
+  if (!payload.visaType || !payload.visaType.match(/^\d+-\w+$/)) {
+    throw new Error(`Invalid visa type: "${payload.visaType}". Expected format: "30-single"`)
+  }
+
+  if (!payload.processingType || !payload.processingType.trim()) {
+    throw new Error('Processing type is required')
+  }
+
+  if (payload.processingFee < 0 || isNaN(payload.processingFee)) {
+    throw new Error(`Invalid processing fee: ${payload.processingFee}`)
+  }
+
+  if (payload.travelers.length === 0) {
+    throw new Error('No travelers found')
+  }
+
+  return payload
 }
 
 const handlePayment = async () => {
   console.log('💳 PaymentModal: Starting payment...')
+  console.log('💳 Expected amount prop:', props.amount)
   console.log('💳 Application Data received:', props.applicationData)
   
   isProcessing.value = true
@@ -180,35 +309,37 @@ const handlePayment = async () => {
       cardholderName: cardDetails.cardholderName,
       cardLast4: cardDetails.cardNumber.replace(/\s/g, '').slice(-4),
       cardBrand: 'visa',
-      transactionId: `txn_${Date.now()}`
+      transactionId: `txn_${Date.now()}`,
+      paymentGateway: 'stripe',
+      paymentIntentId: `pi_${Date.now()}`
     }
     
     console.log('💳 Payment successful:', paymentData)
     
-    // Combine application data with payment data
-    const completeData = {
-      visaProductId: props.applicationData.visaProductId || 1,
-      nationality: props.applicationData.nationality,
-      destinationCountry: props.applicationData.destinationCountry,
-      visaType: props.applicationData.visaType,
-      numberOfTravelers: props.applicationData.numberOfTravelers,
-      travelers: props.applicationData.travelers,
-      processingType: props.applicationData.processingType,
-      processingFee: props.applicationData.processingFee,
-      payment: paymentData,
-      notes: props.applicationData.notes || ''
+    // Transform the data
+    const transformedData = transformApplicationData(props.applicationData)
+    
+    // Add payment data to the payload - CRITICAL: Use the discounted amount
+    transformedData.payment = {
+      ...paymentData,
+      amount: transformedData.totalAmount // ✅ Use discounted totalAmount for payment
     }
     
-    console.log('📤 Complete data being sent:', completeData)
     console.log('🌐 Making API call to submit application...')
+    console.log('📤 Payload being sent to backend:', JSON.stringify(transformedData, null, 2))
+    console.log('💰 totalAmount in payload:', transformedData.totalAmount)
+    console.log('💰 payment.amount in payload:', transformedData.payment.amount)
+    console.log('💰 discountAmount in payload:', transformedData.discountAmount)
+    console.log('💰 couponCode in payload:', transformedData.couponCode)
     
-    // Call API to submit application
-    const response = await fetch('http://localhost:5001/visa-applications/submit-complete', {
+    // Use runtime config for API base URL
+    const baseUrl = (config.public.apiBase as string).replace(/\/$/, '')
+    const response = await fetch(`${baseUrl}/visa-applications/submit-complete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(completeData)
+      body: JSON.stringify(transformedData)
     })
     
     console.log('📥 API Response status:', response.status)
@@ -218,7 +349,10 @@ const handlePayment = async () => {
     console.log('📥 API Response data:', result)
     
     if (!response.ok || !result.status) {
-      throw new Error(result.message || 'Failed to submit application')
+      const errorMessages = Array.isArray(result.message) 
+        ? result.message.join(', ') 
+        : result.message || 'Failed to submit application'
+      throw new Error(errorMessages)
     }
     
     console.log('✅ Application submitted successfully:', result)
@@ -246,17 +380,22 @@ const handlePayment = async () => {
     
     console.log('✅ About to show success modal...')
     
-    // Emit success to parent (optional - for any cleanup)
-    emit('success', result.data)
-    
-    // Show success modal with all data
+    // Show success modal and emit success
+    await nextTick()
     showSuccessModal.value = true
     
-    console.log('✅ Success modal should be visible now:', showSuccessModal.value)
+    console.log('✅ Success modal state set to:', showSuccessModal.value)
+    
+    // Wait another tick for modal to render
+    await nextTick()
+    
+    // Emit success to parent (but don't close anything)
+    emit('success', result.data)
+    console.log('✅ Emitted success event')
     
   } catch (error: any) {
     console.error('❌ Submission failed:', error)
-    console.error('❌ Error details:', error.message, error.stack)
+    console.error('❌ Error details:', error.message, error)
     alert(`Failed to submit application: ${error.message}`)
   } finally {
     isProcessing.value = false
@@ -265,8 +404,15 @@ const handlePayment = async () => {
 }
 
 const handleSuccessClose = () => {
-  console.log('✅ Success modal closed')
+  console.log('✅ SuccessModal close triggered')
+  console.log('🔄 Resetting modal states...')
+  
+  // Reset all states
   showSuccessModal.value = false
+  
+  // Close the payment modal
   emit('close')
+  
+  console.log('✅ PaymentModal closed, navigation should happen from SuccessModal')
 }
 </script>

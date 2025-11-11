@@ -1,7 +1,6 @@
 // composables/useProcessingOptions.ts
 import { ref } from 'vue'
-
-const API_BASE_URL = 'http://localhost:5001'
+import { useRuntimeConfig } from '#app'
 
 export interface ProcessingOption {
   id: number
@@ -27,7 +26,10 @@ export const useProcessingOptions = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/processing-options/active`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/processing-options/active`)
       const result = await response.json()
 
       if (!response.ok || !result.status) {
@@ -51,7 +53,10 @@ export const useProcessingOptions = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/processing-options/type/${type}`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/processing-options/type/${type}`)
       const result = await response.json()
 
       if (!response.ok || !result.status) {

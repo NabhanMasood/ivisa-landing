@@ -1,7 +1,6 @@
 // composables/useCustomer.ts
 import { ref } from 'vue'
-
-const API_BASE_URL = 'http://localhost:5001'
+import { useRuntimeConfig } from '#app'
 
 export interface CreateCustomerData {
   fullname: string
@@ -22,7 +21,10 @@ export const useCustomer = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/customers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +55,10 @@ export const useCustomer = () => {
     error.value = null
 
     try {
-      const url = new URL(`${API_BASE_URL}/customers`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const url = new URL(`${baseUrl}/customers`)
       if (search) {
         url.searchParams.append('search', search)
       }
@@ -82,7 +87,10 @@ export const useCustomer = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE_URL}/customers/${id}`)
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      const response = await fetch(`${baseUrl}/customers/${id}`)
       const result = await response.json()
 
       if (!response.ok || !result.status) {

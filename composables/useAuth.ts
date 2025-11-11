@@ -84,10 +84,9 @@ export const useAuthApi = () => {
     console.log('📦 Data to send:', data)
     
     try {
-      console.log('🌐 Making POST request to /auth/register')
       
-      const response = await api.post<RegisterResponse>('/auth/register', data)
-      
+      const response = await api.post('/auth/customer/register', data)
+
       console.log('✅ Response received:', response)
       
       return {
@@ -115,7 +114,8 @@ export const useAuthApi = () => {
     console.log('📦 Data to send:', data)
     
     try {
-      const response = await api.post<LoginResponse>('/auth/login', data)
+      const response = await api.post('/auth/customer/login', data) 
+
       
       if (!response.data.token) {
         throw new Error('No token received from server')

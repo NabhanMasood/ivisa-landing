@@ -1,13 +1,13 @@
 <template>
-    <div class="flex justify-center pt-10 pb-20 min-h-screen">
-    <div class="flex flex-col w-[1000px] gap-4">
+  <div class="flex justify-center pt-10 pb-20 min-h-screen px-4">
+    <div class="flex flex-col w-full max-w-[1000px] gap-4">
       <!-- Page Title -->
       <h1 class="text-2xl font-semibold tracking-tight text-foreground">
         My Account
       </h1>
 
       <!-- Cards Grid -->
-      <div class="grid grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- My Orders Card -->
         <Card 
           @click="navigateTo('/my-orders')"
@@ -97,7 +97,6 @@ import { useRouter } from 'vue-router'
 import Card from '@/components/ui/card/Card.vue'
 
 const { currentUser, isAuthenticated } = useAuthApi()
-
 
 const router = useRouter()
 

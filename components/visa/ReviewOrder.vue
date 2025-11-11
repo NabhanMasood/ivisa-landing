@@ -4,7 +4,7 @@
     <div class="flex-1">
       
       <!-- Expected Delivery Date -->
-      <div class="border rounded-xl p-4 mb-6" style="border-color: #1ECE84; ">
+      <div class="border rounded-xl p-4 mb-6" style="border-color: #1ECE84;">
         <p style="font-family: Geist; font-weight: 600; font-size: 14px; line-height: 20px; color: #0B3947;">
           Expected delivery date: {{ expectedDeliveryDate }}
         </p>
@@ -57,11 +57,11 @@
         <div class="border-t mb-6" style="border-color: #E5E7EB;"></div>
 
         <!-- Travelers Section -->
-<div class="flex justify-between items-start">
-  <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-    Travelers:
-  </h4>
-  <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="flex justify-between items-start">
+          <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+            Travelers:
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 20px;">
             <div 
               v-for="(traveler, index) in travelers" 
               :key="index"
@@ -84,92 +84,51 @@
 
     </div>
 
-    <!-- Right Side - Summary Card -->
-    <div class="w-[400px] space-y-4">
-      
-      <!-- Price Summary Card -->
-      <div class="border-2 rounded-xl p-6" style="border-color: #1ECE84;">
-        <div class="space-y-4">
-          <!-- Visa Info -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              {{ destination }} Visa
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                {{ travelers.length }} traveler{{ travelers.length > 1 ? 's' : '' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Government Fee -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 20px; color: #0B3947;">
-              Government Fee
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                Rs {{ governmentFee.toFixed(2) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="border-t" style="border-color: #E5E7EB;"></div>
-
-          <!-- Total -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Manrope; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              Total
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                PKR {{ totalAmount.toFixed(2) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Continue to Payment Button -->
-      <Button 
-        @click="handleContinueToPayment"
-        class="w-full h-12"
-        style="background-color: #1ECE84; color: white; border-radius: 6px; font-family: Geist; font-weight: 500; font-size: 14px; line-height: 24px;"
-      >
-        Continue to payment
-      </Button>
-
-    </div>
+    <!-- Right Side - Summary Card with Payment Button -->
+    <PriceSummaryCard
+      :destination="destination"
+      :traveler-count="travelers.length"
+      :product-details="productDetails" 
+      :processing-fee="processingFee"
+      :processing-type="processingType"
+      :show-calculated-total="true"
+      :show-coupon-field="true"
+      button-text="Continue to payment"
+      @continue="handleContinueToPayment"
+      @coupon-applied="handleCouponApplied"
+      @coupon-removed="handleCouponRemoved"
+    />
   </div>
 
   <!-- Payment Modal -->
-    <PaymentModal 
-      :is-open="showPaymentModal"
-      :amount="totalAmount"
-      :application-data="applicationData"
-      @close="showPaymentModal = false"
-      @success="handlePaymentSuccess"
-    />
+  <PaymentModal 
+    v-if="showPaymentModal"
+    :is-open="showPaymentModal"
+    :amount="finalTotalWithDiscount"
+    :application-data="applicationDataWithDiscount"
+    @close="handleClosePaymentModal"
+    @success="handlePaymentSuccess"
+  />
     
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Button from '@/components/ui/button.vue'
+import PriceSummaryCard from '@/components/visa/price-card.vue'
 import PaymentModal from '@/components/visa/PaymentModal.vue'
 
 const props = defineProps<{
   destination: string
   travelers: string[]
-  governmentFee: number
+  productDetails?: any
   processingFee: number
+  processingType?: string
   visaDetails: {
     validity: string
     maxStay: string
     entries: string
   }
-  applicationData: any  
+  applicationData: any
 }>()
 
 const emit = defineEmits<{
@@ -179,8 +138,48 @@ const emit = defineEmits<{
 
 const showPaymentModal = ref(false)
 
+// ✅ NEW: Coupon state
+const couponDiscount = ref(0)
+const appliedCoupon = ref('')
+
+// Calculate base total amount
 const totalAmount = computed(() => {
-  return props.governmentFee + props.processingFee
+  if (!props.productDetails) {
+    console.warn('⚠️ No productDetails provided')
+    return props.processingFee
+  }
+  
+  const govtFee = Number(props.productDetails.govtFee) * props.travelers.length
+  const serviceFee = Number(props.productDetails.serviceFee) * props.travelers.length
+  const processingFee = props.processingFee * props.travelers.length
+  
+  const total = govtFee + serviceFee + processingFee
+  
+  console.log('💰 Total Calculation:', {
+    govtFee,
+    serviceFee,
+    processingFee,
+    travelers: props.travelers.length,
+    total
+  })
+  
+  return total
+})
+
+// ✅ NEW: Calculate final total with discount
+const finalTotalWithDiscount = computed(() => {
+  return Math.max(0, totalAmount.value - couponDiscount.value)
+})
+
+// ✅ NEW: Application data with discount info
+const applicationDataWithDiscount = computed(() => {
+  return {
+    ...props.applicationData,
+    couponCode: appliedCoupon.value || undefined,
+    discountAmount: couponDiscount.value || undefined,
+    originalAmount: totalAmount.value,
+    finalAmount: finalTotalWithDiscount.value
+  }
 })
 
 const expectedDeliveryDate = computed(() => {
@@ -189,17 +188,43 @@ const expectedDeliveryDate = computed(() => {
   return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })
 })
 
+// ✅ NEW: Handle coupon applied
+const handleCouponApplied = (discount: number, code: string) => {
+  console.log('🎟️ Coupon applied in ReviewOrder:', { discount, code })
+  couponDiscount.value = discount
+  appliedCoupon.value = code
+}
+
+// ✅ NEW: Handle coupon removed
+const handleCouponRemoved = () => {
+  console.log('🗑️ Coupon removed in ReviewOrder')
+  couponDiscount.value = 0
+  appliedCoupon.value = ''
+}
+
 const handleContinueToPayment = () => {
-  console.log('🔵 ReviewOrder: Opening payment modal')
-  console.log('🔵 Application Data:', props.applicationData)
+  console.log('🔵 ReviewOrder: Continue to Payment clicked')
+  console.log('📦 Product Details:', props.productDetails)
+  console.log('👥 Travelers:', props.travelers)
+  console.log('💰 Original Amount:', totalAmount.value)
+  console.log('💰 Discount:', couponDiscount.value)
+  console.log('💰 Final Amount:', finalTotalWithDiscount.value)
+  console.log('📄 Application Data:', applicationDataWithDiscount.value)
+  
   showPaymentModal.value = true
+  console.log('✅ Payment modal opened:', showPaymentModal.value)
+}
+
+const handleClosePaymentModal = () => {
+  console.log('🔴 Closing payment modal')
+  showPaymentModal.value = false
 }
 
 const handlePaymentSuccess = (result: any) => {
-  console.log('✅ ReviewOrder: Received success from PaymentModal:', result)
-  showPaymentModal.value = false
+  console.log('✅ ReviewOrder: Payment successful')
+  console.log('📄 Payment Result:', result)
   
-  // Emit to parent (apply page) - optional, just for cleanup
-  emit('next', result)
+  console.log('⏳ Keeping modal structure alive for success modal...')
+  
 }
 </script>
