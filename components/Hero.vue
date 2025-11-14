@@ -27,12 +27,23 @@
 
         <!-- Search Card with enhanced transparency -->
         <Card 
-          class="!rounded-[24px] shadow-2xl max-w-4xl mx-auto" 
-          style="background: rgba(231, 238, 233, 0.87); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 0;"
+          class="!rounded-[24px] shadow-2xl mx-auto backdrop-blur-md" 
+          style="width: 1008px; height: 204.5px; background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.25);"
         >
-          <CardContent class="p-8 lg:p-10">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-              <!-- From Select -->
+          <CardContent class="p-6 lg:p-8 flex items-center h-full">
+            <!-- Loading State -->
+            <div v-if="isLoading" class="flex items-center justify-center w-full">
+              <div class="text-gray-600">Loading countries...</div>
+            </div>
+
+            <!-- Error State -->
+            <div v-else-if="error" class="flex items-center justify-center w-full">
+              <div class="text-red-600">{{ error }}</div>
+            </div>
+
+            <!-- Main Form -->
+            <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end w-full">
+              <!-- From Select (All Countries) -->
               <div class="space-y-2 text-left">
                 <Label htmlFor="from" class="text-gray-700 font-medium text-base">
                   Where am I from?
@@ -40,40 +51,68 @@
                 <Select v-model="selectedFrom">
                   <SelectTrigger 
                     id="from" 
-                    class="w-full !h-[52px] !bg-white/90 !rounded-[20px] !border-2 !border-gray-200 hover:!border-gray-300 transition-all"
+                    class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                    style="width: 299.33px;"
                   >
                     <SelectValue>
-                      <div class="flex items-center gap-3" v-if="selectedFrom">
-                        <span class="text-2xl">{{ getCountryFlag(selectedFrom) }}</span>
-                        <span class="text-base">{{ selectedFrom }}</span>
+                      <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedFrom">
+                        <!-- Logo with fallback -->
+                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            v-if="getCountryLogo(selectedFrom)"
+                            :src="getCountryLogo(selectedFrom)" 
+                            :alt="getCountryName(selectedFrom)"
+                            class="max-w-full max-h-full object-contain"
+                            @error="handleLogoError"
+                          />
+                          <div 
+                            v-else
+                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                          >
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <span class="text-base">{{ getCountryName(selectedFrom) }}</span>
                       </div>
-                      <span v-else class="text-gray-500">Select a country</span>
+                      <span v-else class="text-gray-500 py-3 pl-2">Select your country</span>
                     </SelectValue>
+                    <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
                   </SelectTrigger>
-                  <SelectContent class="!rounded-[20px] !bg-white">
-                    <SelectItem value="United Arab Emirates">
+                  <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
+                    <SelectItem 
+                      v-for="country in countries" 
+                      :key="country.id" 
+                      :value="String(country.id)"
+                    >
                       <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇦🇪</span>
-                        <span>United Arab Emirates</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="United States">
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇺🇸</span>
-                        <span>United States</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Pakistan">
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇵🇰</span>
-                        <span>Pakistan</span>
+                        <!-- Logo with fallback -->
+                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            v-if="country.logoUrl"
+                            :src="getFullLogoUrl(country.logoUrl)" 
+                            :alt="country.countryName"
+                            class="max-w-full max-h-full object-contain"
+                            @error="handleLogoError"
+                          />
+                          <div 
+                            v-else
+                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                          >
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <span>{{ country.countryName }}</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <!-- To Select -->
+              <!-- To Select (Countries with Visa Products) -->
               <div class="space-y-2 text-left">
                 <Label htmlFor="to" class="text-gray-700 font-medium text-base">
                   Where am I going?
@@ -81,44 +120,63 @@
                 <Select v-model="selectedTo">
                   <SelectTrigger 
                     id="to" 
-                    class="w-full !h-[52px] !bg-white/90 !rounded-[20px] !border-2 !border-gray-200 hover:!border-gray-300 transition-all"
+                    class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                    style="width: 299.33px;"
                   >
                     <SelectValue>
-                      <div class="flex items-center gap-3" v-if="selectedTo">
-                        <span class="text-2xl">{{ getCountryFlag(selectedTo) }}</span>
-                        <span class="text-base">{{ selectedTo }}</span>
+                      <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedTo">
+                        <!-- Logo with fallback -->
+                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            v-if="getCountryLogo(selectedTo)"
+                            :src="getCountryLogo(selectedTo)" 
+                            :alt="getCountryName(selectedTo)"
+                            class="max-w-full max-h-full object-contain"
+                            @error="handleLogoError"
+                          />
+                          <div 
+                            v-else
+                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                          >
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <span class="text-base">{{ getCountryName(selectedTo) }}</span>
                       </div>
-                      <span v-else class="text-gray-500">Select a country</span>
+                      <span v-else class="text-gray-500 py-3 pl-2">Select destination</span>
                     </SelectValue>
+                    <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
                   </SelectTrigger>
-                  <SelectContent class="!rounded-[20px] !bg-white">
-                    <SelectItem value="United Kingdom">
+                  <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
+                    <SelectItem 
+                      v-for="country in destinationCountries" 
+                      :key="country.id" 
+                      :value="String(country.id)"
+                    >
                       <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇬🇧</span>
-                        <span>United Kingdom</span>
+                        <!-- Logo with fallback -->
+                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            v-if="country.logoUrl"
+                            :src="getFullLogoUrl(country.logoUrl)" 
+                            :alt="country.countryName"
+                            class="max-w-full max-h-full object-contain"
+                            @error="handleLogoError"
+                          />
+                          <div 
+                            v-else
+                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                          >
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <span>{{ country.countryName }}</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="United States">
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇺🇸</span>
-                        <span>United States</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Canada">
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇨🇦</span>
-                        <span>Canada</span>
-                      </div>
-                    </SelectItem>
-
-                     <SelectItem value="Morocco">
-                      <div class="flex items-center gap-3">
-                        <span class="text-2xl">🇲🇦</span>
-                        <span>Morocco</span>
-                      </div>
-                    </SelectItem>
-
-
                   </SelectContent>
                 </Select>
               </div>
@@ -127,6 +185,7 @@
               <Button 
                 size="lg"
                 class="!bg-gradient-to-r !from-[#00C6A7] !to-[#26D07A] hover:!from-[#00B599] hover:!to-[#22BD6D] !text-white !h-[52px] !rounded-[20px] w-full !font-semibold !text-lg shadow-xl transition-all hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                :disabled="!selectedFrom || !selectedTo || isLoading"
                 @click="handleGetStarted"
               >
                 Get Started
@@ -163,15 +222,13 @@
 
         <!-- Trustpilot -->
         <div class="text-center col-span-2 lg:col-span-1 flex items-center justify-center">
-        
-        <div>
+          <div>
             <img 
-            src="/logos/trust-pilot.png"
-            alt="Trustpilot"
-            class="w-[104px] h-[30px] object-contain translate-y-2"
+              src="/logos/trust-pilot.png"
+              alt="Trustpilot"
+              class="w-[104px] h-[30px] object-contain translate-y-2"
             />
-
-        </div>
+          </div>
         </div>
 
           <!-- Years of Experience -->
@@ -205,7 +262,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import Button from '@/components/ui/button.vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
@@ -215,24 +272,158 @@ import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
 import SelectContent from '@/components/ui/select/SelectContent.vue'
 import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
+import { useCountriesApi, type Country } from '@/composables/useCountries'
+import { useVisaProductsApi } from '@/composables/useVisaProducts'
 
-const selectedFrom = ref('United Arab Emirates')
-const selectedTo = ref('United Kingdom')
+// State
+const countries = ref<Country[]>([])
+const destinationCountries = ref<Country[]>([]) // Countries with visa products (with logos)
+const selectedFrom = ref<string>('')
+const selectedTo = ref<string>('')
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
-const getCountryFlag = (country: string) => {
-  const flags: Record<string, string> = {
-    'United Arab Emirates': '🇦🇪',
-    'United States': '🇺🇸',
-    'Pakistan': '🇵🇰',
-    'United Kingdom': '🇬🇧',
-    'Canada': '🇨🇦'
+// API
+const { getCountries } = useCountriesApi()
+const { getGroupedVisaProductsByCountries } = useVisaProductsApi()
+const config = useRuntimeConfig()
+
+// Debug: Log config on load
+console.log('🔧 Runtime Config:', config.public)
+console.log('🌐 API Base URL:', config.public.apiBase)
+
+// Error handler for logo images
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.error('❌ Logo failed to load:', img.src)
+  img.style.display = 'none'
+}
+
+// Helper functions for "From" dropdown (Countries table)
+const getCountryName = (countryId: string) => {
+  const country = countries.value.find(c => String(c.id) === countryId)
+  return country?.countryName || ''
+}
+
+const getCountryLogo = (countryId: string) => {
+  const country = countries.value.find(c => String(c.id) === countryId)
+  if (!country?.logoUrl) return null
+  return getFullLogoUrl(country.logoUrl)
+}
+
+const getFullLogoUrl = (logoUrl: string) => {
+  if (!logoUrl) {
+    console.warn('⚠️ Empty logo URL')
+    return ''
   }
-  return flags[country] || '🏳️'
+  
+  // Check if it's already a full URL (Cloudinary)
+  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    console.log('✅ Full URL (Cloudinary):', logoUrl)
+    return logoUrl
+  }
+  
+  // Otherwise, construct local URL
+  const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+  const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`
+  
+  const fullUrl = `${baseUrl}${path}`
+  console.log('🔗 Constructed URL:', {
+    baseUrl,
+    logoPath: path,
+    fullUrl
+  })
+  
+  return fullUrl
+}
+
+// Fetch countries for "From" dropdown
+const fetchCountries = async () => {
+  try {
+    const response = await getCountries()
+    
+    if (response.success && response.data) {
+      countries.value = response.data
+      console.log('✅ Loaded countries:', countries.value.length)
+      
+      // Set default "From" value
+      if (countries.value.length > 0) {
+        selectedFrom.value = String(countries.value[0].id)
+      }
+    } else {
+      throw new Error(response.message || 'Failed to load countries')
+    }
+  } catch (err) {
+    console.error('❌ Error fetching countries:', err)
+    throw err
+  }
+}
+
+// Fetch destination countries for "To" dropdown (from visa products, matched with countries table for logos)
+const fetchDestinationCountries = async () => {
+  try {
+    const response = await getGroupedVisaProductsByCountries()
+    
+    if (response.success && response.data) {
+      // Get country names from visa products
+      const visaProductCountryNames = response.data.map(item => item.country)
+      
+      // Match with countries table to get logos
+      destinationCountries.value = countries.value
+        .filter(country => visaProductCountryNames.includes(country.countryName))
+        .sort((a, b) => a.countryName.localeCompare(b.countryName))
+      
+      console.log('✅ Loaded destination countries with logos:', destinationCountries.value.length)
+      console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
+      
+      // Set default "To" value
+      if (destinationCountries.value.length > 0) {
+        selectedTo.value = String(destinationCountries.value[0].id)
+      }
+    } else {
+      throw new Error(response.message || 'Failed to load destination countries')
+    }
+  } catch (err) {
+    console.error('❌ Error fetching destination countries:', err)
+    throw err
+  }
+}
+
+// Fetch all data on mount
+const fetchAllData = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    // First fetch all countries (needed for both dropdowns)
+    await fetchCountries()
+    
+    // Then fetch destination countries and match with countries table
+    await fetchDestinationCountries()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load data'
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const handleGetStarted = () => {
-  console.log('From:', selectedFrom.value)
-  console.log('To:', selectedTo.value)
-  navigateTo(`/visa-application?from=${selectedFrom.value}&to=${selectedTo.value}`)
+  const fromCountry = getCountryName(selectedFrom.value)
+  const toCountry = getCountryName(selectedTo.value)
+  
+  console.log('🚀 Get Started:', {
+    from: fromCountry,
+    fromId: selectedFrom.value,
+    to: toCountry,
+    toId: selectedTo.value
+  })
+  
+  // Pass both country IDs and names as query parameters
+  navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
 }
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchAllData()
+})
 </script>

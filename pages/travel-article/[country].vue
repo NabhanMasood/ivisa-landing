@@ -30,75 +30,133 @@
                     </h2>
                     
                     <!-- Form -->
-                    <form @submit.prevent="handleApplyNow" class="flex flex-col gap-4">
-                        <!-- Where are you from -->
-                        <div>
-                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block  ">
-                            Where are you from?
+                    <!-- Loading State -->
+                    <div v-if="isLoadingWorld || isLoadingVisa" class="flex items-center justify-center py-8">
+                      <div class="text-white">Loading countries...</div>
+                    </div>
+
+                    <!-- Error State -->
+                    <div v-else-if="errorWorld || errorVisa" class="flex items-center justify-center py-8">
+                      <div class="text-red-200">{{ errorWorld || errorVisa }}</div>
+                    </div>
+
+                    <!-- Form Fields -->
+                    <div v-else class="flex flex-col gap-4">
+                      <!-- Where are you from (World Countries) -->
+                      <div>
+                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                          Where are you from?
                         </label>
-                        <div class="relative">
-                           <select 
-                            v-model="formData.from"
-                            class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
+                        <Select v-model="selectedFrom">
+                          <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                            <SelectValue placeholder="Select country">
+                              <div class="flex items-center gap-2 pl-4" v-if="selectedFrom">
+                                <img 
+                                  :src="getWorldCountryFlag(selectedFrom)" 
+                                  :alt="getWorldCountryName(selectedFrom)"
+                                  class="w-5 h-4 object-cover rounded-sm"
+                                  @error="handleFlagError"
+                                />
+                                <span class="text-gray-700">{{ getWorldCountryName(selectedFrom) }}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
+                            <SelectItem 
+                              v-for="country in worldCountries" 
+                              :key="country.id" 
+                              :value="country.id"
+                              class="pl-4"
                             >
-                            <option value="" class="text-gray-400" disabled>Select country</option>
-                            <option value="United States" class="text-[#71717B]">United States</option>
-                            <option value="United Kingdom" class="text-[#71717B]">United Kingdom</option>
-                            <option value="Canada" class="text-[#71717B]">Canada</option>
-                            <option value="Australia" class="text-[#71717B]">Australia</option>
-                            </select>
-                            <!-- Flag Icon: 20x20 - Default USA flag -->
-                            <img 
-                            v-if="formData.from === 'United States' || formData.from === ''" 
-                            src="/svg/flags/US.svg" 
-                            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                            alt="USA flag"
-                            />
-                            <!-- Dropdown Icon: width: 20, height: 20 -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                        </div>
+                              <div class="flex items-center gap-2">
+                                <img 
+                                  :src="country.flag" 
+                                  :alt="country.name"
+                                  class="w-5 h-4 object-cover rounded-sm"
+                                  @error="handleFlagError"
+                                />
+                                <span>{{ country.name }}</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                        <!-- Where are you going -->
-                        <div>
-                          <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
-                            Where are you going?
-                          </label>
-                          <div class="relative">
-                            <select 
-                              v-model="formData.to"
-                              class="w-full h-[50px] pl-12 pr-12 border border-gray-300 rounded-lg font-manrope font-normal text-sm leading-6 bg-white text-[#71717B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#02D275] focus:border-transparent appearance-none"
+                      <!-- Where are you going (Visa Countries) -->
+                      <div>
+                        <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
+                          Where are you going?
+                        </label>
+                        <Select v-model="selectedTo">
+                          <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                            <SelectValue placeholder="Select destination">
+                              <div class="flex items-center gap-2 pl-4" v-if="selectedTo">
+                                <!-- Logo with fallback -->
+                                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                  <img 
+                                    v-if="getVisaCountryLogo(selectedTo)"
+                                    :src="getVisaCountryLogo(selectedTo)" 
+                                    :alt="getVisaCountryName(selectedTo)"
+                                    class="max-w-full max-h-full object-contain"
+                                    @error="handleLogoError"
+                                  />
+                                  <div 
+                                    v-else
+                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                  >
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <span class="text-gray-700">{{ getVisaCountryName(selectedTo) }}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
+                            <SelectItem 
+                              v-for="country in visaCountries" 
+                              :key="country.id" 
+                              :value="String(country.id)"
+                              class="pl-4"
                             >
-                              <option value="" class="text-gray-400" disabled>Select destination</option>
-                              <option value="Turkey" class="text-[#71717B]">Turkey</option>
-                            </select>
-                            
-                            <!-- Flag Icon: Always show Turkey flag since it's the only option -->
-                            <img 
-                              src="/svg/flags/TR.svg" 
-                              class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full object-cover"
-                              alt="Turkey flag"
-                            />
-                            
-                            <!-- Dropdown Icon -->
-                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                          </div>
-                        </div>
+                              <div class="flex items-center gap-2">
+                                <!-- Logo with fallback -->
+                                <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                  <img 
+                                    v-if="country.logoUrl"
+                                    :src="getFullLogoUrl(country.logoUrl)" 
+                                    :alt="country.countryName"
+                                    class="max-w-full max-h-full object-contain"
+                                    @error="handleLogoError"
+                                  />
+                                  <div 
+                                    v-else
+                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                  >
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <span>{{ country.countryName }}</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                        <!-- Apply Button: width: 535, height: 46, border-radius: 10px, bg: #00D474 -->
-                        <button
-                          type="submit"
-                          class="w-[535px] h-[46px] rounded-[10px] bg-[#00D474] hover:bg-[#00D474]/90 font-manrope font-bold text-lg leading-6 text-white text-center flex items-center justify-center gap-2"
-                        >
-                          <span>➜</span>
-                          <span>Apply Now!</span>
-                        </button>
-                        </form>
-                        </div>
+                      <!-- Apply Now Button -->
+                      <button
+                        @click="handleApplyNowHero"
+                        :disabled="!selectedFrom || !selectedTo || isLoadingWorld || isLoadingVisa"
+                        class="w-full h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-base rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span class="text-lg">→</span>
+                        <span>Apply Now!</span>
+                      </button>
+                    </div>
+                    </div>
 
                     <!-- Right Section: width: 373, height: 154, gap: 20px -->
                 <div class="w-[373px] flex flex-col gap-5">
@@ -469,7 +527,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCountryData } from '@/data/visaCountries'
 
@@ -478,6 +536,12 @@ import HeaderLoggedIn from '@/components/HeaderLoggedIn.vue'
 import Footer from '@/components/Footer.vue'
 import Button from '@/components/ui/button.vue'
 import ApplicationForm from '@/components/ApplicationForm.vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
+import SelectContent from '@/components/ui/select/SelectContent.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import SelectValue from '@/components/ui/select/SelectValue.vue'
+import { useCountriesApi, type Country, type SimpleWorldCountry } from '@/composables/useCountries'
 
 const route = useRoute()
 
@@ -485,28 +549,152 @@ const route = useRoute()
 const countrySlug = computed(() => route.params.country as string || 'turkey')
 const countryData = computed(() => getCountryData(countrySlug.value))
 
-// Form data - initialize with computed value
-const formData = ref({
-  from: 'United States',
-  to: countryData.value?.name || 'Turkey'  // ← Use countryData.value.name or fallback to 'Turkey'
-})
+// State for world countries (all countries with flags)
+const worldCountries = ref<SimpleWorldCountry[]>([])
+const selectedFrom = ref<string>('')
+const isLoadingWorld = ref(false)
+const errorWorld = ref<string | null>(null)
 
-// Watch for route changes and update form
-watchEffect(() => {
-  if (countryData.value && countryData.value.name) {
-    formData.value.to = countryData.value.name
+// State for visa service countries (backend countries with logos)
+const visaCountries = ref<Country[]>([])
+const selectedTo = ref<string>('')
+const isLoadingVisa = ref(false)
+const errorVisa = ref<string | null>(null)
+
+// API
+const { getWorldCountries, getVisaCountries } = useCountriesApi()
+const config = useRuntimeConfig()
+
+// Error handlers for images
+const handleFlagError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.error('❌ Flag failed to load:', img.src)
+  img.style.display = 'none'
+}
+
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.error('❌ Logo failed to load:', img.src)
+  img.style.display = 'none'
+}
+
+// Helper functions for world countries
+const getWorldCountryName = (countryId: string) => {
+  const country = worldCountries.value.find(c => c.id === countryId)
+  return country?.name || ''
+}
+
+const getWorldCountryFlag = (countryId: string) => {
+  const country = worldCountries.value.find(c => c.id === countryId)
+  return country?.flag || ''
+}
+
+// Helper functions for visa countries
+const getVisaCountryName = (countryId: string) => {
+  const country = visaCountries.value.find(c => String(c.id) === countryId)
+  return country?.countryName || ''
+}
+
+const getVisaCountryLogo = (countryId: string) => {
+  const country = visaCountries.value.find(c => String(c.id) === countryId)
+  if (!country?.logoUrl) return null
+  return getFullLogoUrl(country.logoUrl)
+}
+
+const getFullLogoUrl = (logoUrl: string) => {
+  if (!logoUrl) {
+    console.warn('⚠️ Empty logo URL')
+    return ''
   }
-})
+  
+  // Check if it's already a full URL (Cloudinary)
+  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    return logoUrl
+  }
+  
+  // Otherwise, construct local URL
+  const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+  const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`
+  
+  return `${baseUrl}${path}`
+}
 
-// Handle form submission
-const handleApplyNow = () => {
-  if (formData.value.from && formData.value.to) {
-    console.log('Application submitted:', formData.value)
-    alert(`Applying for visa from ${formData.value.from} to ${formData.value.to}`)
-  } else {
-    alert('Please select both countries')
+// Fetch world countries for "Where am I from?"
+const fetchWorldCountries = async () => {
+  isLoadingWorld.value = true
+  errorWorld.value = null
+  
+  try {
+    const response = await getWorldCountries()
+    
+    if (response.success && response.data) {
+      worldCountries.value = response.data
+      console.log('✅ Loaded world countries:', worldCountries.value.length)
+      
+      // Set default value to the first country
+      if (worldCountries.value.length > 0) {
+        selectedFrom.value = worldCountries.value[0].id
+      }
+    } else {
+      errorWorld.value = response.message || 'Failed to load world countries'
+    }
+  } catch (err) {
+    errorWorld.value = err instanceof Error ? err.message : 'Failed to load world countries'
+    console.error('❌ Error fetching world countries:', err)
+  } finally {
+    isLoadingWorld.value = false
   }
 }
+
+// Fetch visa countries for "Where am I going?"
+const fetchVisaCountries = async () => {
+  isLoadingVisa.value = true
+  errorVisa.value = null
+  
+  try {
+    const response = await getVisaCountries()
+    
+    if (response.success && response.data) {
+      visaCountries.value = response.data
+      console.log('✅ Loaded visa countries:', visaCountries.value.length)
+      
+      // Set default value to the first country
+      if (visaCountries.value.length > 0) {
+        selectedTo.value = String(visaCountries.value[0].id)
+      }
+    } else {
+      errorVisa.value = response.message || 'Failed to load visa countries'
+    }
+  } catch (err) {
+    errorVisa.value = err instanceof Error ? err.message : 'Failed to load visa countries'
+    console.error('❌ Error fetching visa countries:', err)
+  } finally {
+    isLoadingVisa.value = false
+  }
+}
+
+// Fetch both types of countries on component mount
+onMounted(() => {
+  fetchWorldCountries()
+  fetchVisaCountries()
+})
+
+// Handle Hero form submission
+const handleApplyNowHero = () => {
+  const fromCountry = getWorldCountryName(selectedFrom.value)
+  const toCountry = getVisaCountryName(selectedTo.value)
+  
+  console.log('🚀 Apply Now Hero:', {
+    from: fromCountry,
+    fromCode: selectedFrom.value,
+    to: toCountry,
+    toId: selectedTo.value
+  })
+  
+  // Navigate with the same parameters as hero section
+  navigateTo(`/visa-application?fromCode=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
+}
+
 </script>
 
 <style scoped>

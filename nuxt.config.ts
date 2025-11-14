@@ -20,23 +20,45 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "iVisa - Management System",
+      title: "Visa123 - Management System",
       link: [
         { rel: "icon", type: "image/x-icon", href: "/logoMark.svg" },
         { rel: "icon", type: "image/svg+xml", href: "/logo/Visa123logo.svg" },
+        // 👇 Add Google Fonts
+        { 
+          rel: "preconnect", 
+          href: "https://fonts.googleapis.com" 
+        },
+        { 
+          rel: "preconnect", 
+          href: "https://fonts.gstatic.com", 
+          crossorigin: "" 
+        },
+        { 
+          rel: "stylesheet", 
+          href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" 
+        },
+        // 👇 Preload payment strip SVG
+        {
+          rel: "preload",
+          href: "/svg/payment-strip.svg",
+          as: "image",
+          type: "image/svg+xml"
+        }
       ],
     },
   },
 
-  // 👇 Add this block
   nitro: {
     preset: "vercel",
   },
 
-  // Runtime config for API
   runtimeConfig: {
     public: {
       apiBase: process.env.API_BASE_URL ?? 'https://ivisa123-backend-production.up.railway.app',
+      currencyApiUrl: process.env.NUXT_PUBLIC_CURRENCY_API_URL,
+      currencyApiKey: process.env.NUXT_PUBLIC_CURRENCY_API_KEY,
+
     },
   },
 });

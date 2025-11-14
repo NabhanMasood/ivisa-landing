@@ -3,38 +3,57 @@
     <!-- Left Side - Processing Time Selection -->
     <div class="flex-1">
       
-      <!-- Header -->
-      <div class="mb-6" style="width: 656px; height: 43px; gap: 7px; padding-right: 24px; padding-bottom: 6px;">
-        <h2 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 16px; color: #27272B;">
-          Choose your processing time
+      <!-- Passport Details Header -->
+      <div class="mb-6">
+        <h2 style="font-family: Geist; font-weight: 600; font-size: 18px; line-height: 24px; color: #0B3947;">
+          Choose Your Processing Time
         </h2>
-        <p style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #757579;">
+        <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
           Enter the details as they appear on your passport.
         </p>
       </div>
 
       <!-- Processing Options Card -->
       <div class="border rounded-xl p-6" style="border-color: #E5E7EB;">
-        
-            <!-- Passport Details Header -->
-            <div class="mb-6 max-w-[588px] mx-auto">
-            <h3 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                Passport Details
-            </h3>
-            <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-                Enter the details as they appear on your passport.
-            </p>
-            </div>
+
+        <!-- Processing Time Header -->
+        <div class="mb-6">
+          <h2 style="font-family: Geist; font-weight: 600; font-size: 18px; line-height: 24px; color: #0B3947;">
+            Processing Time
+          </h2>
+          <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
+            Select how quickly you need your visa processed.
+          </p>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex items-center justify-center py-12">
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-600">Loading processing options...</p>
+          </div>
+        </div>
+
+        <!-- No Processing Fees Available -->
+        <div v-else-if="!processingOptions || processingOptions.length === 0" class="py-12 text-center">
+          <p class="text-sm text-gray-600">No processing options available for this visa product.</p>
+          <button
+            @click="handleContinueWithoutProcessing"
+            class="mt-4 px-4 py-2 text-sm font-medium rounded-[6px] text-white bg-black hover:bg-gray-800 transition-colors"
+          >
+            Continue Without Processing Fee
+          </button>
+        </div>
 
         <!-- Processing Time Options -->
-        <div class="space-y-4 flex flex-col items-center">
-          
-          <!-- Standard Option -->
+        <div v-else class="space-y-4">
           <button
-            @click="selectedProcessing = 'standard'"
+            v-for="(option, index) in processingOptions"
+            :key="index"
+            @click="selectedProcessing = option"
             class="text-left transition-all"
             :style="{
-              width: '588px',
+              width: '100%',
               height: '70px',
               borderWidth: '1px',
               gap: '10px',
@@ -43,94 +62,25 @@
               paddingRight: '15px',
               paddingBottom: '14px',
               paddingLeft: '15px',
-              border: selectedProcessing === 'standard' ? '1px solid #1ECE84' : '1px solid #D4D4DA',
-              backgroundColor: selectedProcessing === 'standard' ? '#E8FFF6' : '#FFFFFF'
+              border: selectedProcessing?.id === option.id ? '1px solid #1ECE84' : '1px solid #D4D4DA',
+              backgroundColor: selectedProcessing?.id === option.id ? '#E8FFF6' : '#FFFFFF'
             }"
             type="button"
           >
             <div class="flex justify-between items-center">
               <div>
                 <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                  Standard
+                  {{ option.feeType }}
                 </h4>
                 <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-                  24 Hour Processing
+                  {{ option.timeValue }} {{ option.timeUnit === 'hours' ? (option.timeValue === 1 ? 'Hour' : 'Hours') : (option.timeValue === 1 ? 'Day' : 'Days') }} Processing
                 </p>
               </div>
               <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                +5,320 PKR
+                +{{ formatPrice(Number(option.amount)) }}
               </span>
             </div>
           </button>
-
-          <!-- Rush Option -->
-          <button
-            @click="selectedProcessing = 'rush'"
-            class="text-left transition-all"
-            :style="{
-              width: '588px',
-              height: '70px',
-              borderWidth: '1px',
-              gap: '10px',
-              borderRadius: '10px',
-              paddingTop: '14px',
-              paddingRight: '15px',
-              paddingBottom: '14px',
-              paddingLeft: '15px',
-              border: selectedProcessing === 'rush' ? '1px solid #1ECE84' : '1px solid #D4D4DA',
-              backgroundColor: selectedProcessing === 'rush' ? '#E8FFF6' : '#FFFFFF'
-            }"
-            type="button"
-          >
-            <div class="flex justify-between items-center">
-              <div>
-                <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                  Rush
-                </h4>
-                <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-                  4 Hour Processing
-                </p>
-              </div>
-              <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                +5,320 PKR
-              </span>
-            </div>
-          </button>
-
-          <!-- Super Rush Option -->
-          <button
-            @click="selectedProcessing = 'super-rush'"
-            class="text-left transition-all"
-            :style="{
-              width: '588px',
-              height: '70px',
-              borderWidth: '1px',
-              gap: '10px',
-              borderRadius: '10px',
-              paddingTop: '14px',
-              paddingRight: '15px',
-              paddingBottom: '14px',
-              paddingLeft: '15px',
-              border: selectedProcessing === 'super-rush' ? '1px solid #1ECE84' : '1px solid #D4D4DA',
-              backgroundColor: selectedProcessing === 'super-rush' ? '#E8FFF6' : '#FFFFFF'
-            }"
-            type="button"
-          >
-            <div class="flex justify-between items-center">
-              <div>
-                <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                  Super Rush
-                </h4>
-                <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
-                  30 Minute Processing
-                </p>
-              </div>
-              <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-                +15,320 PKR
-              </span>
-            </div>
-          </button>
-
         </div>
 
       </div>
@@ -138,82 +88,30 @@
     </div>
 
     <!-- Right Side - Summary Card -->
-    <div class="w-[400px] space-y-4">
-      
-      <!-- Price Summary Card -->
-      <div class="border-2 rounded-xl p-6" style="border-color: #1ECE84;">
-        <div class="space-y-4">
-          <!-- Visa Info -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              {{ destination }} Visa
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                {{ travelerCount }} traveler{{ travelerCount > 1 ? 's' : '' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Government Fee -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 20px; color: #0B3947;">
-              Government Fee
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
-                Rs {{ governmentFee.toFixed(2) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="border-t" style="border-color: #E5E7EB;"></div>
-
-          <!-- Total -->
-          <div class="flex justify-between items-center">
-            <span style="font-family: Manrope; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
-              Total
-            </span>
-            <div class="flex justify-end">
-              <span style="font-family: geist; font-weight: 500; font-size: 14px; line-height: 20px; color: #27272B;">
-                Calculated at checkout
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Save & Continue Button -->
-      <Button 
-        @click="handleContinue"
-        class="w-full h-12"
-        style="background-color: #1ECE84; color: white; border-radius: 6px; font-family: Geist; font-weight: 500; font-size: 14px; line-height: 24px;"
-      >
-        Save & Countinue
-      </Button>
-
-      <!-- Security Message -->
-      <div class="border rounded-xl p-4" style="border-color: #E5E7EB;">
-        <div class="flex items-start gap-3">
-          <img src="/svg/union.svg" alt="Security" style="width: 19.2px; height: 19.2px;" />
-          <p style="font-family: Geist; font-weight: 500; font-size: 16px; line-height: 20px; color: #3E3E3E;">
-            We take strong measuresto protect your information
-          </p>
-        </div>
-      </div>
-    </div>
+    <PriceSummaryCard
+      :destination="destination"
+      :traveler-count="travelerCount"
+      :product-details="productDetails" 
+      :processing-fee="selectedProcessing?.amount || 0"
+      :processing-type="selectedProcessing?.feeType"
+      :show-calculated-total="!!selectedProcessing"
+      button-text="Save & Continue"
+      @continue="handleContinue"
+    />
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import Button from '@/components/ui/Button.vue'
+import { ref, computed, onMounted } from 'vue'
+import PriceSummaryCard from '@/components/visa/price-card.vue'
+import type { ProcessingFee } from '@/composables/useVisaProductsApi'
 
 const props = defineProps<{
   destination: string
   travelerCount: number
-  governmentFee: number
+  productDetails?: any  
+  initialData?: any
 }>()
 
 const emit = defineEmits<{
@@ -221,13 +119,22 @@ const emit = defineEmits<{
   back: []
 }>()
 
-const selectedProcessing = ref<'standard' | 'rush' | 'super-rush'>('standard')
+// Currency conversion
+const { formatPrice } = useCurrency()
 
-const processingFees = {
-  'standard': 5320,
-  'rush': 5320,
-  'super-rush': 15320
-}
+const isLoading = ref(false)
+const selectedProcessing = ref<ProcessingFee | null>(null)
+
+// Extract processing options from productDetails
+const processingOptions = computed<ProcessingFee[]>(() => {
+  console.log('🔍 CheckoutForm - Product Details:', props.productDetails)
+  console.log('💰 Available Processing Fees:', props.productDetails?.processingFees)
+  
+  if (!props.productDetails?.processingFees || props.productDetails.processingFees.length === 0) {
+    return []
+  }
+  return props.productDetails.processingFees
+})
 
 const handleContinue = () => {
   if (!selectedProcessing.value) {
@@ -236,8 +143,40 @@ const handleContinue = () => {
   }
 
   emit('next', {
-    processingType: selectedProcessing.value,
-    processingFee: processingFees[selectedProcessing.value]
+    processingFeeId: selectedProcessing.value.id,
+    processingType: selectedProcessing.value.feeType,
+    processingTime: `${selectedProcessing.value.timeValue} ${selectedProcessing.value.timeUnit}`,
+    processingFee: selectedProcessing.value.amount
   })
 }
+
+const handleContinueWithoutProcessing = () => {
+  emit('next', {
+    processingFeeId: null,
+    processingType: null,
+    processingTime: null,
+    processingFee: 0
+  })
+}
+
+// Initialize on mount
+onMounted(() => {
+  console.log('🔄 CheckoutForm mounted')
+  console.log('📦 Product Details:', props.productDetails)
+  console.log('💰 Processing Options:', processingOptions.value)
+  
+  // Auto-select from initialData if available
+  if (props.initialData?.processingFeeId && processingOptions.value.length > 0) {
+    const savedOption = processingOptions.value.find(
+      option => option.id === props.initialData.processingFeeId
+    )
+    if (savedOption) {
+      selectedProcessing.value = savedOption
+    }
+  } 
+  // Auto-select first option if only one available
+  else if (processingOptions.value.length === 1) {
+    selectedProcessing.value = processingOptions.value[0]
+  }
+})
 </script>
