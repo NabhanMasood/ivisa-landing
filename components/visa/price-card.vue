@@ -181,7 +181,7 @@
     <!-- Security Message -->
     <div class="border rounded-xl p-4" style="border-color: #E5E7EB;">
       <div class="flex items-start gap-3">
-        <img src="/svg/union.svg" alt="Security" style="width: 19.2px; height: 19.2px;" />
+        <img src="/svg/Union.svg" alt="Security" style="width: 19.2px; height: 19.2px;" />
         <p style="font-family: Geist; font-weight: 500; font-size: 16px; line-height: 20px; color: #3E3E3E;">
           We take strong measures to protect your information
         </p>
