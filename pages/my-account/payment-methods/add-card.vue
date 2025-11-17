@@ -21,20 +21,20 @@
           </h1>
         </div>
         <div class="flex gap-3 w-full sm:w-auto">
-          <Button
+          <Button 
             @click="goBack"
-            variant="outline"
+            variant="outline" 
             class="rounded-lg flex-1 sm:flex-none !bg-[#EFEFEF] hover:!bg-[#E5E5E5] border-0"
             :disabled="isSaving"
           >
             Discard
           </Button>
-          <Button
+          <Button 
             @click="handleSave"
             class="rounded-lg !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white flex-1 sm:flex-none"
             :disabled="isSaving || !isFormValid"
           >
-            {{ isSaving ? "Saving..." : "Save Card" }}
+            {{ isSaving ? 'Saving...' : 'Save Card' }}
           </Button>
         </div>
       </div>
@@ -79,10 +79,7 @@
 
           <!-- Name Field -->
           <div class="flex flex-col gap-2">
-            <Label
-              for="name"
-              class="text-sm font-medium text-foreground font-inter"
-            >
+            <Label for="name" class="text-sm font-medium text-foreground font-inter">
               Cardholder Name *
             </Label>
             <Input
@@ -97,10 +94,7 @@
 
           <!-- Card Number Field -->
           <div class="flex flex-col gap-2">
-            <Label
-              for="cardNumber"
-              class="text-sm font-medium text-foreground font-inter"
-            >
+            <Label for="cardNumber" class="text-sm font-medium text-foreground font-inter">
               Card Number *
             </Label>
             <Input
@@ -119,18 +113,12 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Expires -->
             <div class="flex flex-col gap-2">
-              <Label
-                for="expires"
-                class="text-sm font-medium text-foreground font-inter"
-              >
+              <Label for="expires" class="text-sm font-medium text-foreground font-inter">
                 Expiry Month *
               </Label>
               <div class="relative">
                 <Select v-model="formData.expiryMonth" required>
-                  <SelectTrigger
-                    id="expires"
-                    class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden"
-                  >
+                  <SelectTrigger id="expires" class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden">
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,24 +147,18 @@
 
             <!-- Year -->
             <div class="flex flex-col gap-2">
-              <Label
-                for="year"
-                class="text-sm font-medium text-foreground font-inter"
-              >
+              <Label for="year" class="text-sm font-medium text-foreground font-inter">
                 Expiry Year *
               </Label>
               <div class="relative">
                 <Select v-model="formData.expiryYear" required>
-                  <SelectTrigger
-                    id="year"
-                    class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden"
-                  >
+                  <SelectTrigger id="year" class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="year in availableYears"
-                      :key="year"
+                    <SelectItem 
+                      v-for="year in availableYears" 
+                      :key="year" 
                       :value="year.toString()"
                     >
                       {{ year }}

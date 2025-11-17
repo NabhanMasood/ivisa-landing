@@ -365,14 +365,14 @@ const emit = defineEmits<{
 }>();
 
 interface Traveler {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  birthMonth: string;
-  birthYear: string;
-  email: string;
-  phone: string;
-  receiveUpdates: boolean;
+  firstName: string
+  lastName: string
+  birthDate: string
+  birthMonth: string
+  birthYear: string
+  email: string
+  phone: string
+  receiveUpdates: boolean
 }
 
 const travelers = ref<Traveler[]>([]);
@@ -380,6 +380,9 @@ const expandedTravelers = ref<Record<number, boolean>>({});
 
 // Auth composable
 const { currentUser, isAuthenticated } = useAuthApi();
+
+// Auth composable
+const { currentUser, isAuthenticated } = useAuthApi()
 
 // Constants
 const months = [
@@ -444,6 +447,11 @@ watch(
       ) {
         travelers.value[0].email = currentUser.value.email;
       }
+    }
+    
+    // Ensure email is set to logged-in user's email after count change
+    if (isAuthenticated.value && currentUser.value?.email && travelers.value.length > 0) {
+      travelers.value[0].email = currentUser.value.email
     }
   }
 );

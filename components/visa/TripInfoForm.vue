@@ -512,10 +512,11 @@ const handleNext = () => {
     nationality: formData.value.nationality,
     visaType: formData.value.visaType,
     applicants: formData.value.applicants,
-    productDetails: selectedProduct.value,
-  });
-
-  emit("next", {
+    productDetails: selectedProduct.value
+  })
+  
+  
+  emit('next', {
     nationality: formData.value.nationality,
     visaType: formData.value.visaType,
     applicants: formData.value.applicants,
@@ -524,8 +525,8 @@ const handleNext = () => {
 };
 
 onMounted(async () => {
-  await initializeRates();
-
+  await initializeRates()
+  
   // Debug: Check if rates are loaded
   const { exchangeRates, selectedCurrency } = useCurrency();
   console.log("💱 Exchange Rates:", exchangeRates.value);
