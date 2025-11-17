@@ -2,35 +2,39 @@
   <div class="flex justify-center pt-10 pb-20 min-h-screen px-4">
     <div class="flex flex-col w-full max-w-[776px] gap-6">
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div
+        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div class="flex items-center gap-4">
-          <Button 
+          <Button
             @click="goBack"
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             class="rounded-md w-[42px] h-[36px] border border-[#E4E4E8]"
           >
             <ChevronLeft class="h-5 w-5" />
           </Button>
-          <h1 class="text-2xl font-semibold tracking-tight text-foreground font-geist">
+          <h1
+            class="text-2xl font-semibold tracking-tight text-foreground font-geist"
+          >
             Credit / debit card
           </h1>
         </div>
         <div class="flex gap-3 w-full sm:w-auto">
-          <Button 
+          <Button
             @click="goBack"
-            variant="outline" 
+            variant="outline"
             class="rounded-lg flex-1 sm:flex-none !bg-[#EFEFEF] hover:!bg-[#E5E5E5] border-0"
             :disabled="isSaving"
           >
             Discard
           </Button>
-          <Button 
+          <Button
             @click="handleSave"
             class="rounded-lg !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white flex-1 sm:flex-none"
             :disabled="isSaving || !isFormValid"
           >
-            {{ isSaving ? 'Saving...' : 'Save Card' }}
+            {{ isSaving ? "Saving..." : "Save Card" }}
           </Button>
         </div>
       </div>
@@ -52,20 +56,33 @@
       <Card class="rounded-xl border p-4 sm:p-6 bg-white">
         <form @submit.prevent="handleSave" class="flex flex-col gap-6">
           <!-- Header with Payment Icons -->
-          <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div
+            class="flex flex-col sm:flex-row items-start justify-between gap-4"
+          >
             <div>
-              <h2 class="text-lg font-semibold text-foreground font-geist">Card Details</h2>
-              <p class="text-sm text-muted-foreground font-inter">Add the card details below</p>
+              <h2 class="text-lg font-semibold text-foreground font-geist">
+                Card Details
+              </h2>
+              <p class="text-sm text-muted-foreground font-inter">
+                Add the card details below
+              </p>
             </div>
             <!-- Single SVG Strip with border and rounded corners -->
             <div class="rounded-md p-1">
-              <img src="/svg/payment-strip.svg" alt="Payment Methods" class="h-[32px]" />
+              <img
+                src="/svg/payment-strip.svg"
+                alt="Payment Methods"
+                class="h-[32px]"
+              />
             </div>
           </div>
 
           <!-- Name Field -->
           <div class="flex flex-col gap-2">
-            <Label for="name" class="text-sm font-medium text-foreground font-inter">
+            <Label
+              for="name"
+              class="text-sm font-medium text-foreground font-inter"
+            >
               Cardholder Name *
             </Label>
             <Input
@@ -80,7 +97,10 @@
 
           <!-- Card Number Field -->
           <div class="flex flex-col gap-2">
-            <Label for="cardNumber" class="text-sm font-medium text-foreground font-inter">
+            <Label
+              for="cardNumber"
+              class="text-sm font-medium text-foreground font-inter"
+            >
               Card Number *
             </Label>
             <Input
@@ -99,12 +119,18 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Expires -->
             <div class="flex flex-col gap-2">
-              <Label for="expires" class="text-sm font-medium text-foreground font-inter">
+              <Label
+                for="expires"
+                class="text-sm font-medium text-foreground font-inter"
+              >
                 Expiry Month *
               </Label>
               <div class="relative">
                 <Select v-model="formData.expiryMonth" required>
-                  <SelectTrigger id="expires" class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden">
+                  <SelectTrigger
+                    id="expires"
+                    class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden"
+                  >
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
@@ -122,47 +148,56 @@
                     <SelectItem value="12">12</SelectItem>
                   </SelectContent>
                 </Select>
-                <img 
-                  src="/svg/arrow-down.svg" 
-                  alt="" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" 
-                  style="width: 9.33px; height: 5.33px;"
+                <img
+                  src="/svg/arrow-down.svg"
+                  alt=""
+                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style="width: 9.33px; height: 5.33px"
                 />
               </div>
             </div>
 
             <!-- Year -->
             <div class="flex flex-col gap-2">
-              <Label for="year" class="text-sm font-medium text-foreground font-inter">
+              <Label
+                for="year"
+                class="text-sm font-medium text-foreground font-inter"
+              >
                 Expiry Year *
               </Label>
               <div class="relative">
                 <Select v-model="formData.expiryYear" required>
-                  <SelectTrigger id="year" class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden">
+                  <SelectTrigger
+                    id="year"
+                    class="rounded-lg h-11 px-3 font-inter [&>svg]:hidden"
+                  >
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem 
-                      v-for="year in availableYears" 
-                      :key="year" 
+                    <SelectItem
+                      v-for="year in availableYears"
+                      :key="year"
                       :value="year.toString()"
                     >
                       {{ year }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <img 
-                  src="/svg/arrow-down.svg" 
-                  alt="" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" 
-                  style="width: 9.33px; height: 5.33px;"
+                <img
+                  src="/svg/arrow-down.svg"
+                  alt=""
+                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style="width: 9.33px; height: 5.33px"
                 />
               </div>
             </div>
 
             <!-- CVC -->
             <div class="flex flex-col gap-2">
-              <Label for="cvc" class="text-sm font-medium text-foreground font-inter">
+              <Label
+                for="cvc"
+                class="text-sm font-medium text-foreground font-inter"
+              >
                 CVC *
               </Label>
               <Input
@@ -186,7 +221,10 @@
               type="checkbox"
               class="rounded border-gray-300"
             />
-            <Label for="isDefault" class="text-sm font-medium text-foreground font-inter cursor-pointer">
+            <Label
+              for="isDefault"
+              class="text-sm font-medium text-foreground font-inter cursor-pointer"
+            >
               Set as default payment method
             </Label>
           </div>
@@ -197,101 +235,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ChevronLeft, Lock } from 'lucide-vue-next'
-import Button from '@/components/ui/button.vue'
-import Card from '@/components/ui/card/Card.vue'
-import Input from '@/components/ui/input.vue'
-import Label from '@/components/ui/label.vue'
-import Select from '@/components/ui/select/Select.vue'
-import SelectContent from '@/components/ui/select/SelectContent.vue'
-import SelectItem from '@/components/ui/select/SelectItem.vue'
-import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
-import SelectValue from '@/components/ui/select/SelectValue.vue'
-import { useCardInfo } from '@/composables/useCardInfo'
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { ChevronLeft, Lock } from "lucide-vue-next";
+import Button from "@/components/ui/button.vue";
+import Card from "@/components/ui/card/Card.vue";
+import Input from "@/components/ui/Input.vue";
+import Label from "@/components/ui/label.vue";
+import Select from "@/components/ui/select/Select.vue";
+import SelectContent from "@/components/ui/select/SelectContent.vue";
+import SelectItem from "@/components/ui/select/SelectItem.vue";
+import SelectTrigger from "@/components/ui/select/SelectTrigger.vue";
+import SelectValue from "@/components/ui/select/SelectValue.vue";
+import { useCardInfo } from "@/composables/useCardInfo";
 
-const router = useRouter()
-const { addCard } = useCardInfo()
+const router = useRouter();
+const { addCard } = useCardInfo();
 
-const formattedCardNumber = ref('')
-const isSaving = ref(false)
-const error = ref('')
+const formattedCardNumber = ref("");
+const isSaving = ref(false);
+const error = ref("");
 
 const formData = ref({
-  cardholderName: '',
-  expiryMonth: '',
-  expiryYear: '',
-  cvc: '',
-  isDefault: false
-})
+  cardholderName: "",
+  expiryMonth: "",
+  expiryYear: "",
+  cvc: "",
+  isDefault: false,
+});
 
 // Generate years from current year to 20 years ahead
-const currentYear = new Date().getFullYear()
-const availableYears = Array.from({ length: 20 }, (_, i) => currentYear + i)
+const currentYear = new Date().getFullYear();
+const availableYears = Array.from({ length: 20 }, (_, i) => currentYear + i);
 
 // Detect card brand from card number
 const detectCardBrand = (cardNumber: string): string => {
-  const number = cardNumber.replace(/\s/g, '')
-  
-  if (/^4/.test(number)) return 'visa'
-  if (/^5[1-5]/.test(number)) return 'mastercard'
-  if (/^3[47]/.test(number)) return 'amex'
-  if (/^6(?:011|5)/.test(number)) return 'discover'
-  if (/^3[068]/.test(number)) return 'diners'
-  if (/^35/.test(number)) return 'jcb'
-  if (/^62/.test(number)) return 'unionpay'
-  
-  return 'visa' // default
-}
+  const number = cardNumber.replace(/\s/g, "");
+
+  if (/^4/.test(number)) return "visa";
+  if (/^5[1-5]/.test(number)) return "mastercard";
+  if (/^3[47]/.test(number)) return "amex";
+  if (/^6(?:011|5)/.test(number)) return "discover";
+  if (/^3[068]/.test(number)) return "diners";
+  if (/^35/.test(number)) return "jcb";
+  if (/^62/.test(number)) return "unionpay";
+
+  return "visa"; // default
+};
 
 // Get last 4 digits from card number
 const getLast4 = (cardNumber: string): string => {
-  const number = cardNumber.replace(/\s/g, '')
-  return number.slice(-4)
-}
+  const number = cardNumber.replace(/\s/g, "");
+  return number.slice(-4);
+};
 
 // Validate form
 const isFormValid = computed(() => {
   return (
-    formData.value.cardholderName.trim() !== '' &&
-    formattedCardNumber.value.replace(/\s/g, '').length >= 13 &&
-    formData.value.expiryMonth !== '' &&
-    formData.value.expiryYear !== '' &&
+    formData.value.cardholderName.trim() !== "" &&
+    formattedCardNumber.value.replace(/\s/g, "").length >= 13 &&
+    formData.value.expiryMonth !== "" &&
+    formData.value.expiryYear !== "" &&
     formData.value.cvc.trim().length >= 3
-  )
-})
+  );
+});
 
 const formatCardNumber = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  let value = input.value.replace(/\s/g, '') // Remove all spaces
-  value = value.replace(/\D/g, '') // Remove non-digits
-  value = value.substring(0, 16) // Limit to 16 digits
-  
+  const input = event.target as HTMLInputElement;
+  let value = input.value.replace(/\s/g, ""); // Remove all spaces
+  value = value.replace(/\D/g, ""); // Remove non-digits
+  value = value.substring(0, 16); // Limit to 16 digits
+
   // Add space every 4 digits
-  const formatted = value.match(/.{1,4}/g)?.join(' ') || value
-  formattedCardNumber.value = formatted
-}
+  const formatted = value.match(/.{1,4}/g)?.join(" ") || value;
+  formattedCardNumber.value = formatted;
+};
 
 const formatCVC = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  formData.value.cvc = input.value.replace(/\D/g, '').substring(0, 4)
-}
+  const input = event.target as HTMLInputElement;
+  formData.value.cvc = input.value.replace(/\D/g, "").substring(0, 4);
+};
 
 const handleSave = async () => {
   if (!isFormValid.value) {
-    error.value = 'Please fill in all required fields'
-    return
+    error.value = "Please fill in all required fields";
+    return;
   }
 
-  error.value = ''
-  isSaving.value = true
+  error.value = "";
+  isSaving.value = true;
 
   try {
-    const cardNumber = formattedCardNumber.value.replace(/\s/g, '')
-    
+    const cardNumber = formattedCardNumber.value.replace(/\s/g, "");
+
     if (cardNumber.length < 13) {
-      throw new Error('Invalid card number')
+      throw new Error("Invalid card number");
     }
 
     const cardData = {
@@ -300,26 +338,26 @@ const handleSave = async () => {
       cardBrand: detectCardBrand(formattedCardNumber.value),
       expiryMonth: formData.value.expiryMonth,
       expiryYear: formData.value.expiryYear,
-      isDefault: formData.value.isDefault
-    }
+      isDefault: formData.value.isDefault,
+    };
 
-    const response = await addCard(cardData)
+    const response = await addCard(cardData);
 
     if (response.success) {
       // Navigate back to payment methods list
-      router.push('/my-account/payment-methods')
+      router.push("/my-account/payment-methods");
     } else {
-      error.value = response.message || 'Failed to save card'
+      error.value = response.message || "Failed to save card";
     }
   } catch (err: any) {
-    console.error('Error saving card:', err)
-    error.value = err.message || 'Failed to save card. Please try again.'
+    console.error("Error saving card:", err);
+    error.value = err.message || "Failed to save card. Please try again.";
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
-}
+};
 
 const goBack = () => {
-  router.back()
-}
+  router.back();
+};
 </script>

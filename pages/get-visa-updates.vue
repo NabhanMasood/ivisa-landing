@@ -162,7 +162,7 @@ import { ref } from 'vue'
 import HeaderLoggedIn from '@/components/HeaderLoggedIn.vue'
 import Footer from '@/components/Footer.vue'
 import Button from '@/components/ui/button.vue'
-import Input from '@/components/ui/input.vue'
+import Input from '@/components/ui/Input.vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 
