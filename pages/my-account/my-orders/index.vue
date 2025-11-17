@@ -194,7 +194,7 @@ import Table from '@/components/ui/table/Table.vue'
 import TableBody from '@/components/ui/table/Tablebody.vue'
 import TableCell from '@/components/ui/table/Tablecell.vue'
 import TableHead from '@/components/ui/table/Tablehead.vue'
-import TableHeader from '@/components/ui/table/Tableheader.vue'
+import TableHeader from '@/components/ui/table/TableHeader.vue'
 import TableRow from '@/components/ui/table/Tablerow.vue'
 
 const router = useRouter()
