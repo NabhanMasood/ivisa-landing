@@ -240,7 +240,12 @@ const completeApplicationData = computed(() => {
       }
       
       if (index === 0) {
-        travelerData.email = traveler.email
+        travelerData.email = traveler.email || ''
+        travelerData.phone = traveler.phone || ''
+        console.log('📞 First traveler phone:', travelerData.phone)
+      } else {
+        // For additional travelers, use empty string or first traveler's phone
+        travelerData.phone = ''
       }
       
       return travelerData

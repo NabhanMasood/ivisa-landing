@@ -245,7 +245,6 @@ export const useCurrency = () => {
 
   // Initialize rates
   const initializeRates = async () => {
-    console.log('🔄 Initializing currency rates...')
     
     // Cache version - increment this when API structure changes
     const CACHE_VERSION = '1.0'
@@ -272,10 +271,6 @@ export const useCurrency = () => {
             }
             
             lastFetched.value = new Date(timestamp)
-            console.log('📦 Loaded cached exchange rates')
-            console.log('📅 Cache date:', lastFetched.value.toLocaleString())
-            console.log('💱 Cached currencies:', Object.keys(exchangeRates.value).length)
-            console.log('💱 Available currencies:', availableCurrencies.value.length)
           } else {
             console.warn('⚠️ Cached data is incomplete, fetching fresh data...')
             localStorage.removeItem('exchange-rates')
@@ -318,7 +313,6 @@ export const useCurrency = () => {
       console.log('🔄 Cache expired or empty, fetching fresh rates...')
       await fetchExchangeRates()
     } else {
-      console.log('✅ Using cached rates (still fresh)')
     }
   }
 

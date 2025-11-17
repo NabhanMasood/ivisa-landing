@@ -58,7 +58,27 @@
           <!-- Inputs Container -->
           <div class="space-y-4">
 
-     
+            <!-- Name Input - Show only if not authenticated -->
+            <div v-if="!isAuthenticated">
+              <Input
+                v-model="formData.fullName"
+                type="text"
+                placeholder="Full Name"
+                required
+                class="w-full h-12 border-gray-200"
+              />
+            </div>
+
+            <!-- Email Input - Show only if not authenticated -->
+            <div v-if="!isAuthenticated">
+              <Input
+                v-model="formData.email"
+                type="email"
+                placeholder="Email"
+                required
+                class="w-full h-12 border-gray-200"
+              />
+            </div>
 
             <!-- Password Input -->
             <div>
@@ -170,7 +190,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import Input from '@/components/ui/input.vue'
 import Button from '@/components/ui/button.vue'
 
-const { register, login } = useAuthApi()
+const { register, login, isAuthenticated } = useAuthApi()
 const router = useRouter()
 const route = useRoute()
 
@@ -237,9 +257,13 @@ const passwordsMatch = computed(() => {
 
 // Check if entire form is valid
 const isFormValid = computed(() => {
-  return (
+  const nameAndEmailValid = isAuthenticated.value || (
     formData.fullName.trim() !== '' &&
-    formData.email.trim() !== '' &&
+    formData.email.trim() !== ''
+  )
+  
+  return (
+    nameAndEmailValid &&
     isPasswordValid.value &&
     passwordsMatch.value
   )

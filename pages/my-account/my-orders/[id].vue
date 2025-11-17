@@ -32,19 +32,54 @@
                   {{ application.applicationNumber }}
                 </h1>
                 <span 
-                  :class="getStatusColor(application.status)"
+                  :class="getStatusColor(effectiveStatus)"
                   class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium"
                 >
-                  {{ formatStatus(application.status) }}
+                  {{ formatStatus(effectiveStatus) }}
                 </span>
               </div>
             </div>
-            <Button 
-              @click="navigateTo('/')"
-              class="rounded-lg !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white font-geist"
-            >
-              Create New Order
-            </Button>
+            <div class="flex items-center gap-2">
+              <Button 
+                v-if="effectiveStatus === 'Additional Info required' && !allAdditionalInfoSubmitted"
+                @click="navigateToAdditionalInfo"
+                class="rounded-lg !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white font-geist"
+              >
+                Fill Additional Information
+              </Button>
+              <Button 
+                @click="navigateTo('/')"
+                class="rounded-lg !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white font-geist"
+              >
+                Create New Order
+              </Button>
+            </div>
+          </div>
+
+          <!-- Additional Info Alert -->
+          <div 
+            v-if="effectiveStatus === 'Additional Info required'"
+            class="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4 text-orange-900"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 mt-0.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86A2.07 2.07 0 0021 16.93L13.93 4.14a2.07 2.07 0 00-3.86 0L3 16.93A2.07 2.07 0 005.07 19z" />
+                </svg>
+                <div>
+                  <p class="font-medium font-geist">Additional information requested</p>
+                  <p class="text-sm mt-1 font-inter">
+                    We need some updates to continue processing your application. Please fill the requested fields.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                @click="navigateToAdditionalInfo"
+                class="rounded-md !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white font-geist h-9 px-3"
+              >
+                Fill Additional Info
+              </Button>
+            </div>
           </div>
 
           <!-- Search Bar -->
@@ -146,10 +181,10 @@
                 <div>
                   <p class="text-sm text-[#64748B] font-geist mb-1">Status</p>
                   <span 
-                    :class="getStatusColor(application.status)"
+                    :class="getStatusColor(effectiveStatus)"
                     class="inline-block px-3 py-1 rounded-full text-xs font-medium capitalize"
                   >
-                    {{ formatStatus(application.status) }}
+                    {{ formatStatus(effectiveStatus) }}
                   </span>
                 </div>
               </div>
@@ -199,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronLeft } from 'lucide-vue-next'
 import Button from '@/components/ui/button.vue'
@@ -210,11 +245,13 @@ import TableCell from '@/components/ui/table/TableCell.vue'
 import TableHead from '@/components/ui/table/TableHead.vue'
 import TableHeader from '@/components/ui/table/TableHeader.vue'
 import TableRow from '@/components/ui/table/TableRow.vue'
+import { useVisaProductFieldsApi } from '@/composables/useVisaProductFields'
 
 const router = useRouter()
 const route = useRoute()
 
 const { getApplicationById, formatStatus, getStatusColor } = useVisaApplications()
+const { checkAllAdditionalInfoSubmitted } = useVisaProductFieldsApi()
 
 // Currency conversion
 const { formatPrice, selectedCurrency } = useCurrency()
@@ -224,11 +261,34 @@ const loading = ref(true)
 const error = ref('')
 const searchQuery = ref('')
 const selectedRows = ref<number[]>([])
+const allAdditionalInfoSubmitted = ref(false)
+const hasAdditionalInfoFields = ref(false) // Track if there are any additional info fields
 
 const applicationId = computed(() => parseInt(route.params.id as string))
 
 const travelers = computed(() => {
   return application.value?.travelers || []
+})
+
+// Computed property to determine the effective status for display
+// This overrides backend status if additional info is required but not submitted
+const effectiveStatus = computed(() => {
+  if (!application.value) return 'pending'
+  
+  const backendStatus = application.value.status
+  
+  // If all additional info is submitted and status is 'Additional Info required', show 'processing'
+  if (allAdditionalInfoSubmitted.value && backendStatus === 'Additional Info required') {
+    return 'processing'
+  }
+  
+// Only override to 'Additional Info required' when backend also says so
+if (backendStatus === 'Additional Info required' && hasAdditionalInfoFields.value && !allAdditionalInfoSubmitted.value) {
+    return 'Additional Info required'
+  }
+  
+  // Otherwise, show the backend status
+  return backendStatus
 })
 
 const filteredTravelers = computed(() => {
@@ -246,6 +306,14 @@ onMounted(async () => {
   await fetchApplicationDetails()
 })
 
+// Refresh when route changes (e.g., navigating back from additional info page)
+watch(() => route.path, async (newPath) => {
+  if (newPath === `/my-account/my-orders/${applicationId.value}`) {
+    console.log('🔄 Route changed to order details, refreshing application...')
+    await fetchApplicationDetails()
+  }
+}, { immediate: false })
+
 const fetchApplicationDetails = async () => {
   loading.value = true
   error.value = ''
@@ -256,6 +324,45 @@ const fetchApplicationDetails = async () => {
     if (response.success && response.data) {
       application.value = response.data.data
       console.log('✅ Application details loaded:', application.value)
+      
+      // Always check if additional info has been submitted, regardless of current status
+      // This ensures we show the correct status even if backend status is incorrect
+      const travelers = application.value.travelers || []
+      
+      // Check if there are any additional info fields
+      const { getFieldsByApplication } = useVisaProductFieldsApi()
+      try {
+        // Check application-level fields
+        const appFieldsResponse = await getFieldsByApplication(applicationId.value)
+        const hasAppFields = appFieldsResponse.success && appFieldsResponse.data && appFieldsResponse.data.length > 0
+        
+        // Check if any traveler has fields
+        let hasTravelerFields = false
+        for (const traveler of travelers) {
+          if (traveler.id) {
+            const travelerFieldsResponse = await getFieldsByApplication(applicationId.value, traveler.id)
+            if (travelerFieldsResponse.success && travelerFieldsResponse.data && travelerFieldsResponse.data.length > 0) {
+              hasTravelerFields = true
+              break
+            }
+          }
+        }
+        
+        hasAdditionalInfoFields.value = hasAppFields || hasTravelerFields
+        console.log('🔍 Has additional info fields:', hasAdditionalInfoFields.value)
+      } catch (err) {
+        console.error('Error checking for additional info fields:', err)
+        hasAdditionalInfoFields.value = false
+      }
+      
+      // Check if all additional info has been submitted
+      // Pass the total number of travelers to ensure we check all of them
+      allAdditionalInfoSubmitted.value = await checkAllAdditionalInfoSubmitted(
+        applicationId.value,
+        travelers,
+        application.value.numberOfTravelers
+      )
+      console.log('✅ All additional info submitted:', allAdditionalInfoSubmitted.value)
     } else {
       error.value = response.message || 'Failed to load application details'
     }
@@ -270,6 +377,12 @@ const fetchApplicationDetails = async () => {
 const goBack = () => {
   router.back()
 }
+
+const navigateToAdditionalInfo = () => {
+  router.push(`/my-account/additional-info?applicationId=${applicationId.value}`)
+}
+
+// Resubmission page is deprecated; all flows use Additional Info page
 
 const toggleRowSelection = (id: number) => {
   if (selectedRows.value.includes(id)) {

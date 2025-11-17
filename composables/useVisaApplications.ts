@@ -1,12 +1,25 @@
 import { useApi, handleApiError, type ApiResponse } from './useApi'
 
 /**
+ * Resubmission Request interface (Option B)
+ */
+export interface ResubmissionRequest {
+  id: string
+  target: 'application' | 'traveler'
+  travelerId?: number | null
+  fieldIds: number[]
+  note?: string | null
+  requestedAt: Date | string
+  fulfilledAt?: Date | string | null
+}
+
+/**
  * Visa Application interface
  */
 export interface VisaApplication {
   id: number
   applicationNumber: string
-  status: 'pending' | 'processing' | 'approved' | 'rejected' | 'submitted'
+  status: 'pending' | 'processing' | 'approved' | 'rejected' | 'submitted' | 'resubmission' | 'Additional Info required' | 'completed'
   totalAmount: number
   submittedAt: string
   createdAt: string
@@ -20,6 +33,14 @@ export interface VisaApplication {
   processingType: string
   processingFee: number
   notes?: string
+  
+  // ✅ NEW: Array of resubmission requests (Option B)
+  resubmissionRequests?: ResubmissionRequest[] | null
+  
+  // ⚠️ DEPRECATED: Backward compatibility (Option A)
+  resubmissionTarget?: 'application' | 'traveler' | null
+  resubmissionTravelerId?: number | null
+  requestedFieldIds?: number[] | null
   
   // Relations
   travelers?: Traveler[]
@@ -44,6 +65,7 @@ export interface Traveler {
   residenceCountry: string
   hasSchengenVisa: boolean
   createdAt: string
+  notes?: string
 }
 
 /**
@@ -87,10 +109,7 @@ export const useVisaApplications = () => {
   /**
    * Get all applications for current user
    */
- /**
- * Get all applications for current user
- */
-const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse>> => {
+  const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse>> => {
     console.log('🔵 useVisaApplications.getMyApplications called')
     
     try {
@@ -121,7 +140,17 @@ const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse
         `/visa-applications/customer/${customerId}`
       )
       
-      console.log('✅ Applications fetched:', response.data)
+      console.log('✅ Raw API response:', response)
+      console.log('✅ Response data:', response.data)
+      console.log('✅ Response data type:', typeof response.data)
+      if (response.data) {
+        console.log('✅ Response.data.data:', response.data.data)
+        console.log('✅ Response.data.data is array?', Array.isArray(response.data.data))
+        if (Array.isArray(response.data.data)) {
+          console.log('✅ Number of applications in response:', response.data.data.length)
+          console.log('✅ Application IDs:', response.data.data.map((app: any) => app.id))
+        }
+      }
       
       return {
         data: response.data,
@@ -144,8 +173,6 @@ const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse
    * Get single application details by ID
    */
   const getApplicationById = async (id: number): Promise<ApiResponse<ApplicationDetailsResponse>> => {
-    console.log('🔵 useVisaApplications.getApplicationById called for:', id)
-    
     try {
       const response = await api.get<ApplicationDetailsResponse>(
         `/visa-applications/${id}`
@@ -201,15 +228,142 @@ const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse
   }
   
   /**
+   * Update application status
+   * PATCH /visa-applications/:id/status
+   */
+  const updateApplicationStatus = async (
+    id: number | string,
+    status: string
+  ): Promise<ApiResponse<VisaApplication>> => {
+    try {
+      const response = await api.patch<VisaApplication | { status: boolean; message: string; data: VisaApplication }>(
+        `/visa-applications/${id}/status`,
+        { status }
+      )
+
+      let applicationData: VisaApplication
+
+      if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
+        const wrappedResponse = response.data as { status: boolean; message: string; data: VisaApplication }
+        if (wrappedResponse.status && wrappedResponse.data) {
+          applicationData = wrappedResponse.data
+        } else {
+          throw new Error(wrappedResponse.message || 'Failed to update application status')
+        }
+      } else {
+        applicationData = response.data as VisaApplication
+      }
+
+      return {
+        data: applicationData,
+        message: 'Application status updated successfully',
+        success: true,
+      }
+    } catch (error: any) {
+      console.error('❌ Update application status error:', error)
+      const errorMessage = handleApiError(error)
+      return {
+        data: null as any,
+        message: errorMessage,
+        success: false,
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
+   * ✅ NEW: Request resubmission (supports both single and multiple requests)
+   * POST /visa-applications/:id/request-resubmission
+   */
+  const requestResubmission = async (
+    applicationId: number,
+    requests: Array<{
+      target?: 'application' | 'traveler'
+      travelerId?: number
+      fieldIds: number[]
+      note?: string
+    }>
+  ): Promise<ApiResponse<any>> => {
+    try {
+      // Format requests
+      const formattedRequests = requests.map(req => ({
+        target: req.target || (req.travelerId ? 'traveler' : 'application'),
+        travelerId: req.travelerId,
+        fieldIds: Array.isArray(req.fieldIds) ? req.fieldIds : [req.fieldIds],
+        note: req.note
+      }))
+
+      console.log('🔵 Requesting resubmission:', { applicationId, requests: formattedRequests })
+
+      const response = await api.post(
+        `/visa-applications/${applicationId}/request-resubmission`,
+        { requests: formattedRequests }
+      )
+
+      console.log('✅ Resubmission requested:', response.data)
+
+      return {
+        data: response.data,
+        message: response.message || 'Resubmission requested successfully',
+        success: true
+      }
+    } catch (error: any) {
+      console.error('❌ Request resubmission error:', error)
+      const errorMessage = handleApiError(error)
+      return {
+        data: null,
+        message: errorMessage,
+        success: false,
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
+   * ✅ NEW: Get active resubmission requests
+   * GET /visa-applications/:id/resubmission-requests
+   */
+  const getResubmissionRequests = async (
+    applicationId: number
+  ): Promise<ApiResponse<ResubmissionRequest[]>> => {
+    try {
+      const response = await api.get(
+        `/visa-applications/${applicationId}/resubmission-requests`
+      )
+
+      console.log('✅ Resubmission requests fetched:', response.data)
+
+      return {
+        data: response.data || [],
+        message: 'Resubmission requests retrieved successfully',
+        success: true
+      }
+    } catch (error: any) {
+      console.error('❌ Get resubmission requests error:', error)
+      return {
+        data: [],
+        message: handleApiError(error),
+        success: false
+      }
+    }
+  }
+
+  /**
    * Format status for display
    */
   const formatStatus = (status: string): string => {
     const statusMap: Record<string, string> = {
+      'draft': 'Draft',
       'pending': 'Pending',
       'processing': 'Processing',
+      'under_review': 'Under Review',
       'approved': 'Approved',
       'rejected': 'Rejected',
-      'submitted': 'Submitted'
+      'cancelled': 'Cancelled',
+      'submitted': 'Submitted',
+      'completed': 'Completed',
+      'Additional Info required': 'Additional Info Required',
+      'resubmission': 'Resubmission'
     }
     return statusMap[status] || status
   }
@@ -219,11 +373,17 @@ const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse
    */
   const getStatusColor = (status: string): string => {
     const colorMap: Record<string, string> = {
+      'draft': 'bg-gray-100 text-gray-800',
       'pending': 'bg-yellow-100 text-yellow-800',
       'processing': 'bg-blue-100 text-blue-800',
+      'under_review': 'bg-indigo-100 text-indigo-800',
       'approved': 'bg-green-100 text-green-800',
+      'completed': 'bg-green-100 text-green-800',
       'rejected': 'bg-red-100 text-red-800',
-      'submitted': 'bg-purple-100 text-purple-800'
+      'cancelled': 'bg-gray-100 text-gray-800',
+      'submitted': 'bg-purple-100 text-purple-800',
+      'Additional Info required': 'bg-orange-100 text-orange-800',
+      'resubmission': 'bg-orange-100 text-orange-800'
     }
     return colorMap[status] || 'bg-gray-100 text-gray-800'
   }
@@ -232,6 +392,9 @@ const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse
     getMyApplications,
     getApplicationById,
     getApplicationByNumber,
+    updateApplicationStatus,
+    requestResubmission,  
+    getResubmissionRequests, 
     formatStatus,
     getStatusColor,
   }

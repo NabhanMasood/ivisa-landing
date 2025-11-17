@@ -18,6 +18,8 @@ export interface Coupon {
 
   value?: number
 
+  status?: 'enable' | 'disable'
+
   createdAt?: string
 
   updatedAt?: string
@@ -36,6 +38,8 @@ export interface CreateCouponDto {
 
   value?: number
 
+  status?: 'enable' | 'disable'
+
 }
 
 
@@ -49,6 +53,8 @@ export interface UpdateCouponDto {
   validity?: string
 
   value?: number
+
+  status?: 'enable' | 'disable'
 
 }
 
@@ -408,11 +414,25 @@ export const useCouponsApi = () => {
             coupon = { ...coupon, value: Number((responseData as any).value) }
           }
           
+          // Check coupon status - ensure it's enabled
+          if (coupon.status && coupon.status !== 'enable') {
+            console.error('[useCouponsApi] validateCoupon: coupon is disabled', {
+              coupon,
+              status: coupon.status
+            })
+            return {
+              data: null as any,
+              message: 'The coupon code does not exist',
+              success: false,
+            }
+          }
+          
           console.debug('[useCouponsApi] validateCoupon: extracted coupon', {
             coupon,
             couponKeys: Object.keys(coupon),
             couponValue: coupon.value,
             couponValueType: typeof coupon.value,
+            couponStatus: coupon.status,
             responseDataKeys: Object.keys(responseData),
             responseDataValue: (responseData as any).value,
             fullResponseData: responseData
@@ -452,10 +472,25 @@ export const useCouponsApi = () => {
       } else {
         // Direct coupon object
         coupon = response.data as Coupon
+        
+        // Check coupon status - ensure it's enabled
+        if (coupon.status && coupon.status !== 'enable') {
+          console.error('[useCouponsApi] validateCoupon: coupon is disabled', {
+            coupon,
+            status: coupon.status
+          })
+          return {
+            data: null as any,
+            message: 'The coupon code does not exist',
+            success: false,
+          }
+        }
+        
         console.debug('[useCouponsApi] validateCoupon: direct coupon object', {
           coupon,
           couponKeys: Object.keys(coupon),
-          couponValue: coupon.value
+          couponValue: coupon.value,
+          couponStatus: coupon.status
         })
       }
 

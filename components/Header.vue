@@ -32,7 +32,7 @@
               <img 
                 src="/svg/my-account/search-bar.svg" 
                 alt="Search" 
-                style="width: 100%; height: 100%;"
+                class="w-full h-full"
               />
             </div>
           </div>
@@ -88,14 +88,85 @@
           <!-- Vertical Divider -->
           <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
 
-          <!-- Notification Bell -->
-          <button class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+          <!-- Notification Bell with Dropdown -->
+          <DropdownMenu v-if="isAuthenticated" v-model:open="notificationDropdownOpen">
+            <DropdownMenuTrigger asChild>
+              <button class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+                <img 
+                  src="/svg/my-account/bell.svg" 
+                  alt="Notifications" 
+                  class="w-5 h-5"
+                />
+                <span 
+                  v-if="notificationCount > 0"
+                  class="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 w-5 bg-red-500 text-white text-[10px] font-semibold rounded-full border-2 border-white"
+                  style="min-width: 20px; padding: 0 2px;"
+                >
+                  {{ notificationCount > 9 ? '9+' : notificationCount }}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-80 z-[110] max-h-[400px] overflow-y-auto">
+              <div class="px-3 py-2 border-b">
+                <h3 class="font-semibold text-sm text-gray-900">Notifications</h3>
+              </div>
+              
+              <!-- Loading State -->
+              <div v-if="notificationsLoading" class="px-3 py-4 text-center text-sm text-gray-500">
+                Loading notifications...
+              </div>
+              
+              <!-- Empty State -->
+              <div v-else-if="notificationCount === 0" class="px-3 py-8 text-center">
+                <p class="text-sm text-gray-500">No new notifications</p>
+              </div>
+              
+              <!-- Notifications List -->
+              <div v-else class="divide-y divide-gray-100">
+                <DropdownMenuItem
+                  v-for="notification in notifications"
+                  :key="notification.id"
+                  class="cursor-pointer px-3 py-3 hover:bg-gray-50 focus:bg-gray-50"
+                  @click="handleNotificationClick(notification)"
+                >
+                  <div class="flex flex-col gap-1 w-full">
+                    <div class="flex items-start justify-between gap-2">
+                      <span class="text-sm font-medium text-gray-900 flex-1">
+                        Application #{{ notification.applicationNumber }}
+                      </span>
+                      <span class="text-xs text-gray-500 whitespace-nowrap">
+                        {{ formatNotificationDate(notification.requestedAt) }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-gray-600 line-clamp-2">
+                      {{ notification.message }}
+                    </p>
+                    <span class="text-xs text-orange-600 font-medium mt-1">
+                      Action Required
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              </div>
+              
+              <!-- View All Link -->
+              <div v-if="notificationCount > 0" class="px-3 py-2 border-t">
+                <DropdownMenuItem 
+                  class="cursor-pointer text-center justify-center text-sm text-[#1ECE84] hover:text-[#1AB876]"
+                  @click="navigateTo('/my-account/my-orders')"
+                >
+                  View All Applications
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <!-- Notification Bell (Static for non-authenticated) -->
+          <button v-else class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
             <img 
               src="/svg/my-account/bell.svg" 
               alt="Notifications" 
               class="w-5 h-5"
             />
-            <span class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
           </button>
 
           <!-- Vertical Divider -->
@@ -270,7 +341,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown } from 'lucide-vue-next'
 import Button from '@/components/ui/button.vue'
@@ -278,6 +349,7 @@ import DropdownMenu from '@/components/ui/dropdown-menu/DropdownMenu.vue'
 import DropdownMenuTrigger from '@/components/ui/dropdown-menu/DropdownMenuTrigger.vue'
 import DropdownMenuContent from '@/components/ui/dropdown-menu/DropdownMenuContent.vue'
 import DropdownMenuItem from '@/components/ui/dropdown-menu/DropdownMenuItem.vue'
+import { useNotifications } from '@/composables/useNotifications'
 
 // Get current route
 const route = useRoute()
@@ -323,6 +395,97 @@ const adminInfo = useCookie('admin_info')
 
 const isAuthenticated = computed(() => {
   return !!(authToken.value && adminInfo.value)
+})
+
+// Notifications
+const { 
+  notifications, 
+  loading: notificationsLoading, 
+  unreadCount: notificationCount,
+  fetchNotifications,
+  initialize: initializeNotifications
+} = useNotifications()
+
+// Track notification dropdown open state
+const notificationDropdownOpen = ref(false)
+
+// Initialize notifications when authenticated
+let notificationCleanup: (() => void) | null = null
+
+const setupNotifications = () => {
+  // Cleanup existing interval if any
+  if (notificationCleanup) {
+    notificationCleanup()
+    notificationCleanup = null
+  }
+  
+  if (isAuthenticated.value) {
+    const cleanup = initializeNotifications()
+    if (cleanup) {
+      notificationCleanup = cleanup
+    }
+  }
+}
+
+onMounted(() => {
+  setupNotifications()
+})
+
+onUnmounted(() => {
+  if (notificationCleanup) {
+    notificationCleanup()
+  }
+})
+
+// Watch for authentication changes
+watch(isAuthenticated, (newValue) => {
+  if (newValue) {
+    setupNotifications()
+  } else {
+    if (notificationCleanup) {
+      notificationCleanup()
+      notificationCleanup = null
+    }
+  }
+})
+
+// Format notification date
+const formatNotificationDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  const diffMs = now.getTime() - dateObj.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  
+  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Handle notification click
+const handleNotificationClick = (notification: any) => {
+  // Navigate to the application details page
+  navigateTo(`/my-account/additional-info?applicationId=${notification.applicationId}`)
+}
+
+// Watch notification dropdown open state to refresh when opened
+watch(notificationDropdownOpen, (isOpen) => {
+  if (isOpen && isAuthenticated.value) {
+    // Refresh notifications when dropdown opens
+    fetchNotifications(true)
+  }
+})
+
+// Watch route changes to refresh notifications when navigating to my-account pages
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/my-account') && isAuthenticated.value) {
+    // Refresh notifications when navigating to my-account pages
+    fetchNotifications()
+  }
 })
 
 const userName = computed(() => {
