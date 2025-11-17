@@ -89,9 +89,8 @@ watch(() => props.isOpen, (newValue) => {
     redirectTimer = setTimeout(() => {
       console.log('⏰ Auto-redirecting to signup...')
       navigateToSignup()
-    }, 5000)
+    }, 1000)
   } else {
-    console.log('🔴 Success modal closed')
     // Clear timer if modal closes
     if (redirectTimer) {
       clearTimeout(redirectTimer)

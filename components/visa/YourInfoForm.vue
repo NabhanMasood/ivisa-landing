@@ -144,11 +144,29 @@
                   v-model="traveler.email"
                   type="email"
                   placeholder="johnd@gmail.com"
+                  :readonly="isAuthenticated && currentUser?.email"
                   class="mt-2"
                 />
                 <p style="font-family: Manrope; font-weight: 400; font-size: 12px; line-height: 16px; color: #6B7280;" class="mt-1">
                   Your approved {{ destination }} Visa will be sent to this email address.
                 </p>
+              </div>
+
+              <!-- Phone Number - Only for first traveler -->
+              <div v-if="index === 0">
+                <Label 
+                  :htmlFor="`phone-${index}`"
+                  style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+                >
+                  Phone Number
+                </Label>
+                <Input
+                  :id="`phone-${index}`"
+                  v-model="traveler.phone"
+                  type="tel"
+                  placeholder="+1 234 567 8900"
+                  class="mt-2"
+                />
               </div>
 
               <!-- Newsletter Checkbox - Only for first traveler -->
@@ -220,6 +238,7 @@ import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
 import Checkbox from '@/components/ui/Checkbox.vue'
 import PriceSummaryCard from '@/components/visa/price-card.vue'
+import { useAuthApi } from '@/composables/useAuth'
 
 
 const props = defineProps<{
@@ -244,11 +263,15 @@ interface Traveler {
   birthMonth: string
   birthYear: string
   email: string
+  phone: string
   receiveUpdates: boolean
 }
 
 const travelers = ref<Traveler[]>([])
 const expandedTravelers = ref<Record<number, boolean>>({})
+
+// Auth composable
+const { currentUser, isAuthenticated } = useAuthApi()
 
 // Constants
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -288,8 +311,24 @@ watch(() => props.initialTravelerCount, (newCount, oldCount) => {
       }
       expandedTravelers.value = newExpanded
     }
+    
+    // Ensure email is set to logged-in user's email after count change
+    if (isAuthenticated.value && currentUser.value?.email && travelers.value.length > 0) {
+      travelers.value[0].email = currentUser.value.email
+    }
   }
 })
+
+// Watch for initial travelers data changes (e.g., when navigating back)
+watch(() => props.initialTravelersData, (newData) => {
+  if (newData?.length && newData.length === travelers.value.length) {
+    // Ensure email is always set to logged-in user's email if authenticated
+    if (isAuthenticated.value && currentUser.value?.email && travelers.value.length > 0) {
+      travelers.value[0].email = currentUser.value.email
+      console.log('✅ Overrode email with logged-in user email:', currentUser.value.email)
+    }
+  }
+}, { deep: true })
 
 
 
@@ -309,6 +348,12 @@ const initializeTravelers = () => {
   
   // Expand first traveler by default
   expandedTravelers.value = { 0: true }
+  
+  // Always set email to logged-in user's email if authenticated
+  if (isAuthenticated.value && currentUser.value?.email && travelers.value.length > 0) {
+    travelers.value[0].email = currentUser.value.email
+    console.log('✅ Set email to logged-in user:', currentUser.value.email)
+  }
 }
 
 
@@ -340,10 +385,30 @@ const createEmptyTraveler = (): Traveler => ({
   birthMonth: '',
   birthYear: '',
   email: '',
+  phone: '',
   receiveUpdates: false
 })
 
 initializeTravelers()
+
+// Watch for auth state changes and always set email to logged-in user's email
+watch([isAuthenticated, currentUser], ([authenticated, user]) => {
+  if (authenticated && user?.email && travelers.value.length > 0) {
+    travelers.value[0].email = user.email
+    console.log('✅ Set email to logged-in user after auth change:', user.email)
+  }
+}, { immediate: false })
+
+// Watch the email field to ensure it always matches logged-in user's email
+watch(() => travelers.value[0]?.email, (newEmail) => {
+  if (isAuthenticated.value && currentUser.value?.email && travelers.value.length > 0) {
+    // If user is logged in and email doesn't match, reset it
+    if (newEmail !== currentUser.value.email) {
+      travelers.value[0].email = currentUser.value.email
+      console.log('✅ Reset email to logged-in user email:', currentUser.value.email)
+    }
+  }
+})
 
 const governmentFee = computed(() => travelers.value.length * GOVERNMENT_FEE_PER_TRAVELER)
 
@@ -400,9 +465,11 @@ const isFormValid = () => {
       return false
     }
     
-    // Only check email for first traveler
-    if (i === 0 && !t.email.trim()) {
-      return false
+    // Only check email and phone for first traveler
+    if (i === 0) {
+      if (!t.email.trim() || !t.phone.trim()) {
+        return false
+      }
     }
   }
   

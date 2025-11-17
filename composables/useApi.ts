@@ -63,21 +63,28 @@ export interface ApiResponse<T = any> {
               ...options.headers as any,
               'Authorization': `Bearer ${token}`
             } as any
+            console.log('🔑 Adding Authorization header to request')
+          } else {
+            console.warn('⚠️ No token found, request will be unauthenticated')
           }
         }
       },
   
       onResponseError({ response }) {
         if (process.client) {
-          console.error('API Error:', response.status, response._data)
+          console.error('❌ API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: response._data,
+            url: response.url
+          })
           
-          // Handle 401 Unauthorized
+          // Handle 401 Unauthorized - but don't auto-redirect
+          // Let the calling component handle the error appropriately
           if (response.status === 401) {
-            const tokenCookie = useCookie('auth_token')
-            const adminCookie = useCookie('admin_info')
-            tokenCookie.value = null
-            adminCookie.value = null
-            navigateTo('/login')
+            console.error('❌ 401 Unauthorized - Token may be invalid or expired')
+            // Don't clear cookies or redirect here - let the component decide
+            // This allows password change page to show proper error messages
           }
         }
       }
@@ -87,17 +94,13 @@ export interface ApiResponse<T = any> {
      * GET request
      */
     const get = async <T = any>(url: string, options?: any): Promise<ApiResponse<T>> => {
-      console.log('🔵 useApi.get called')
-      console.log('📍 URL:', url)
-      console.log('🌐 Full URL:', `${baseURL}${url}`)
       
       try {
         const data = await apiFetch<T>(url, {
           method: 'GET',
           ...options
         })
-        
-        console.log('✅ GET response:', data)
+
         
         return {
           data,
@@ -114,10 +117,6 @@ export interface ApiResponse<T = any> {
      * POST request
      */
     const post = async <T = any>(url: string, body?: any, options?: any): Promise<ApiResponse<T>> => {
-      console.log('🔵 useApi.post called')
-      console.log('📍 URL:', url)
-      console.log('📦 Body:', body)
-      console.log('🌐 Full URL:', `${baseURL}${url}`)
       
       try {
         const data = await apiFetch<T>(url, {
@@ -126,7 +125,6 @@ export interface ApiResponse<T = any> {
           ...options
         })
         
-        console.log('✅ POST response:', data)
         
         return {
           data,
@@ -164,6 +162,14 @@ export interface ApiResponse<T = any> {
      * PATCH request
      */
     const patch = async <T = any>(url: string, body?: any, options?: any): Promise<ApiResponse<T>> => {
+      
+      // Log token status
+      if (process.client) {
+        const token = getAuthToken()
+        console.log('🔑 Token exists:', !!token)
+        console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token')
+      }
+      
       try {
         const data = await apiFetch<T>(url, {
           method: 'PATCH',
@@ -171,12 +177,15 @@ export interface ApiResponse<T = any> {
           ...options
         })
         
+        console.log('✅ PATCH response:', data)
+        
         return {
           data,
           message: 'Success',
           success: true
         }
       } catch (error) {
+        console.error('❌ PATCH error:', error)
         throw error
       }
     }

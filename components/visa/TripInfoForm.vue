@@ -391,8 +391,6 @@ const handleNext = () => {
     productDetails: selectedProduct.value
   })
   
-  // ✅ Log processing fees to verify they're included
-  console.log('💰 Processing Fees:', selectedProduct.value?.processingFees)
   
   emit('next', {
     nationality: formData.value.nationality,
@@ -403,9 +401,7 @@ const handleNext = () => {
 }
 
 onMounted(async () => {
-  console.log('🔄 Initializing currency rates...')
   await initializeRates()
-  console.log('✅ Currency rates initialized')
   
   // Debug: Check if rates are loaded
   const { exchangeRates, selectedCurrency } = useCurrency()

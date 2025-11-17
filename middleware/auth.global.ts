@@ -5,9 +5,6 @@ export default defineNuxtRouteMiddleware((to, from) => {
       const token = useCookie('auth_token')
       const adminInfo = useCookie('admin_info')
       
-      console.log('🔐 Auth Middleware - Checking authentication for:', to.path)
-      console.log('Token exists:', !!token.value)
-      console.log('Admin info exists:', !!adminInfo.value)
       
       // If not authenticated, redirect to login
       if (!token.value || !adminInfo.value) {
@@ -20,6 +17,5 @@ export default defineNuxtRouteMiddleware((to, from) => {
         })
       }
       
-      console.log('✅ Authenticated, allowing access')
     }
   })

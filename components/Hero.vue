@@ -328,11 +328,7 @@ const getFullLogoUrl = (logoUrl: string) => {
   const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`
   
   const fullUrl = `${baseUrl}${path}`
-  console.log('🔗 Constructed URL:', {
-    baseUrl,
-    logoPath: path,
-    fullUrl
-  })
+
   
   return fullUrl
 }
