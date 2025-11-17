@@ -191,11 +191,11 @@ import { ChevronLeft, Eye } from 'lucide-vue-next'
 import Button from '@/components/ui/button.vue'
 import Checkbox from '@/components/ui/Checkbox.vue'
 import Table from '@/components/ui/table/Table.vue'
-import TableBody from '@/components/ui/table/Tablebody.vue'
-import TableCell from '@/components/ui/table/Tablecell.vue'
-import TableHead from '@/components/ui/table/Tablehead.vue'
+import TableBody from '@/components/ui/table/TableBody.vue'
+import TableCell from '@/components/ui/table/TableCell.vue'
+import TableHead from '@/components/ui/table/TableHead.vue'
 import TableHeader from '@/components/ui/table/TableHeader.vue'
-import TableRow from '@/components/ui/table/Tablerow.vue'
+import TableRow from '@/components/ui/table/TableRow.vue'
 
 const router = useRouter()
 const route = useRoute()
