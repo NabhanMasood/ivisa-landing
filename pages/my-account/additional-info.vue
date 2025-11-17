@@ -330,7 +330,7 @@
 import { ref, reactive, computed, onMounted, onActivated, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Input from '@/components/ui/Input.vue'
-import Button from '@/components/ui/Button.vue'
+import Button from '@/components/ui/button.vue'
 import Select from '@/components/ui/select/Select.vue'
 import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
