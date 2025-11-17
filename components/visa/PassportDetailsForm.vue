@@ -1,62 +1,121 @@
 <template>
-  <div class="flex" style="gap: 14px;">
+  <div class="flex" style="gap: 14px">
     <!-- Left Side - Form -->
-    <div class="flex-1 border rounded-xl" style="border-color: #E5E7EB; padding: 24px;">
+    <div
+      class="flex-1 border rounded-xl"
+      style="border-color: #e5e7eb; padding: 24px"
+    >
       <!-- Header -->
       <div class="mb-6">
-        <h2 style="font-family: Geist; font-weight: 600; font-size: 18px; line-height: 24px; color: #0B3947;">
+        <h2
+          style="
+            font-family: Geist;
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 24px;
+            color: #0b3947;
+          "
+        >
           Passport Details
         </h2>
-        <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
+        <p
+          style="
+            font-family: Manrope;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 20px;
+            color: #6b7280;
+          "
+        >
           Enter the details as they appear on your passport.
         </p>
       </div>
 
       <!-- Single Traveler (No Dropdown) -->
       <div v-if="passportDetails.length === 1">
-        <h3 class="mb-5" style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+        <h3
+          class="mb-5"
+          style="
+            font-family: Geist;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: #0b3947;
+          "
+        >
           Traveler 1
         </h3>
 
         <div class="space-y-5">
-          
           <!-- Nationality on Passport -->
           <div>
-            <Label 
+            <Label
               htmlFor="nationality-0"
-              style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+              style="
+                font-family: Manrope;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                color: #0b3947;
+              "
             >
               Nationality on Passport
             </Label>
             <div class="relative mt-2">
               <!-- Loading State -->
-              <div v-if="isLoadingCountries" class="flex items-center gap-2 text-sm text-gray-600">
-                <div class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+              <div
+                v-if="isLoadingCountries"
+                class="flex items-center gap-2 text-sm text-gray-600"
+              >
+                <div
+                  class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"
+                ></div>
                 Loading countries...
               </div>
-              
+
               <Select v-else v-model="passportDetails[0].nationality">
-                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                <SelectTrigger
+                  variant="form"
+                  class="!h-[45px] !bg-white w-full px-4"
+                >
                   <SelectValue placeholder="Select nationality" />
                 </SelectTrigger>
-                <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                  <SelectItem 
-                    v-for="country in countries" 
-                    :key="country.id" 
+                <SelectContent
+                  class="max-h-[300px] overflow-y-auto"
+                  position="popper"
+                >
+                  <SelectItem
+                    v-for="country in countries"
+                    :key="country.id"
                     :value="country.countryName"
                   >
                     <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                        <img 
+                      <div
+                        class="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      >
+                        <img
                           v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)" 
+                          :src="getFullLogoUrl(country.logoUrl)"
                           :alt="country.countryName"
                           class="max-w-full max-h-full object-contain"
                           @error="handleFlagError"
                         />
-                        <div v-else class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                        <div
+                          v-else
+                          class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                        >
+                          <svg
+                            class="w-3 h-3 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                            ></path>
                           </svg>
                         </div>
                       </div>
@@ -70,9 +129,15 @@
 
           <!-- Passport Number -->
           <div>
-            <Label 
+            <Label
               htmlFor="passportNumber-0"
-              style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+              style="
+                font-family: Manrope;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                color: #0b3947;
+              "
             >
               Passport Number
             </Label>
@@ -86,26 +151,50 @@
 
           <!-- Passport Expiration Date -->
           <div>
-            <Label style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+            <Label
+              style="
+                font-family: Manrope;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                color: #0b3947;
+              "
+            >
               Passport expiration date
             </Label>
             <div class="grid grid-cols-3 gap-4 mt-2">
               <Select v-model="passportDetails[0].expiryDate">
-                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                <SelectTrigger
+                  variant="form"
+                  class="!h-[45px] !bg-white w-full px-4"
+                >
                   <SelectValue placeholder="Date" />
                 </SelectTrigger>
-                <SelectContent class="max-h-[180px] overflow-y-auto" position="popper">
-                  <SelectItem v-for="day in 31" :key="day" :value="day.toString()">
+                <SelectContent
+                  class="max-h-[180px] overflow-y-auto"
+                  position="popper"
+                >
+                  <SelectItem
+                    v-for="day in 31"
+                    :key="day"
+                    :value="day.toString()"
+                  >
                     {{ day }}
                   </SelectItem>
                 </SelectContent>
               </Select>
 
               <Select v-model="passportDetails[0].expiryMonth">
-                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                <SelectTrigger
+                  variant="form"
+                  class="!h-[45px] !bg-white w-full px-4"
+                >
                   <SelectValue placeholder="Month" />
                 </SelectTrigger>
-                <SelectContent class="max-h-[250px] overflow-y-auto" position="popper">
+                <SelectContent
+                  class="max-h-[250px] overflow-y-auto"
+                  position="popper"
+                >
                   <SelectItem value="1">January</SelectItem>
                   <SelectItem value="2">February</SelectItem>
                   <SelectItem value="3">March</SelectItem>
@@ -122,11 +211,21 @@
               </Select>
 
               <Select v-model="passportDetails[0].expiryYear">
-                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                <SelectTrigger
+                  variant="form"
+                  class="!h-[45px] !bg-white w-full px-4"
+                >
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
-                <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                  <SelectItem v-for="year in futureYears" :key="year" :value="year.toString()">
+                <SelectContent
+                  class="max-h-[300px] overflow-y-auto"
+                  position="popper"
+                >
+                  <SelectItem
+                    v-for="year in futureYears"
+                    :key="year"
+                    :value="year.toString()"
+                  >
                     {{ year }}
                   </SelectItem>
                 </SelectContent>
@@ -136,41 +235,73 @@
 
           <!-- Residence Country -->
           <div>
-            <Label 
+            <Label
               htmlFor="residenceCountry-0"
-              style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+              style="
+                font-family: Manrope;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                color: #0b3947;
+              "
             >
               Residence Country
             </Label>
             <div class="relative mt-2">
               <!-- Loading State -->
-              <div v-if="isLoadingCountries" class="flex items-center gap-2 text-sm text-gray-600">
-                <div class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+              <div
+                v-if="isLoadingCountries"
+                class="flex items-center gap-2 text-sm text-gray-600"
+              >
+                <div
+                  class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"
+                ></div>
                 Loading countries...
               </div>
-              
+
               <Select v-else v-model="passportDetails[0].residenceCountry">
-                <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                <SelectTrigger
+                  variant="form"
+                  class="!h-[45px] !bg-white w-full px-4"
+                >
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
-                <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                  <SelectItem 
-                    v-for="country in countries" 
-                    :key="country.id" 
+                <SelectContent
+                  class="max-h-[300px] overflow-y-auto"
+                  position="popper"
+                >
+                  <SelectItem
+                    v-for="country in countries"
+                    :key="country.id"
                     :value="country.countryName"
                   >
                     <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                        <img 
+                      <div
+                        class="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      >
+                        <img
                           v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)" 
+                          :src="getFullLogoUrl(country.logoUrl)"
                           :alt="country.countryName"
                           class="max-w-full max-h-full object-contain"
                           @error="handleFlagError"
                         />
-                        <div v-else class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                        <div
+                          v-else
+                          class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                        >
+                          <svg
+                            class="w-3 h-3 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                            ></path>
                           </svg>
                         </div>
                       </div>
@@ -183,14 +314,25 @@
           </div>
 
           <!-- Schengen Visa Question -->
-          <div style="gap: 8px; display: flex; flex-direction: column;">
-            <Label 
-              style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+          <div style="gap: 8px; display: flex; flex-direction: column">
+            <Label
+              style="
+                font-family: Manrope;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                color: #0b3947;
+              "
             >
-              Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?
+              Do you have a valid visa or residence permit from the Schengen
+              Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand,
+              Ireland, or Switzerland?
             </Label>
             <Select v-model="passportDetails[0].hasSchengenVisa">
-              <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+              <SelectTrigger
+                variant="form"
+                class="!h-[45px] !bg-white w-full px-4"
+              >
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -199,83 +341,131 @@
               </SelectContent>
             </Select>
           </div>
-
         </div>
       </div>
 
       <!-- Multiple Travelers (With Dropdown) -->
       <div v-else class="space-y-4">
-        <div 
-          v-for="(traveler, index) in passportDetails" 
+        <div
+          v-for="(traveler, index) in passportDetails"
           :key="index"
           class="border"
-          style="height: auto; border-width: 1px; border-color: #E5E7EB; border-radius: 12px;"
+          style="
+            height: auto;
+            border-width: 1px;
+            border-color: #e5e7eb;
+            border-radius: 12px;
+          "
         >
           <!-- Traveler Header - Clickable -->
           <button
             @click="toggleTraveler(index)"
             class="w-full flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-            style="padding: 24px;"
+            style="padding: 24px"
             type="button"
           >
-            <h3 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+            <h3
+              style="
+                font-family: Geist;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: #0b3947;
+              "
+            >
               Traveler {{ index + 1 }}
             </h3>
-            <svg 
+            <svg
               class="w-5 h-5 transition-transform"
               :class="{ 'rotate-180': expandedTravelers[index] }"
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
           <!-- Passport Form - Collapsible -->
-          <div 
+          <div
             v-show="expandedTravelers[index]"
-            style="padding: 0 24px 24px 24px;"
+            style="padding: 0 24px 24px 24px"
           >
             <div class="space-y-5">
-              
               <!-- Nationality on Passport -->
               <div>
-                <Label 
+                <Label
                   :htmlFor="`nationality-${index}`"
-                  style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+                  style="
+                    font-family: Manrope;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #0b3947;
+                  "
                 >
                   Nationality on Passport
                 </Label>
                 <div class="relative mt-2">
                   <!-- Loading State -->
-                  <div v-if="isLoadingCountries" class="flex items-center gap-2 text-sm text-gray-600">
-                    <div class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+                  <div
+                    v-if="isLoadingCountries"
+                    class="flex items-center gap-2 text-sm text-gray-600"
+                  >
+                    <div
+                      class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"
+                    ></div>
                     Loading countries...
                   </div>
-                  
+
                   <Select v-else v-model="traveler.nationality">
-                  <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
-                    <SelectValue placeholder="Select nationality" />
-                  </SelectTrigger>
-                    <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                      <SelectItem 
-                        v-for="country in countries" 
-                        :key="country.id" 
+                    <SelectTrigger
+                      variant="form"
+                      class="!h-[45px] !bg-white w-full px-4"
+                    >
+                      <SelectValue placeholder="Select nationality" />
+                    </SelectTrigger>
+                    <SelectContent
+                      class="max-h-[300px] overflow-y-auto"
+                      position="popper"
+                    >
+                      <SelectItem
+                        v-for="country in countries"
+                        :key="country.id"
                         :value="country.countryName"
                       >
                         <div class="flex items-center gap-2">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                          <div
+                            class="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                          >
+                            <img
                               v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)" 
+                              :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
                               class="max-w-full max-h-full object-contain"
                               @error="handleFlagError"
                             />
-                            <div v-else class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            <div
+                              v-else
+                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                            >
+                              <svg
+                                class="w-3 h-3 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                                ></path>
                               </svg>
                             </div>
                           </div>
@@ -289,9 +479,15 @@
 
               <!-- Passport Number -->
               <div>
-                <Label 
+                <Label
                   :htmlFor="`passportNumber-${index}`"
-                  style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+                  style="
+                    font-family: Manrope;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #0b3947;
+                  "
                 >
                   Passport Number
                 </Label>
@@ -305,26 +501,50 @@
 
               <!-- Passport Expiration Date -->
               <div>
-                <Label style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+                <Label
+                  style="
+                    font-family: Manrope;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #0b3947;
+                  "
+                >
                   Passport expiration date
                 </Label>
                 <div class="grid grid-cols-3 gap-4 mt-2">
                   <Select v-model="traveler.expiryDate">
-                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger
+                      variant="form"
+                      class="!h-[45px] !bg-white w-full px-4"
+                    >
                       <SelectValue placeholder="Date" />
                     </SelectTrigger>
-                    <SelectContent class="max-h-[180px] overflow-y-auto" position="popper">
-                      <SelectItem v-for="day in 31" :key="day" :value="day.toString()">
+                    <SelectContent
+                      class="max-h-[180px] overflow-y-auto"
+                      position="popper"
+                    >
+                      <SelectItem
+                        v-for="day in 31"
+                        :key="day"
+                        :value="day.toString()"
+                      >
                         {{ day }}
                       </SelectItem>
                     </SelectContent>
                   </Select>
 
                   <Select v-model="traveler.expiryMonth">
-                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger
+                      variant="form"
+                      class="!h-[45px] !bg-white w-full px-4"
+                    >
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
-                    <SelectContent class="max-h-[250px] overflow-y-auto" position="popper">
+                    <SelectContent
+                      class="max-h-[250px] overflow-y-auto"
+                      position="popper"
+                    >
                       <SelectItem value="1">January</SelectItem>
                       <SelectItem value="2">February</SelectItem>
                       <SelectItem value="3">March</SelectItem>
@@ -341,11 +561,21 @@
                   </Select>
 
                   <Select v-model="traveler.expiryYear">
-                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger
+                      variant="form"
+                      class="!h-[45px] !bg-white w-full px-4"
+                    >
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
-                    <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                      <SelectItem v-for="year in futureYears" :key="year" :value="year.toString()">
+                    <SelectContent
+                      class="max-h-[300px] overflow-y-auto"
+                      position="popper"
+                    >
+                      <SelectItem
+                        v-for="year in futureYears"
+                        :key="year"
+                        :value="year.toString()"
+                      >
                         {{ year }}
                       </SelectItem>
                     </SelectContent>
@@ -355,41 +585,73 @@
 
               <!-- Residence Country -->
               <div>
-                <Label 
+                <Label
                   :htmlFor="`residenceCountry-${index}`"
-                  style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+                  style="
+                    font-family: Manrope;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #0b3947;
+                  "
                 >
                   Residence Country
                 </Label>
                 <div class="relative mt-2">
                   <!-- Loading State -->
-                  <div v-if="isLoadingCountries" class="flex items-center gap-2 text-sm text-gray-600">
-                    <div class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+                  <div
+                    v-if="isLoadingCountries"
+                    class="flex items-center gap-2 text-sm text-gray-600"
+                  >
+                    <div
+                      class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"
+                    ></div>
                     Loading countries...
                   </div>
-                  
+
                   <Select v-else v-model="traveler.residenceCountry">
-                    <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger
+                      variant="form"
+                      class="!h-[45px] !bg-white w-full px-4"
+                    >
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
-                    <SelectContent class="max-h-[300px] overflow-y-auto" position="popper">
-                      <SelectItem 
-                        v-for="country in countries" 
-                        :key="country.id" 
+                    <SelectContent
+                      class="max-h-[300px] overflow-y-auto"
+                      position="popper"
+                    >
+                      <SelectItem
+                        v-for="country in countries"
+                        :key="country.id"
                         :value="country.countryName"
                       >
                         <div class="flex items-center gap-2">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                          <div
+                            class="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                          >
+                            <img
                               v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)" 
+                              :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
                               class="max-w-full max-h-full object-contain"
                               @error="handleFlagError"
                             />
-                            <div v-else class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                            <div
+                              v-else
+                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                            >
+                              <svg
+                                class="w-3 h-3 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                                ></path>
                               </svg>
                             </div>
                           </div>
@@ -402,14 +664,25 @@
               </div>
 
               <!-- Schengen Visa Question -->
-              <div style="gap: 8px; display: flex; flex-direction: column;">
-                <Label 
-                  style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;"
+              <div style="gap: 8px; display: flex; flex-direction: column">
+                <Label
+                  style="
+                    font-family: Manrope;
+                    font-weight: 500;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #0b3947;
+                  "
                 >
-                  Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?
+                  Do you have a valid visa or residence permit from the Schengen
+                  Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand,
+                  Ireland, or Switzerland?
                 </Label>
                 <Select v-model="traveler.hasSchengenVisa">
-                  <SelectTrigger variant="form" class="!h-[45px] !bg-white w-full px-4">
+                  <SelectTrigger
+                    variant="form"
+                    class="!h-[45px] !bg-white w-full px-4"
+                  >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent position="popper">
@@ -418,253 +691,271 @@
                   </SelectContent>
                 </Select>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
 
     <!-- Right Side - Summary Card -->
     <PriceSummaryCard
       :destination="destination"
       :traveler-count="travelerCount"
-      :product-details="productDetails" 
+      :product-details="productDetails"
       button-text="Save & Continue"
       @continue="handleSaveAndContinue"
     />
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRefs, onMounted, watch } from 'vue'
-import Button from '@/components/ui/button.vue'
-import Input from '@/components/ui/input.vue'
-import Label from '@/components/ui/label/Label.vue'
-import Select from '@/components/ui/select/Select.vue'
-import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
-import SelectContent from '@/components/ui/select/SelectContent.vue'
-import SelectItem from '@/components/ui/select/SelectItem.vue'
-import SelectValue from '@/components/ui/select/SelectValue.vue'
-import PriceSummaryCard from '@/components/visa/price-card.vue'
-import { useCountriesApi, type Country } from '@/composables/useCountries'
-import { useRuntimeConfig } from '#app'
+import { ref, computed, toRefs, onMounted, watch } from "vue";
+import Button from "@/components/ui/button.vue";
+import Input from "@/components/ui/Input.vue";
+import Label from "@/components/ui/label/Label.vue";
+import Select from "@/components/ui/select/Select.vue";
+import SelectTrigger from "@/components/ui/select/SelectTrigger.vue";
+import SelectContent from "@/components/ui/select/SelectContent.vue";
+import SelectItem from "@/components/ui/select/SelectItem.vue";
+import SelectValue from "@/components/ui/select/SelectValue.vue";
+import PriceSummaryCard from "@/components/visa/price-card.vue";
+import { useCountriesApi, type Country } from "@/composables/useCountries";
+import { useRuntimeConfig } from "#app";
 
 const props = defineProps<{
-  destination: string
-  travelerCount: number
-  initialPassportData?: PassportDetail[]
-  productDetails?: any  
-}>()
+  destination: string;
+  travelerCount: number;
+  initialPassportData?: PassportDetail[];
+  productDetails?: any;
+}>();
 
-const { productDetails, destination, travelerCount } = toRefs(props)
+const { productDetails, destination, travelerCount } = toRefs(props);
 
 const emit = defineEmits<{
-  next: [data: any]
-  back: []
-  update: [data: any]  
-}>()
+  next: [data: any];
+  back: [];
+  update: [data: any];
+}>();
 
 interface PassportDetail {
-  nationality: string
-  passportNumber: string
-  expiryDate: string
-  expiryMonth: string
-  expiryYear: string
-  residenceCountry: string
-  hasSchengenVisa: string
+  nationality: string;
+  passportNumber: string;
+  expiryDate: string;
+  expiryMonth: string;
+  expiryYear: string;
+  residenceCountry: string;
+  hasSchengenVisa: string;
 }
 
 // API
-const { getCountries } = useCountriesApi()
-const config = useRuntimeConfig()
+const { getCountries } = useCountriesApi();
+const config = useRuntimeConfig();
 
 // State
-const passportDetails = ref<PassportDetail[]>([])
-const expandedTravelers = ref<Record<number, boolean>>({})
-const countries = ref<Country[]>([])
-const isLoadingCountries = ref(false)
+const passportDetails = ref<PassportDetail[]>([]);
+const expandedTravelers = ref<Record<number, boolean>>({});
+const countries = ref<Country[]>([]);
+const isLoadingCountries = ref(false);
 
 // Generate future years for passport expiry (next 20 years)
-const currentYear = new Date().getFullYear()
-const futureYears = Array.from({ length: 20 }, (_, i) => currentYear + i)
+const currentYear = new Date().getFullYear();
+const futureYears = Array.from({ length: 20 }, (_, i) => currentYear + i);
 
 // Helper functions
 const handleFlagError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  console.error('❌ Flag failed to load:', img.src)
-  img.style.display = 'none'
-}
+  const img = event.target as HTMLImageElement;
+  console.error("❌ Flag failed to load:", img.src);
+  img.style.display = "none";
+};
 
 const getFullLogoUrl = (logoUrl: string) => {
-  if (!logoUrl) return ''
-  
+  if (!logoUrl) return "";
+
   // If already full URL (Cloudinary)
-  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
-    return logoUrl
+  if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) {
+    return logoUrl;
   }
-  
+
   // Construct local URL
-  const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-  const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`
-  
-  return `${baseUrl}${path}`
-}
+  const baseUrl = config.public.apiBase.replace(/\/+$/, "");
+  const path = logoUrl.startsWith("/") ? logoUrl : `/${logoUrl}`;
+
+  return `${baseUrl}${path}`;
+};
 
 const getSelectedCountry = (countryName: string) => {
-  return countries.value.find(c => c.countryName === countryName)
-}
+  return countries.value.find((c) => c.countryName === countryName);
+};
 
 // Fetch countries from database
 const fetchCountries = async () => {
-  isLoadingCountries.value = true
+  isLoadingCountries.value = true;
   try {
-    const response = await getCountries()
+    const response = await getCountries();
     if (response.success && response.data) {
-      countries.value = response.data
-      console.log('✅ Loaded countries for passport form:', countries.value.length)
+      countries.value = response.data;
+      console.log(
+        "✅ Loaded countries for passport form:",
+        countries.value.length
+      );
     }
   } catch (error) {
-    console.error('Failed to fetch countries:', error)
+    console.error("Failed to fetch countries:", error);
   } finally {
-    isLoadingCountries.value = false
+    isLoadingCountries.value = false;
   }
-}
+};
 
 // ✅ FIXED: Initialize passport details properly
 const initializePassportDetails = () => {
-  console.log('🔄 Initializing passport details:', {
+  console.log("🔄 Initializing passport details:", {
     hasInitialData: !!props.initialPassportData,
     initialDataLength: props.initialPassportData?.length || 0,
-    travelerCount: props.travelerCount
-  })
-  
+    travelerCount: props.travelerCount,
+  });
+
   // ✅ CASE 1: We have saved data
   if (props.initialPassportData && props.initialPassportData.length > 0) {
-    passportDetails.value = [...props.initialPassportData]
-    expandedTravelers.value = { 0: true }
-    
+    passportDetails.value = [...props.initialPassportData];
+    expandedTravelers.value = { 0: true };
+
     // ✅ CRITICAL FIX: If travelerCount is MORE than saved passport data, add empty forms
     if (props.travelerCount > passportDetails.value.length) {
-      const toAdd = props.travelerCount - passportDetails.value.length
-      console.log(`➕ Adding ${toAdd} more passport forms for new travelers`)
-      
+      const toAdd = props.travelerCount - passportDetails.value.length;
+      console.log(`➕ Adding ${toAdd} more passport forms for new travelers`);
+
       for (let i = 0; i < toAdd; i++) {
-        const newIndex = passportDetails.value.length
+        const newIndex = passportDetails.value.length;
         passportDetails.value.push({
-          nationality: '',
-          passportNumber: '',
-          expiryDate: '',
-          expiryMonth: '',
-          expiryYear: '',
-          residenceCountry: '',
-          hasSchengenVisa: ''
-        })
-        expandedTravelers.value[newIndex] = true // Expand newly added
+          nationality: "",
+          passportNumber: "",
+          expiryDate: "",
+          expiryMonth: "",
+          expiryYear: "",
+          residenceCountry: "",
+          hasSchengenVisa: "",
+        });
+        expandedTravelers.value[newIndex] = true; // Expand newly added
       }
-      
-      console.log('✅ Added new passport forms, total:', passportDetails.value.length)
+
+      console.log(
+        "✅ Added new passport forms, total:",
+        passportDetails.value.length
+      );
     }
-    
-    return
+
+    return;
   }
-  
+
   // ✅ CASE 2: No saved data, create fresh forms
-  console.log('🆕 Creating fresh passport forms for', props.travelerCount, 'travelers')
+  console.log(
+    "🆕 Creating fresh passport forms for",
+    props.travelerCount,
+    "travelers"
+  );
   passportDetails.value = Array.from({ length: props.travelerCount }, () => ({
-    nationality: '',
-    passportNumber: '',
-    expiryDate: '',
-    expiryMonth: '',
-    expiryYear: '',
-    residenceCountry: '',
-    hasSchengenVisa: ''
-  }))
-  
-  expandedTravelers.value = { 0: true }
-}
+    nationality: "",
+    passportNumber: "",
+    expiryDate: "",
+    expiryMonth: "",
+    expiryYear: "",
+    residenceCountry: "",
+    hasSchengenVisa: "",
+  }));
+
+  expandedTravelers.value = { 0: true };
+};
 
 const toggleTraveler = (index: number) => {
-  expandedTravelers.value[index] = !expandedTravelers.value[index]
-}
+  expandedTravelers.value[index] = !expandedTravelers.value[index];
+};
 
 const handleSaveAndContinue = () => {
   // Validate all passport details
-  const isValid = passportDetails.value.every(p => 
-    p.nationality && 
-    p.passportNumber && 
-    p.expiryDate && 
-    p.expiryMonth && 
-    p.expiryYear && 
-    p.residenceCountry && 
-    p.hasSchengenVisa
-  )
-  
+  const isValid = passportDetails.value.every(
+    (p) =>
+      p.nationality &&
+      p.passportNumber &&
+      p.expiryDate &&
+      p.expiryMonth &&
+      p.expiryYear &&
+      p.residenceCountry &&
+      p.hasSchengenVisa
+  );
+
   if (!isValid) {
-    alert('Please fill in all required passport details for all travelers')
-    return
+    alert("Please fill in all required passport details for all travelers");
+    return;
   }
 
-  emit('next', { passportDetails: passportDetails.value })
-}
+  emit("next", { passportDetails: passportDetails.value });
+};
 
 // Initialize on mount
 onMounted(() => {
-  fetchCountries()
-  initializePassportDetails()
-})
+  fetchCountries();
+  initializePassportDetails();
+});
 
 // ✅ FIXED: Watch for traveler count changes more carefully
-watch(() => props.travelerCount, (newCount, oldCount) => {
-  console.log('👥 Traveler count changed:', { oldCount, newCount, currentPassportCount: passportDetails.value.length })
-  
-  if (newCount && newCount !== oldCount) {
-    if (newCount > passportDetails.value.length) {
-      // User increased travelers - add more passport forms
-      const toAdd = newCount - passportDetails.value.length
-      console.log(`➕ Adding ${toAdd} more passport forms`)
-      
-      for (let i = 0; i < toAdd; i++) {
-        const newIndex = passportDetails.value.length
-        passportDetails.value.push({
-          nationality: '',
-          passportNumber: '',
-          expiryDate: '',
-          expiryMonth: '',
-          expiryYear: '',
-          residenceCountry: '',
-          hasSchengenVisa: ''
-        })
-        expandedTravelers.value[newIndex] = true // Expand newly added
+watch(
+  () => props.travelerCount,
+  (newCount, oldCount) => {
+    console.log("👥 Traveler count changed:", {
+      oldCount,
+      newCount,
+      currentPassportCount: passportDetails.value.length,
+    });
+
+    if (newCount && newCount !== oldCount) {
+      if (newCount > passportDetails.value.length) {
+        // User increased travelers - add more passport forms
+        const toAdd = newCount - passportDetails.value.length;
+        console.log(`➕ Adding ${toAdd} more passport forms`);
+
+        for (let i = 0; i < toAdd; i++) {
+          const newIndex = passportDetails.value.length;
+          passportDetails.value.push({
+            nationality: "",
+            passportNumber: "",
+            expiryDate: "",
+            expiryMonth: "",
+            expiryYear: "",
+            residenceCountry: "",
+            hasSchengenVisa: "",
+          });
+          expandedTravelers.value[newIndex] = true; // Expand newly added
+        }
+
+        console.log("✅ Passport forms now:", passportDetails.value.length);
+      } else if (newCount < passportDetails.value.length) {
+        // User decreased travelers - remove extra passport forms
+        console.log(
+          `➖ Removing ${
+            passportDetails.value.length - newCount
+          } passport forms`
+        );
+        passportDetails.value = passportDetails.value.slice(0, newCount);
+
+        // Clean up expanded state
+        const newExpanded: Record<number, boolean> = {};
+        for (let i = 0; i < newCount; i++) {
+          newExpanded[i] = expandedTravelers.value[i] || i === 0;
+        }
+        expandedTravelers.value = newExpanded;
+
+        console.log("✅ Passport forms now:", passportDetails.value.length);
       }
-      
-      console.log('✅ Passport forms now:', passportDetails.value.length)
-    } else if (newCount < passportDetails.value.length) {
-      // User decreased travelers - remove extra passport forms
-      console.log(`➖ Removing ${passportDetails.value.length - newCount} passport forms`)
-      passportDetails.value = passportDetails.value.slice(0, newCount)
-      
-      // Clean up expanded state
-      const newExpanded: Record<number, boolean> = {}
-      for (let i = 0; i < newCount; i++) {
-        newExpanded[i] = expandedTravelers.value[i] || (i === 0)
-      }
-      expandedTravelers.value = newExpanded
-      
-      console.log('✅ Passport forms now:', passportDetails.value.length)
     }
   }
-})
+);
 
 // Auto-save passport details as user types
 watch(
   () => passportDetails.value,
   (newPassportDetails) => {
-    emit('update', { passportDetails: newPassportDetails })
+    emit("update", { passportDetails: newPassportDetails });
   },
   { deep: true }
-)
+);
 </script>
