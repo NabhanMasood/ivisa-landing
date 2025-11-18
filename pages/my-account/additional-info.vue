@@ -120,7 +120,7 @@
           >
             <button
               v-for="(traveler, index) in allTravelers"
-              :key="traveler.id || `app-${index}`"
+              :key="traveler.id || `traveler-${index}`"
               @click="selectTraveler(traveler.id || null, index)"
               class="px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors relative"
               :class="[
@@ -155,11 +155,7 @@
                   {{ getTravelerName(currentTraveler, selectedTravelerIndex) }}
                 </h3>
                 <p class="text-sm text-gray-600 mt-1">
-                  {{
-                    selectedTravelerId
-                      ? "Traveler Information"
-                      : "Application Information"
-                  }}
+                  Traveler Information
                 </p>
               </div>
 
@@ -646,32 +642,20 @@ const sortedFields = computed(() => {
   return [...fields.value].sort((a, b) => a.displayOrder - b.displayOrder);
 });
 
-// All travelers including application-level
+// All travelers (removed application-level tab as it's duplicate of first traveler)
 const allTravelers = computed(() => {
-  const result: Array<{
-    id?: number;
-    firstName?: string;
-    lastName?: string;
-    isApplication?: boolean;
-  }> = [
-    { isApplication: true }, // Application-level form
-  ];
-
-  travelers.value.forEach((traveler) => {
-    result.push(traveler);
-  });
-
-  return result;
+  return [...travelers.value];
 });
 
 const currentTraveler = computed(() => {
-  if (selectedTravelerId.value === null) {
-    return { isApplication: true };
+  if (selectedTravelerId.value === null && travelers.value.length > 0) {
+    // Default to first traveler if none selected
+    return travelers.value[0];
   }
   return (
-    travelers.value.find((t) => t.id === selectedTravelerId.value) || {
-      isApplication: true,
-    }
+    travelers.value.find((t) => t.id === selectedTravelerId.value) ||
+    travelers.value[0] ||
+    {}
   );
 });
 
@@ -716,14 +700,18 @@ const adminNoteToShow = computed(() => {
     const activeRequests = app.resubmissionRequests.filter((req: any) => {
       if (req.fulfilledAt) return false;
 
-      if (!selectedTravelerId.value) {
-        return req.target === "application";
-      } else {
-        return (
-          req.target === "traveler" &&
-          req.travelerId === selectedTravelerId.value
-        );
+      // Application-level requests are shown for the first traveler (index 0)
+      const isFirstTraveler = selectedTravelerIndex.value === 0;
+      
+      if (req.target === "application" && isFirstTraveler) {
+        return true;
+      } else if (
+        req.target === "traveler" &&
+        req.travelerId === selectedTravelerId.value
+      ) {
+        return true;
       }
+      return false;
     });
 
     // Combine all notes from active requests
@@ -749,16 +737,20 @@ const shouldHighlightField = (field: any) => {
       if (req.fulfilledAt) return false;
 
       // Check if this request is for the current context
-      if (!selectedTravelerId.value) {
-        // We're viewing application-level fields
-        return req.target === "application";
-      } else {
-        // We're viewing a specific traveler's fields
-        return (
-          req.target === "traveler" &&
-          req.travelerId === selectedTravelerId.value
-        );
+      // Application-level requests are shown for the first traveler (index 0)
+      const isFirstTraveler = selectedTravelerIndex.value === 0;
+      
+      if (req.target === "application" && isFirstTraveler) {
+        // Application-level request shown on first traveler tab
+        return true;
+      } else if (
+        req.target === "traveler" &&
+        req.travelerId === selectedTravelerId.value
+      ) {
+        // Traveler-specific request
+        return true;
       }
+      return false;
     });
 
     // Check if this field is in any of the active requests
@@ -789,7 +781,7 @@ const getTravelerStatus = (
   travelerId: number | null,
   index: number
 ): string => {
-  const key = travelerId ? `traveler-${travelerId}` : "application";
+  const key = travelerId ? `traveler-${travelerId}` : `traveler-${index}`;
   const status = submissionStatus[key] || "not_started";
 
   if (status === "submitted") return "Submitted";
@@ -801,7 +793,7 @@ const getTravelerStatusClass = (
   travelerId: number | null,
   index: number
 ): string => {
-  const key = travelerId ? `traveler-${travelerId}` : "application";
+  const key = travelerId ? `traveler-${travelerId}` : `traveler-${index}`;
   const status = submissionStatus[key] || "not_started";
 
   if (status === "submitted") return "bg-green-100 text-green-700";
@@ -892,7 +884,9 @@ const checkSubmissionStatus = async (travelerId: number | null) => {
         return hasValue || hasFile;
       });
 
-      const key = travelerId ? `traveler-${travelerId}` : "application";
+      // Use traveler ID if available, otherwise use a fallback key
+      // Note: Since we removed application tab, travelerId should always be set for travelers
+      const key = travelerId ? `traveler-${travelerId}` : `traveler-null`;
 
       // Only mark as 'submitted' if ALL required fields are filled AND there are responses
       // This is more conservative - we assume if all required fields are filled, it was submitted
@@ -1045,6 +1039,15 @@ const triggerFileUpload = (fieldId: number) => {
 };
 
 // Handle file upload
+// Backend should upload to Cloudinary and return:
+// {
+//   status: true,
+//   data: {
+//     filePath: "https://res.cloudinary.com/...", // Cloudinary URL (full URL)
+//     fileName: "document.pdf",
+//     fileSize: 12345
+//   }
+// }
 const handleFileUpload = async (event: Event, fieldId: number) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
@@ -1128,12 +1131,25 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
       throw new Error(result.message || "Invalid response from server");
     }
 
-    formResponses[fieldId].filePath = result.data.filePath;
+    // Store Cloudinary URL (or local path if backend still returns it)
+    const filePath = result.data.filePath || result.data.url || result.data.cloudinaryUrl;
+    if (!filePath) {
+      throw new Error("File upload succeeded but no file path/URL was returned");
+    }
+
+    formResponses[fieldId].filePath = filePath;
     formResponses[fieldId].fileName = result.data.fileName || file.name;
     formResponses[fieldId].fileSize = result.data.fileSize || file.size;
 
     formResponses[fieldId].isUploading = false;
     formResponses[fieldId].isUploaded = true;
+
+    // Log for debugging
+    console.log("✅ File uploaded successfully:", {
+      fileName: formResponses[fieldId].fileName,
+      filePath: filePath,
+      isCloudinaryUrl: filePath.startsWith("http://") || filePath.startsWith("https://"),
+    });
   } catch (err: any) {
     console.error("File upload error:", err);
     formResponses[fieldId].uploadError =
@@ -1260,7 +1276,7 @@ const handleSubmit = async () => {
       // Update submission status
       const key = selectedTravelerId.value
         ? `traveler-${selectedTravelerId.value}`
-        : "application";
+        : `traveler-${selectedTravelerIndex.value}`;
       submissionStatus[key] = "submitted";
 
       // Refresh fields to show updated responses
@@ -1334,7 +1350,6 @@ const initializeData = async () => {
     }
 
     // Check status for all travelers
-    await checkSubmissionStatus(null); // Application level
     for (const traveler of travelers.value) {
       if (traveler.id) {
         await checkSubmissionStatus(traveler.id);
@@ -1357,10 +1372,17 @@ const initializeData = async () => {
         const firstRequest = activeRequests[0];
 
         if (firstRequest.target === "application") {
-          // Application-level request - stay on application tab
-          selectedTravelerId.value = null;
-          selectedTravelerIndex.value = 0;
-          await fetchFields(null);
+          // Application-level request - map to first traveler (since we removed application tab)
+          if (travelers.value.length > 0 && travelers.value[0].id) {
+            selectedTravelerId.value = travelers.value[0].id;
+            selectedTravelerIndex.value = 0;
+            await fetchFields(selectedTravelerId.value);
+          } else {
+            // No travelers available - default to first traveler index
+            selectedTravelerId.value = null;
+            selectedTravelerIndex.value = 0;
+            await fetchFields(null);
+          }
         } else if (
           firstRequest.target === "traveler" &&
           firstRequest.travelerId
@@ -1371,31 +1393,55 @@ const initializeData = async () => {
           );
           if (idx !== -1) {
             selectedTravelerId.value = firstRequest.travelerId;
-            selectedTravelerIndex.value = idx + 1; // +1 because tab 0 is application-level
+            selectedTravelerIndex.value = idx;
             await fetchFields(selectedTravelerId.value);
           } else {
-            // Fallback to application-level if traveler not found
+            // Fallback to first traveler if traveler not found
+            if (travelers.value.length > 0 && travelers.value[0].id) {
+              selectedTravelerId.value = travelers.value[0].id;
+              selectedTravelerIndex.value = 0;
+              await fetchFields(selectedTravelerId.value);
+            } else {
+              selectedTravelerId.value = null;
+              selectedTravelerIndex.value = 0;
+              await fetchFields(null);
+            }
+          }
+        } else {
+          // Default to first traveler
+          if (travelers.value.length > 0 && travelers.value[0].id) {
+            selectedTravelerId.value = travelers.value[0].id;
+            selectedTravelerIndex.value = 0;
+            await fetchFields(selectedTravelerId.value);
+          } else {
             selectedTravelerId.value = null;
             selectedTravelerIndex.value = 0;
             await fetchFields(null);
           }
+        }
+      } else {
+        // No active requests - default to first traveler
+        if (travelers.value.length > 0 && travelers.value[0].id) {
+          selectedTravelerId.value = travelers.value[0].id;
+          selectedTravelerIndex.value = 0;
+          await fetchFields(selectedTravelerId.value);
         } else {
-          // Default to application-level
           selectedTravelerId.value = null;
           selectedTravelerIndex.value = 0;
           await fetchFields(null);
         }
+      }
+    } else {
+      // No resubmission requests - default to first traveler
+      if (travelers.value.length > 0 && travelers.value[0].id) {
+        selectedTravelerId.value = travelers.value[0].id;
+        selectedTravelerIndex.value = 0;
+        await fetchFields(selectedTravelerId.value);
       } else {
-        // No active requests - default to application-level
         selectedTravelerId.value = null;
         selectedTravelerIndex.value = 0;
         await fetchFields(null);
       }
-    } else {
-      // No resubmission requests - default to application-level
-      selectedTravelerId.value = null;
-      selectedTravelerIndex.value = 0;
-      await fetchFields(null);
     }
   } catch (err: any) {
     error.value = err.message || "Failed to initialize data";
