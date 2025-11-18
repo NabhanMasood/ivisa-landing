@@ -29,7 +29,8 @@ export const useStripe = () => {
       stripe: null,
       elements: null,
       createPaymentIntent: async () => ({ clientSecret: null }),
-      confirmPayment: async () => ({ success: false, error: 'Stripe not configured' })
+      confirmPayment: async () => ({ success: false, error: 'Stripe not configured' }),
+      resetElements: () => { }
     }
   }
 
@@ -50,13 +51,30 @@ export const useStripe = () => {
   }
 
   /**
-   * Get or create Elements instance
+   * Reset Elements instance (creates a new one)
+   * This is needed when we need to create a fresh card element
+   * Note: Components should unmount their own card elements before calling this
    */
-  const getElements = async (): Promise<StripeElements | null> => {
+  const resetElements = () => {
+    console.log('🔄 Resetting Stripe Elements instance')
+    // Reset elements instance to allow creating a new one
+    // This allows creating a new card element since Stripe only allows one card element per Elements instance
+    elementsInstance = null
+  }
+
+  /**
+   * Get or create Elements instance
+   * If forceNew is true, creates a fresh Elements instance
+   */
+  const getElements = async (forceNew: boolean = false): Promise<StripeElements | null> => {
     const stripe = await getStripe()
     if (!stripe) return null
 
-    if (!elementsInstance) {
+    if (forceNew || !elementsInstance) {
+      // If forcing new, reset first
+      if (forceNew && elementsInstance) {
+        resetElements()
+      }
       elementsInstance = stripe.elements()
     }
     return elementsInstance
@@ -71,7 +89,7 @@ export const useStripe = () => {
       const config = useRuntimeConfig()
 
       console.log('💳 Creating payment intent for amount:', amount)
-      
+
       const response = await post<{ clientSecret: string }>(
         'stripe/create-payment-intent',
         { amount }
@@ -115,7 +133,7 @@ export const useStripe = () => {
         // Use card element
         result = await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
-            card: cardElement,
+            card: cardElement as any,
           }
         })
       } else {
@@ -143,7 +161,8 @@ export const useStripe = () => {
     getStripe,
     getElements,
     createPaymentIntent,
-    confirmPayment
+    confirmPayment,
+    resetElements
   }
 }
 
