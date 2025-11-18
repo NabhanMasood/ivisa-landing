@@ -378,7 +378,7 @@ interface Traveler {
 const travelers = ref<Traveler[]>([]);
 const expandedTravelers = ref<Record<number, boolean>>({});
 
-// Auth composable
+// Auth composables
 const { currentUser, isAuthenticated } = useAuthApi();
 
 
