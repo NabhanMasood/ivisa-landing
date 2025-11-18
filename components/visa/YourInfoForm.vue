@@ -381,6 +381,8 @@ const expandedTravelers = ref<Record<number, boolean>>({});
 // Auth composable
 const { currentUser, isAuthenticated } = useAuthApi();
 
+
+
 // Constants
 const months = [
   "January",

@@ -25,7 +25,7 @@
         
         <VisaStats v-if="currentStep === 1" :destination="destinationCountry" />
         
-        <!-- Step 1: Trip Info0 -->
+        <!-- Step 1: Trip Info -->
         <TripInfoForm 
           v-if="currentStep === 1"
           :nationality="nationalityCountry"
