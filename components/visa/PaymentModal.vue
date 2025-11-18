@@ -242,10 +242,11 @@ const cardDetails = reactive({
 })
 
 // Stripe integration
-const { getStripe, getElements, createPaymentIntent, confirmPayment } = useStripe()
+const { getStripe, getElements, createPaymentIntent, confirmPayment, resetElements } = useStripe()
 const cardElement = ref<StripeCardElement | null>(null)
 const cardErrors = ref<string>('')
 const stripeInitialized = ref(false)
+const isInitializing = ref(false) // Guard to prevent concurrent initializations
 
 // Helper function to get customer ID from various sources
 const getCustomerId = (): number | null => {
@@ -456,15 +457,55 @@ const formatCardExpiryDisplay = (month: string, year: string): string => {
 
 // Initialize Stripe Elements
 const initializeStripeElements = async () => {
-  if (!process.client || stripeInitialized.value) return
+  if (!process.client) return
+
+  // Prevent concurrent initializations
+  if (isInitializing.value) {
+    console.log('⚠️ Stripe initialization already in progress, skipping')
+    return
+  }
+
+  // Check if already initialized
+  if (stripeInitialized.value && cardElement.value) {
+    console.log('⚠️ Stripe already initialized, skipping')
+    return
+  }
+
+  isInitializing.value = true
 
   try {
+    // Always cleanup first to prevent duplicate elements
+    cleanupStripeElements()
+    
+    // Reset Elements instance to get a fresh one (this prevents "can only create one element" error)
+    resetElements()
+    
+    // Wait a bit to ensure cleanup is complete
+    await new Promise(resolve => setTimeout(resolve, 100))
+
     const stripe = await getStripe()
-    const elements = await getElements()
+    // Get a fresh Elements instance (forceNew = true)
+    const elements = await getElements(true)
     
     if (!stripe || !elements) {
       console.error('❌ Stripe not initialized')
+      isInitializing.value = false
       return
+    }
+
+    // Check if card element container exists and is visible
+    const cardElementContainer = document.getElementById('card-element')
+    if (!cardElementContainer) {
+      console.warn('⚠️ Card element container not found')
+      isInitializing.value = false
+      return
+    }
+
+    // Ensure container is empty
+    if (cardElementContainer.querySelector('iframe') || cardElementContainer.children.length > 0) {
+      console.warn('⚠️ Card element container not empty, clearing it')
+      cardElementContainer.innerHTML = ''
+      await new Promise(resolve => setTimeout(resolve, 50))
     }
 
     // Create card element
@@ -488,8 +529,7 @@ const initializeStripeElements = async () => {
     cardElement.value = elements.create('card', cardElementOptions) as StripeCardElement
     
     // Mount card element
-    const cardElementContainer = document.getElementById('card-element')
-    if (cardElementContainer && cardElement.value) {
+    if (cardElement.value && cardElementContainer) {
       cardElement.value.mount(cardElementContainer)
       
       // Listen for errors
@@ -506,6 +546,12 @@ const initializeStripeElements = async () => {
     }
   } catch (error) {
     console.error('❌ Error initializing Stripe Elements:', error)
+    // Reset flag on error so it can be retried
+    stripeInitialized.value = false
+    cardElement.value = null
+  } finally {
+    // Always reset the initialization guard
+    isInitializing.value = false
   }
 }
 
@@ -515,11 +561,25 @@ const cleanupStripeElements = () => {
     try {
       cardElement.value.unmount()
       cardElement.value = null
-      stripeInitialized.value = false
     } catch (error) {
-      console.error('❌ Error cleaning up Stripe Elements:', error)
+      console.error('❌ Error unmounting Stripe Elements:', error)
     }
   }
+  
+  // Always reset the flag and clear the container
+  stripeInitialized.value = false
+  
+  // Clear the container DOM element if it exists
+  if (process.client) {
+    const cardElementContainer = document.getElementById('card-element')
+    if (cardElementContainer) {
+      // Remove any remaining iframes or children
+      cardElementContainer.innerHTML = ''
+    }
+  }
+  
+  // Clear any errors
+  cardErrors.value = ''
 }
 
 // Validate form
