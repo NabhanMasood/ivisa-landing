@@ -785,11 +785,23 @@ const transformApplicationData = (applicationData: any) => {
   console.log("🔄 Transforming application data...");
   console.log("📥 Raw data received:", applicationData);
 
-  // Transform visa type: "30 Days|single" -> "30-single"
+  // Transform visa type: "Tourist Visa|single" -> "30-single"
+  // Use duration from productDetails if available, otherwise try to extract from productName
   let visaType = "";
   if (applicationData.visaType && applicationData.visaType.includes("|")) {
     const [productName, entryType] = applicationData.visaType.split("|");
-    const duration = productName.match(/\d+/)?.[0] || "";
+    
+    // ✅ PRIORITY 1: Get duration from productDetails (most reliable)
+    let duration = "";
+    if (applicationData.productDetails && applicationData.productDetails.duration) {
+      duration = String(applicationData.productDetails.duration);
+      console.log("✅ Got duration from productDetails:", duration);
+    } else {
+      // FALLBACK: Try to extract from productName
+      duration = productName.match(/\d+/)?.[0] || "";
+      console.log("⚠️ Extracted duration from productName:", duration);
+    }
+    
     visaType = `${duration}-${entryType}`;
   }
 
@@ -1212,6 +1224,9 @@ const handlePayment = async () => {
         email: userEmail.value,
         name: userFullName.value,
       });
+      
+      // ✅ Email is automatically sent by backend with tracking link
+      console.log("📧 Backend will automatically send application confirmation email to:", userEmail.value);
     }
 
     // Reset form

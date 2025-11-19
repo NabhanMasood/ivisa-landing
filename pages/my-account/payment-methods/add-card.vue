@@ -223,7 +223,7 @@ import { ChevronLeft, Lock } from "lucide-vue-next";
 import Button from "@/components/ui/button.vue";
 import Card from "@/components/ui/card/Card.vue";
 import Input from "@/components/ui/Input.vue";
-import Label from "@/components/ui/label.vue";
+import Label from "@/components/ui/label/Label.vue";
 import Select from "@/components/ui/select/Select.vue";
 import SelectContent from "@/components/ui/select/SelectContent.vue";
 import SelectItem from "@/components/ui/select/SelectItem.vue";
