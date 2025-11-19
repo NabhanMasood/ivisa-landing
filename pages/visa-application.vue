@@ -23,7 +23,11 @@
 
         <VisaStepper :current-step="currentStep" />
         
-        <VisaStats v-if="currentStep === 1" :destination="destinationCountry" />
+        <VisaStats 
+          v-if="currentStep === 1" 
+          :destination="destinationCountry" 
+          :product-details="tripData.productDetails"
+        />
         
         <!-- Step 1: Trip Info -->
         <TripInfoForm 
@@ -35,6 +39,7 @@
             travelers: travelersData.travelers  
           }"
           @next="handleStepOne"
+          @update="handleStepOneUpdate"
         />
         
         <!-- Step 2: Personal Details (Your Info) -->
@@ -226,6 +231,7 @@ const completeApplicationData = computed(() => {
     govtFee: govtFeePerTraveler,
     serviceFee: serviceFeePerTraveler,
     processingFee: processingFeePerTraveler,
+    productDetails: product, // ✅ Include full product details for PaymentModal
     travelers: travelersData.value.travelers.map((traveler: any, index: number) => {
       const passport = passportData.value.passportDetails[index]
       const travelerData: any = {
@@ -316,6 +322,18 @@ const handleBack = () => {
 }
 
 // Step handlers
+// Handle real-time updates from Step 1 (for VisaStats)
+const handleStepOneUpdate = (data: any) => {
+  console.log('🔄 Step 1 update received:', data)
+  tripData.value = {
+    ...tripData.value,
+    ...data,
+    applicants: parseInt(data.applicants),
+    productDetails: data.productDetails
+  }
+  // Don't change step, just update the data
+}
+
 const handleStepOne = (data: any) => {
   console.log('✅ Step 1 data received:', data)
   tripData.value = {

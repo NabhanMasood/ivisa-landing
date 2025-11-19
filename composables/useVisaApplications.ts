@@ -1,4 +1,5 @@
 import { useApi, handleApiError, type ApiResponse } from './useApi'
+import { useEmailNotifications } from './useEmailNotifications'
 
 /**
  * Resubmission Request interface (Option B)
@@ -33,15 +34,15 @@ export interface VisaApplication {
   processingType: string
   processingFee: number
   notes?: string
-  
+
   // ✅ NEW: Array of resubmission requests (Option B)
   resubmissionRequests?: ResubmissionRequest[] | null
-  
+
   // ⚠️ DEPRECATED: Backward compatibility (Option A)
   resubmissionTarget?: 'application' | 'traveler' | null
   resubmissionTravelerId?: number | null
   requestedFieldIds?: number[] | null
-  
+
   // Relations
   travelers?: Traveler[]
   payment?: Payment
@@ -105,41 +106,41 @@ export interface ApplicationDetailsResponse {
 export const useVisaApplications = () => {
   const api = useApi()
   const { currentUser } = useAuthApi()
-  
+
   /**
    * Get all applications for current user
    */
   const getMyApplications = async (): Promise<ApiResponse<ApplicationsListResponse>> => {
     console.log('🔵 useVisaApplications.getMyApplications called')
-    
+
     try {
       // Get customer ID from admin_info cookie
       const adminCookie = useCookie('admin_info')
-      
+
       if (!adminCookie.value) {
         throw new Error('User not authenticated')
       }
-      
+
       let customerId: number
       try {
-        const adminData = typeof adminCookie.value === 'string' 
-          ? JSON.parse(adminCookie.value) 
+        const adminData = typeof adminCookie.value === 'string'
+          ? JSON.parse(adminCookie.value)
           : adminCookie.value
         customerId = adminData.id
       } catch (e) {
         throw new Error('Invalid user data')
       }
-      
+
       if (!customerId) {
         throw new Error('Customer ID not found')
       }
-      
+
       console.log('🌐 Fetching applications for customer:', customerId)
-      
+
       const response = await api.get<ApplicationsListResponse>(
         `/visa-applications/customer/${customerId}`
       )
-      
+
       console.log('✅ Raw API response:', response)
       console.log('✅ Response data:', response.data)
       console.log('✅ Response data type:', typeof response.data)
@@ -151,7 +152,7 @@ export const useVisaApplications = () => {
           console.log('✅ Application IDs:', response.data.data.map((app: any) => app.id))
         }
       }
-      
+
       return {
         data: response.data,
         message: response.data.message || 'Applications retrieved successfully',
@@ -168,7 +169,7 @@ export const useVisaApplications = () => {
       }
     }
   }
-  
+
   /**
    * Get single application details by ID
    */
@@ -177,9 +178,9 @@ export const useVisaApplications = () => {
       const response = await api.get<ApplicationDetailsResponse>(
         `/visa-applications/${id}`
       )
-      
+
       console.log('✅ Application details fetched:', response.data)
-      
+
       return {
         data: response.data,
         message: response.data.message || 'Application retrieved successfully',
@@ -196,20 +197,20 @@ export const useVisaApplications = () => {
       }
     }
   }
-  
+
   /**
    * Get application by application number
    */
   const getApplicationByNumber = async (applicationNumber: string): Promise<ApiResponse<ApplicationDetailsResponse>> => {
     console.log('🔵 useVisaApplications.getApplicationByNumber called for:', applicationNumber)
-    
+
     try {
       const response = await api.get<ApplicationDetailsResponse>(
         `/visa-applications/number/${applicationNumber}`
       )
-      
+
       console.log('✅ Application fetched by number:', response.data)
-      
+
       return {
         data: response.data,
         message: response.data.message || 'Application retrieved successfully',
@@ -226,19 +227,34 @@ export const useVisaApplications = () => {
       }
     }
   }
-  
+
   /**
    * Update application status
    * PATCH /visa-applications/:id/status
+   * 
+   * When status is changed to 'resubmission', the backend will automatically
+   * send an email notification to the customer.
    */
   const updateApplicationStatus = async (
     id: number | string,
-    status: string
+    status: string,
+    options?: {
+      sendEmail?: boolean // Whether to send email notification (default: true for 'resubmission' status)
+    }
   ): Promise<ApiResponse<VisaApplication>> => {
     try {
+      // Determine if we should send email (default true for resubmission status)
+      const shouldSendEmail = options?.sendEmail !== false &&
+        (status === 'resubmission' || status === 'Additional Info required')
+
+      console.log('🔵 Updating application status:', { id, status, sendEmail: shouldSendEmail })
+
       const response = await api.patch<VisaApplication | { status: boolean; message: string; data: VisaApplication }>(
         `/visa-applications/${id}/status`,
-        { status }
+        {
+          status,
+          sendEmail: shouldSendEmail
+        }
       )
 
       let applicationData: VisaApplication
@@ -252,6 +268,11 @@ export const useVisaApplications = () => {
         }
       } else {
         applicationData = response.data as VisaApplication
+      }
+
+      // Log email notification
+      if (shouldSendEmail) {
+        console.log('📧 Backend will send status update email notification')
       }
 
       return {
@@ -274,6 +295,11 @@ export const useVisaApplications = () => {
   /**
    * ✅ NEW: Request resubmission (supports both single and multiple requests)
    * POST /visa-applications/:id/request-resubmission
+   * 
+   * This function will:
+   * 1. Send resubmission request to backend
+   * 2. Backend changes status to 'resubmission'
+   * 3. Backend triggers email notification to customer
    */
   const requestResubmission = async (
     applicationId: number,
@@ -282,7 +308,10 @@ export const useVisaApplications = () => {
       travelerId?: number
       fieldIds: number[]
       note?: string
-    }>
+    }>,
+    options?: {
+      sendEmail?: boolean // Whether to send email notification (default: true)
+    }
   ): Promise<ApiResponse<any>> => {
     try {
       // Format requests
@@ -297,10 +326,19 @@ export const useVisaApplications = () => {
 
       const response = await api.post(
         `/visa-applications/${applicationId}/request-resubmission`,
-        { requests: formattedRequests }
+        {
+          requests: formattedRequests,
+          sendEmail: options?.sendEmail !== false // Default to true
+        }
       )
 
       console.log('✅ Resubmission requested:', response.data)
+
+      // Note: Email is sent by the backend API automatically
+      // The backend has access to customer email and application details
+      if (options?.sendEmail !== false) {
+        console.log('📧 Backend will send resubmission email notification')
+      }
 
       return {
         data: response.data,
@@ -367,7 +405,7 @@ export const useVisaApplications = () => {
     }
     return statusMap[status] || status
   }
-  
+
   /**
    * Get status color class
    */
@@ -387,14 +425,14 @@ export const useVisaApplications = () => {
     }
     return colorMap[status] || 'bg-gray-100 text-gray-800'
   }
-  
+
   return {
     getMyApplications,
     getApplicationById,
     getApplicationByNumber,
     updateApplicationStatus,
-    requestResubmission,  
-    getResubmissionRequests, 
+    requestResubmission,
+    getResubmissionRequests,
     formatStatus,
     getStatusColor,
   }

@@ -141,7 +141,16 @@
                     <p class="text-xs text-gray-600 line-clamp-2">
                       {{ notification.message }}
                     </p>
-                    <span class="text-xs text-orange-600 font-medium mt-1">
+                    <span 
+                      v-if="notification.type === 'completed'"
+                      class="text-xs text-green-600 font-medium mt-1"
+                    >
+                      Completed
+                    </span>
+                    <span 
+                      v-else
+                      class="text-xs text-orange-600 font-medium mt-1"
+                    >
                       Action Required
                     </span>
                   </div>
@@ -468,8 +477,13 @@ const formatNotificationDate = (date: Date | string): string => {
 
 // Handle notification click
 const handleNotificationClick = (notification: any) => {
-  // Navigate to the application details page
-  navigateTo(`/my-account/additional-info?applicationId=${notification.applicationId}`)
+  // For completed applications, navigate to order details page
+  // For resubmission notifications, navigate to additional info page
+  if (notification.type === 'completed') {
+    navigateTo(`/my-account/my-orders/${notification.applicationId}`)
+  } else {
+    navigateTo(`/my-account/additional-info?applicationId=${notification.applicationId}`)
+  }
 }
 
 // Watch notification dropdown open state to refresh when opened

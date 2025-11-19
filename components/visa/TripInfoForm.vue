@@ -223,7 +223,7 @@ import { ref, watch, computed, onMounted } from "vue";
 import { useRuntimeConfig } from "#app";
 
 import Button from "@/components/ui/button.vue";
-import Label from "@/components/ui/label.vue";
+import Label from "@/components/ui/label/Label.vue";
 import Input from "@/components/ui/Input.vue";
 import Select from "@/components/ui/select/Select.vue";
 import SelectContent from "@/components/ui/select/SelectContent.vue";
@@ -243,6 +243,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   next: [data: any];
+  update: [data: any];
 }>();
 
 // API composables
@@ -505,6 +506,25 @@ const selectedProduct = computed(() => {
   return availableProducts.value.find(
     (p) => p.productName === productName && p.entryType === entryType
   );
+});
+
+// Watch for changes in selected product and emit updates in real-time
+watch(selectedProduct, (newProduct) => {
+  console.log("🔄 Selected product changed:", newProduct);
+  
+  // Only emit update if we have a valid product and visaType
+  // This prevents emitting incomplete data when products are being cleared
+  if (newProduct && formData.value.visaType) {
+    console.log("✅ Emitting update with valid product data");
+    emit('update', {
+      nationality: formData.value.nationality,
+      visaType: formData.value.visaType,
+      applicants: formData.value.applicants,
+      productDetails: newProduct,
+    });
+  } else {
+    console.log("⏭️ Skipping update - no valid product selected yet");
+  }
 });
 
 const handleNext = () => {

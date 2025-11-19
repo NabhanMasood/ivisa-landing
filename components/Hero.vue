@@ -355,6 +355,7 @@ const fetchCountries = async () => {
   }
 }
 
+
 // Fetch destination countries for "To" dropdown (from visa products, matched with countries table for logos)
 const fetchDestinationCountries = async () => {
   try {

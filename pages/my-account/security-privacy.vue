@@ -171,7 +171,7 @@ import { ChevronLeft, Eye, EyeOff } from "lucide-vue-next";
 import Button from "@/components/ui/button.vue";
 import Card from "@/components/ui/card/Card.vue";
 import Input from "@/components/ui/Input.vue";
-import Label from "@/components/ui/label.vue";
+import Label from "@/components/ui/label/Label.vue";
 import { useAuthApi } from "@/composables/useAuth";
 
 const router = useRouter();

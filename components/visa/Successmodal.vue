@@ -21,8 +21,13 @@
         </h2>
 
         <!-- Application Number -->
-        <p style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #1ECE84; margin-bottom: 24px;">
+        <p style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #1ECE84; margin-bottom: 12px;">
           {{ applicationNumber || 'Processing...' }}
+        </p>
+
+        <!-- Email Confirmation Message -->
+        <p style="font-family: Manrope; font-weight: 400; font-size: 13px; line-height: 18px; color: #6B7280; margin-bottom: 24px;">
+          📧 A tracking link has been sent to <strong>{{ userEmail }}</strong>
         </p>
 
         <!-- OK Button -->
