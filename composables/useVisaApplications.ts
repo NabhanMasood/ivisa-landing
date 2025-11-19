@@ -2,13 +2,28 @@ import { useApi, handleApiError, type ApiResponse } from './useApi'
 import { useEmailNotifications } from './useEmailNotifications'
 
 /**
+ * Admin Custom Field interface for new fields created during resubmission
+ */
+export interface AdminCustomField {
+  question: string
+  fieldType: 'text' | 'number' | 'date' | 'textarea' | 'dropdown' | 'upload'
+  isRequired: boolean
+  options?: string[] // For dropdown fields
+  allowedFileTypes?: string[] | string // For upload fields (comma-separated string or array)
+  minLength?: number
+  maxLength?: number
+  maxFileSize?: number
+}
+
+/**
  * Resubmission Request interface (Option B)
  */
 export interface ResubmissionRequest {
   id: string
   target: 'application' | 'traveler'
   travelerId?: number | null
-  fieldIds: number[]
+  fieldIds?: number[] // Optional existing field IDs (can be empty if only newFields are present)
+  newFields?: AdminCustomField[] // Optional new custom fields created by admin
   note?: string | null
   requestedAt: Date | string
   fulfilledAt?: Date | string | null
@@ -300,13 +315,16 @@ export const useVisaApplications = () => {
    * 1. Send resubmission request to backend
    * 2. Backend changes status to 'resubmission'
    * 3. Backend triggers email notification to customer
+   * 
+   * Supports both existing fields (via fieldIds) and new custom fields (via newFields)
    */
   const requestResubmission = async (
     applicationId: number,
     requests: Array<{
       target?: 'application' | 'traveler'
       travelerId?: number
-      fieldIds: number[]
+      fieldIds?: number[] // Existing field IDs
+      newFields?: AdminCustomField[] // New custom fields to create
       note?: string
     }>,
     options?: {
@@ -314,13 +332,56 @@ export const useVisaApplications = () => {
     }
   ): Promise<ApiResponse<any>> => {
     try {
-      // Format requests
-      const formattedRequests = requests.map(req => ({
-        target: req.target || (req.travelerId ? 'traveler' : 'application'),
-        travelerId: req.travelerId,
-        fieldIds: Array.isArray(req.fieldIds) ? req.fieldIds : [req.fieldIds],
-        note: req.note
-      }))
+      // Format requests and validate newFields
+      const formattedRequests = requests.map(req => {
+        const formatted: any = {
+          target: req.target || (req.travelerId ? 'traveler' : 'application'),
+          travelerId: req.travelerId,
+          note: req.note
+        }
+
+        // Include fieldIds if provided
+        if (req.fieldIds && req.fieldIds.length > 0) {
+          formatted.fieldIds = Array.isArray(req.fieldIds) ? req.fieldIds : [req.fieldIds]
+        }
+
+        // Include newFields if provided (validate and format)
+        if (req.newFields && req.newFields.length > 0) {
+          formatted.newFields = req.newFields.map(field => {
+            const formattedField: any = {
+              question: field.question,
+              fieldType: field.fieldType,
+              isRequired: field.isRequired || false
+            }
+
+            // Add optional properties
+            if (field.options && field.options.length > 0) {
+              formattedField.options = field.options
+            }
+            if (field.allowedFileTypes) {
+              // Handle both array and comma-separated string
+              if (Array.isArray(field.allowedFileTypes)) {
+                formattedField.allowedFileTypes = field.allowedFileTypes
+              } else if (typeof field.allowedFileTypes === 'string' && field.allowedFileTypes.length > 0) {
+                formattedField.allowedFileTypes = field.allowedFileTypes.split(',').map((t: string) => t.trim())
+              }
+            }
+            if (field.minLength !== undefined) {
+              formattedField.minLength = field.minLength
+            }
+            if (field.maxLength !== undefined) {
+              formattedField.maxLength = field.maxLength
+            }
+            if (field.maxFileSize !== undefined) {
+              formattedField.maxFileSize = field.maxFileSize
+            }
+
+            return formattedField
+          })
+        }
+
+        return formatted
+      })
 
       console.log('🔵 Requesting resubmission:', { applicationId, requests: formattedRequests })
 

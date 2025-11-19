@@ -19,7 +19,7 @@ export interface VisaProductField {
   maxFileSize?: number // For upload fields (in bytes)
   createdAt?: string
   updatedAt?: string
-  editable?: boolean  
+  editable?: boolean
 
 }
 
@@ -357,7 +357,7 @@ export const useVisaProductFieldsApi = () => {
       if (travelerId) {
         url += `?travelerId=${travelerId}`
       }
-      
+
       const response = await api.get<FieldsWithResponsesResponse | VisaProductFieldWithResponse[]>(
         url
       )
@@ -394,14 +394,14 @@ export const useVisaProductFieldsApi = () => {
     }
   }
 
-/**
- * Submit field responses for an application
- * POST /visa-product-fields/responses
- * 
- * After successful submission, checks if all additional info is complete
- * and automatically updates application status from "resubmission" to "processing"
- */
-const submitFieldResponses = async (
+  /**
+   * Submit field responses for an application
+   * POST /visa-product-fields/responses
+   * 
+   * After successful submission, checks if all additional info is complete
+   * and automatically updates application status from "resubmission" to "processing"
+   */
+  const submitFieldResponses = async (
     data: SubmitFieldResponsesRequest,
     travelers?: Array<{ id?: number }>
   ): Promise<ApiResponse<FieldResponse[]>> => {
@@ -410,9 +410,9 @@ const submitFieldResponses = async (
         '/visa-product-fields/responses',
         data
       )
-  
+
       let responsesData: FieldResponse[]
-  
+
       if (Array.isArray(response.data)) {
         responsesData = response.data
       } else if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
@@ -425,42 +425,42 @@ const submitFieldResponses = async (
       } else {
         throw new Error('Invalid response format')
       }
-  
+
       // ✅ UPDATED: Check application status and update if needed
       if (travelers) {
         try {
           // First, get the current application to check its status
           const { getApplicationById } = useVisaApplications()
           const appResponse = await getApplicationById(data.applicationId)
-          
+
           if (appResponse.success && appResponse.data) {
             const appData = appResponse.data.data || appResponse.data
-            
+
             console.log('🔵 Current application status after submission:', {
               status: appData.status,
               resubmissionTarget: appData.resubmissionTarget,
               resubmissionTravelerId: appData.resubmissionTravelerId
             })
-            
+
             // Only proceed if status is still 'resubmission'
             if (appData.status === 'resubmission') {
               const allSubmitted = await checkAllAdditionalInfoSubmitted(
                 data.applicationId,
                 travelers
               )
-              
+
               console.log('🔍 All additional info submitted?', allSubmitted)
-              
+
               if (allSubmitted) {
                 console.log('✅ All additional info submitted, updating application status to "processing"')
-                
+
                 const { updateApplicationStatus } = useVisaApplications()
                 try {
                   const statusUpdateResult = await updateApplicationStatus(
                     data.applicationId,
                     'processing'
                   )
-                  
+
                   if (statusUpdateResult.success) {
                     console.log('✅ Application status updated to "processing"')
                   } else {
@@ -486,7 +486,7 @@ const submitFieldResponses = async (
           console.error('❌ Error checking/updating application status:', statusError)
         }
       }
-  
+
       return {
         data: responsesData,
         message: 'Field responses submitted successfully',
@@ -510,7 +510,7 @@ const submitFieldResponses = async (
       if (travelerId) {
         url += `?travelerId=${travelerId}`
       }
-      
+
       const response = await api.get<{ status: boolean; message: string; count?: number; data: FieldResponse[] } | FieldResponse[]>(
         url
       )
@@ -544,15 +544,15 @@ const submitFieldResponses = async (
     }
   }
 
-/**
- * Check if all additional info has been submitted for an application
- * This checks both application-level and all traveler-level fields
- * Returns true only if we can definitively verify all required fields are filled
- * AND at least some fields have responses (user has actually submitted something)
- * 
- * IMPORTANT: During resubmission, only editable fields need to be filled
- */
-const checkAllAdditionalInfoSubmitted = async (
+  /**
+   * Check if all additional info has been submitted for an application
+   * This checks both application-level and all traveler-level fields
+   * Returns true only if we can definitively verify all required fields are filled
+   * AND at least some fields have responses (user has actually submitted something)
+   * 
+   * IMPORTANT: During resubmission, only editable fields need to be filled
+   */
+  const checkAllAdditionalInfoSubmitted = async (
     applicationId: number | string,
     travelers: Array<{ id?: number }> = [],
     totalTravelersCount?: number
@@ -561,56 +561,56 @@ const checkAllAdditionalInfoSubmitted = async (
       let hasAnyFields = false
       let hasAnyResponses = false
       let allRequiredFieldsFilled = true
-      
+
       // Check application-level fields
       let applicationHasResponses = false
       let applicationAllFilled = true
-      
+
       const appFieldsResponse = await getFieldsByApplication(applicationId)
       if (appFieldsResponse.success && appFieldsResponse.data) {
         const appFields = appFieldsResponse.data
         if (appFields.length > 0) {
           hasAnyFields = true
-          
+
           // Check if any field has a response
           applicationHasResponses = appFields.some(field => {
             if (field.response === null || field.response === undefined) return false
-            const hasValue = field.response.value !== null && 
-                           field.response.value !== '' && 
-                           field.response.value !== undefined
-            const hasFile = field.response.filePath !== null && 
-                          field.response.filePath !== '' &&
-                          field.response.filePath !== undefined
+            const hasValue = field.response.value !== null &&
+              field.response.value !== '' &&
+              field.response.value !== undefined
+            const hasFile = field.response.filePath !== null &&
+              field.response.filePath !== '' &&
+              field.response.filePath !== undefined
             return hasValue || hasFile
           })
-          
+
           if (applicationHasResponses) {
             hasAnyResponses = true
           }
-          
+
           // ⭐ KEY CHANGE: Only check editable fields during resubmission
           // If field.editable is false, it means admin didn't request it, so skip validation
           applicationAllFilled = appFields.every(field => {
             // Skip non-editable fields (not requested by admin)
             if (field.editable === false) return true
-            
+
             // Skip non-required fields
             if (!field.isRequired) return true
-            
+
             // Field is required AND editable, check if it has a valid response
             if (field.response === null || field.response === undefined) {
               return false
             }
-            
-            const hasValue = field.response.value !== null && 
-                           field.response.value !== '' && 
-                           field.response.value !== undefined
-            const hasFile = field.response.filePath !== null && 
-                          field.response.filePath !== '' &&
-                          field.response.filePath !== undefined
+
+            const hasValue = field.response.value !== null &&
+              field.response.value !== '' &&
+              field.response.value !== undefined
+            const hasFile = field.response.filePath !== null &&
+              field.response.filePath !== '' &&
+              field.response.filePath !== undefined
             return hasValue || hasFile
           })
-          
+
           if (!applicationAllFilled) {
             allRequiredFieldsFilled = false
           }
@@ -619,11 +619,11 @@ const checkAllAdditionalInfoSubmitted = async (
         console.warn('Failed to fetch application-level fields, assuming not all info submitted')
         return false
       }
-  
+
       // Check traveler-level fields for each traveler
       const travelersWithIds: number[] = []
       let allTravelersComplete = true
-      
+
       for (const traveler of travelers) {
         if (traveler.id) {
           travelersWithIds.push(traveler.id)
@@ -632,45 +632,45 @@ const checkAllAdditionalInfoSubmitted = async (
             const travelerFields = travelerFieldsResponse.data
             if (travelerFields.length > 0) {
               hasAnyFields = true
-              
+
               // Check if any field has a response
               const travelerHasResponses = travelerFields.some(field => {
                 if (field.response === null || field.response === undefined) return false
-                const hasValue = field.response.value !== null && 
-                               field.response.value !== '' && 
-                               field.response.value !== undefined
-                const hasFile = field.response.filePath !== null && 
-                              field.response.filePath !== '' &&
-                              field.response.filePath !== undefined
+                const hasValue = field.response.value !== null &&
+                  field.response.value !== '' &&
+                  field.response.value !== undefined
+                const hasFile = field.response.filePath !== null &&
+                  field.response.filePath !== '' &&
+                  field.response.filePath !== undefined
                 return hasValue || hasFile
               })
-              
+
               if (travelerHasResponses) {
                 hasAnyResponses = true
               }
-              
+
               // ⭐ KEY CHANGE: Only check editable fields during resubmission
               const travelerAllRequiredFilled = travelerFields.every(field => {
                 // Skip non-editable fields (not requested by admin)
                 if (field.editable === false) return true
-                
+
                 // Skip non-required fields
                 if (!field.isRequired) return true
-                
+
                 // Field is required AND editable, check if it has a valid response
                 if (field.response === null || field.response === undefined) {
                   return false
                 }
-                
-                const hasValue = field.response.value !== null && 
-                               field.response.value !== '' && 
-                               field.response.value !== undefined
-                const hasFile = field.response.filePath !== null && 
-                              field.response.filePath !== '' &&
-                              field.response.filePath !== undefined
+
+                const hasValue = field.response.value !== null &&
+                  field.response.value !== '' &&
+                  field.response.value !== undefined
+                const hasFile = field.response.filePath !== null &&
+                  field.response.filePath !== '' &&
+                  field.response.filePath !== undefined
                 return hasValue || hasFile
               })
-              
+
               if (!travelerAllRequiredFilled || !travelerHasResponses) {
                 allRequiredFieldsFilled = false
                 allTravelersComplete = false
@@ -682,35 +682,26 @@ const checkAllAdditionalInfoSubmitted = async (
           }
         }
       }
-      
+
       console.log('🔍 Travelers checked:', travelersWithIds.length, 'out of', travelers.length, 'total travelers:', totalTravelersCount)
-      
+
       // If there are no fields at all, then there's nothing to submit, so return true
       if (!hasAnyFields) {
         console.log('🔍 checkAllAdditionalInfoSubmitted: No fields found, returning true (nothing to submit)')
         return true
       }
-      
+
       // IMPORTANT: If there are fields but NO responses at all, return false
       if (!hasAnyResponses) {
         console.log('🔍 checkAllAdditionalInfoSubmitted: Fields exist but no responses found, returning false')
         return false
       }
-      
+
       const applicationComplete = applicationAllFilled && applicationHasResponses
       const result = hasAnyResponses && applicationComplete && allTravelersComplete && allRequiredFieldsFilled
-      
-      console.log('🔍 checkAllAdditionalInfoSubmitted result:', {
-        hasAnyFields,
-        hasAnyResponses,
-        applicationComplete,
-        applicationAllFilled,
-        applicationHasResponses,
-        allTravelersComplete,
-        allRequiredFieldsFilled,
-        result
-      })
-      
+
+
+
       return result
     } catch (error) {
       console.error('Error checking additional info submission status:', error)

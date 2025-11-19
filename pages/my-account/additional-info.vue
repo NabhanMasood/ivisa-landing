@@ -182,7 +182,8 @@
                 <!-- Text Input -->
                 <Input
                   v-if="field.fieldType === 'text'"
-                  v-model="formResponses[field.id].value"
+                  :model-value="formResponses[field.id]?.value ?? ''"
+                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
                   :placeholder="field.question"
                   class="w-full h-9 border"
                   :class="
@@ -199,7 +200,8 @@
                 <!-- Number Input -->
                 <Input
                   v-else-if="field.fieldType === 'number'"
-                  v-model="formResponses[field.id].value"
+                  :model-value="formResponses[field.id]?.value ?? ''"
+                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
                   type="number"
                   :placeholder="field.question"
                   class="w-full h-9 border"
@@ -217,7 +219,8 @@
                 <!-- Textarea -->
                 <textarea
                   v-else-if="field.fieldType === 'textarea'"
-                  v-model="formResponses[field.id].value"
+                  :value="formResponses[field.id]?.value ?? ''"
+                  @input="(e: Event) => { const resp = formResponses[field.id!]; if (resp) resp.value = (e.target as HTMLTextAreaElement).value }"
                   :placeholder="field.question"
                   class="w-full min-h-[100px] px-3 py-2 border rounded-md"
                   :class="
@@ -237,7 +240,8 @@
                   class="grid grid-cols-3 gap-4"
                 >
                   <Select
-                    v-model="formResponses[field.id].date.day"
+                    :model-value="formResponses[field.id]?.date?.day ?? ''"
+                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.day = val }"
                     :disabled="isFieldDisabled(field)"
                     :class="
                       shouldHighlightField(field)
@@ -260,7 +264,8 @@
                   </Select>
 
                   <Select
-                    v-model="formResponses[field.id].date.month"
+                    :model-value="formResponses[field.id]?.date?.month ?? ''"
+                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.month = val }"
                     :disabled="isFieldDisabled(field)"
                     :class="
                       shouldHighlightField(field)
@@ -283,7 +288,8 @@
                   </Select>
 
                   <Select
-                    v-model="formResponses[field.id].date.year"
+                    :model-value="formResponses[field.id]?.date?.year ?? ''"
+                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.year = val }"
                     :disabled="isFieldDisabled(field)"
                     :class="
                       shouldHighlightField(field)
@@ -309,7 +315,8 @@
                 <!-- Dropdown -->
                 <Select
                   v-else-if="field.fieldType === 'dropdown'"
-                  v-model="formResponses[field.id].value"
+                  :model-value="formResponses[field.id]?.value ?? ''"
+                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
                   :required="field.isRequired"
                   :disabled="isFieldDisabled(field)"
                   :class="
@@ -359,7 +366,7 @@
                     "
                     class="w-full h-9 border rounded-md px-4 text-left text-sm flex items-center justify-between transition-colors"
                     :class="[
-                      formResponses[field.id]?.isUploaded
+                      (formResponses[field.id]?.isUploaded || (formResponses[field.id]?.file && field.id < 0))
                         ? 'bg-green-50 border-green-300 text-green-700 cursor-default'
                         : formResponses[field.id]?.isUploading
                         ? 'bg-gray-50 border-gray-300 text-gray-500 cursor-wait'
@@ -446,14 +453,13 @@
                         >
                         <span
                           v-else-if="
-                            formResponses[field.id]?.isUploaded &&
+                            (formResponses[field.id]?.isUploaded || formResponses[field.id]?.file) &&
                             formResponses[field.id]?.fileName
                           "
                         >
-                          {{ formResponses[field.id].fileName }} - Uploaded
-                        </span>
-                        <span v-else-if="formResponses[field.id]?.fileName">
-                          {{ formResponses[field.id].fileName }}
+                          {{ formResponses[field.id]?.fileName }}
+                          <span v-if="formResponses[field.id]?.isUploaded"> - Uploaded</span>
+                          <span v-else-if="field.id < 0"> - Ready to upload</span>
                         </span>
                         <span v-else>Upload</span>
                       </span>
@@ -486,7 +492,7 @@
                     v-if="formResponses[field.id]?.uploadError"
                     class="text-red-500 text-xs mt-1"
                   >
-                    {{ formResponses[field.id].uploadError }}
+                    {{ formResponses[field.id]?.uploadError }}
                   </p>
                   <p
                     v-if="
@@ -639,7 +645,10 @@ const yearOptions = Array.from({ length: 100 }, (_, i) => ({
 
 // Computed properties
 const sortedFields = computed(() => {
-  return [...fields.value].sort((a, b) => a.displayOrder - b.displayOrder);
+  // Filter out fields without IDs and sort by displayOrder
+  return [...fields.value]
+    .filter((field): field is VisaProductFieldWithResponse & { id: number } => field.id !== undefined)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 });
 
 // All travelers (removed application-level tab as it's duplicate of first traveler)
@@ -754,10 +763,52 @@ const shouldHighlightField = (field: any) => {
     });
 
     // Check if this field is in any of the active requests
-    return myRequests.some(
-      (req: any) =>
-        Array.isArray(req.fieldIds) && req.fieldIds.includes(field.id)
-    );
+    return myRequests.some((req: any) => {
+      const fieldIdNum = Number(field.id);
+      
+      // Check existing field IDs (supports negative IDs for admin-created fields)
+      if (Array.isArray(req.fieldIds) && req.fieldIds.length > 0) {
+        // Convert both to numbers for comparison (handles negative IDs)
+        if (req.fieldIds.some((id: any) => Number(id) === fieldIdNum)) {
+          return true;
+        }
+      }
+
+      // Check if this field matches any of the newFields in the request
+      // This handles cases where the field was created from newFields
+      // New fields will have negative IDs assigned by the backend
+      if (req.newFields && Array.isArray(req.newFields) && req.newFields.length > 0) {
+        // If field has a negative ID, it's likely an admin-created field
+        // Match by field properties (question, fieldType) to verify it's from newFields
+        if (fieldIdNum < 0) {
+          // Negative ID indicates admin-created field
+          // Check if it matches any newField by comparing properties
+          const matchesNewField = req.newFields.some((newField: any) => {
+            return (
+              newField.question === field.question &&
+              newField.fieldType === field.fieldType
+            );
+          });
+          if (matchesNewField) {
+            return true;
+          }
+        }
+        
+        // Also check by properties even if ID is not negative yet
+        // (fallback for edge cases where backend hasn't assigned ID yet)
+        const matchesByProperties = req.newFields.some((newField: any) => {
+          return (
+            newField.question === field.question &&
+            newField.fieldType === field.fieldType
+          );
+        });
+        if (matchesByProperties) {
+          return true;
+        }
+      }
+
+      return false;
+    });
   }
 
   return false;
@@ -925,6 +976,11 @@ const fetchFields = async (travelerId: number | null = null) => {
 
       // Initialize form responses with existing data or empty values
       fields.value.forEach((field) => {
+        // Skip fields without IDs
+        if (field.id === undefined) {
+          return;
+        }
+
         if (!formResponses[field.id]) {
           if (field.fieldType === "date") {
             // Parse existing date if available
@@ -962,27 +1018,27 @@ const fetchFields = async (travelerId: number | null = null) => {
           }
         } else {
           // Update existing response if field has response data
-          if (field.response) {
+          const existingResponse = formResponses[field.id];
+          if (field.response && existingResponse) {
             if (field.fieldType === "date" && field.response.value) {
               try {
                 const date = new Date(field.response.value);
-                formResponses[field.id].date = {
-                  day: String(date.getDate()),
-                  month: String(date.getMonth() + 1),
-                  year: String(date.getFullYear()),
-                };
+                if (existingResponse.date) {
+                  existingResponse.date = {
+                    day: String(date.getDate()),
+                    month: String(date.getMonth() + 1),
+                    year: String(date.getFullYear()),
+                  };
+                }
               } catch (e) {
                 // Invalid date
               }
             } else if (field.fieldType !== "date") {
-              formResponses[field.id].value = field.response.value || null;
-              formResponses[field.id].filePath =
-                field.response.filePath || null;
-              formResponses[field.id].fileName =
-                field.response.fileName || null;
-              formResponses[field.id].fileSize =
-                field.response.fileSize || null;
-              formResponses[field.id].isUploaded = !!field.response.filePath;
+              existingResponse.value = field.response.value || null;
+              existingResponse.filePath = field.response.filePath || null;
+              existingResponse.fileName = field.response.fileName || null;
+              existingResponse.fileSize = field.response.fileSize || null;
+              existingResponse.isUploaded = !!field.response.filePath;
             }
           }
         }
@@ -1057,17 +1113,58 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
   const field = fields.value.find((f) => f.id === fieldId);
   if (!field) return;
 
+  // Initialize formResponses entry if it doesn't exist (for negative IDs)
+  if (!formResponses[fieldId]) {
+    formResponses[fieldId] = {
+      value: null,
+      filePath: null,
+      fileName: null,
+      fileSize: null,
+      isUploading: false,
+      isUploaded: false,
+    };
+  }
+
   // Validate file type
   if (field.allowedFileTypes && field.allowedFileTypes.length > 0) {
     const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
-    const allowedExtensions = field.allowedFileTypes.map((type) =>
-      type.toLowerCase()
+    
+    // Normalize allowed extensions: ensure they all have dot prefix
+    const allowedExtensions = field.allowedFileTypes.map((type) => {
+      const normalized = type.toLowerCase().trim();
+      return normalized.startsWith(".") ? normalized : `.${normalized}`;
+    });
+    
+    // MIME type mapping for common file types
+    const mimeTypeMap: Record<string, string[]> = {
+      ".pdf": ["application/pdf"],
+      ".jpg": ["image/jpeg", "image/jpg"],
+      ".jpeg": ["image/jpeg", "image/jpg"],
+      ".png": ["image/png"],
+      ".gif": ["image/gif"],
+      ".doc": ["application/msword"],
+      ".docx": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      ".xls": ["application/vnd.ms-excel"],
+      ".xlsx": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+    };
+    
+    // Check if file extension matches
+    const extensionMatches = allowedExtensions.some(
+      (ext) => fileExtension === ext
     );
-    if (
-      !allowedExtensions.some(
-        (ext) => fileExtension === ext.toLowerCase() || file.type === ext
-      )
-    ) {
+    
+    // Check if MIME type matches (handle jpg/jpeg variations)
+    const mimeMatches = allowedExtensions.some((ext) => {
+      const mimeTypes = mimeTypeMap[ext] || [];
+      return mimeTypes.includes(file.type);
+    });
+    
+    // Also handle jpg/jpeg equivalence
+    const jpgJpegEquivalence = 
+      (fileExtension === ".jpg" || fileExtension === ".jpeg") &&
+      (allowedExtensions.includes(".jpg") || allowedExtensions.includes(".jpeg"));
+    
+    if (!extensionMatches && !mimeMatches && !jpgJpegEquivalence) {
       formResponses[
         fieldId
       ].uploadError = `File type not allowed. Allowed types: ${field.allowedFileTypes.join(
@@ -1079,12 +1176,35 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
 
   // Validate file size
   if (field.maxFileSize && file.size > field.maxFileSize) {
+    // Initialize formResponses entry if it doesn't exist (for negative IDs)
+    if (!formResponses[fieldId]) {
+      formResponses[fieldId] = {
+        value: null,
+        filePath: null,
+        fileName: null,
+        fileSize: null,
+        isUploading: false,
+        isUploaded: false,
+      };
+    }
     formResponses[
       fieldId
     ].uploadError = `File size exceeds maximum allowed size of ${formatFileSize(
       field.maxFileSize
     )}`;
     return;
+  }
+
+  // Initialize formResponses entry if it doesn't exist (for negative IDs)
+  if (!formResponses[fieldId]) {
+    formResponses[fieldId] = {
+      value: null,
+      filePath: null,
+      fileName: null,
+      fileSize: null,
+      isUploading: false,
+      isUploaded: false,
+    };
   }
 
   // Reset states
@@ -1095,7 +1215,30 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
   formResponses[fieldId].fileName = file.name;
   formResponses[fieldId].fileSize = file.size;
 
-  // Upload file to server
+  // For negative field IDs (admin-created custom fields), store file temporarily
+  // and upload during form submission since the upload endpoint doesn't support negative IDs yet
+  const isNegativeFieldId = fieldId < 0;
+  
+  if (isNegativeFieldId) {
+    // Store file for upload during submission
+    formResponses[fieldId].file = file;
+    formResponses[fieldId].fileName = file.name;
+    formResponses[fieldId].fileSize = file.size;
+    formResponses[fieldId].isUploading = false;
+    formResponses[fieldId].isUploaded = false; // Will be uploaded during submission
+    formResponses[fieldId].uploadError = undefined;
+    
+    // Show success state even though we haven't uploaded yet
+    // The actual upload will happen during form submission
+    console.log('📎 File stored for negative field ID, will upload during submission:', {
+      fieldId,
+      fileName: file.name,
+      fileSize: file.size
+    });
+    return; // Exit early, don't upload now
+  }
+
+  // Upload file to server (for positive field IDs)
   try {
     const config = useRuntimeConfig();
     const baseUrl = (config.public.apiBase as string).replace(/\/+$/, "");
@@ -1152,6 +1295,17 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
     });
   } catch (err: any) {
     console.error("File upload error:", err);
+    // Ensure formResponses entry exists before setting error
+    if (!formResponses[fieldId]) {
+      formResponses[fieldId] = {
+        value: null,
+        filePath: null,
+        fileName: null,
+        fileSize: null,
+        isUploading: false,
+        isUploaded: false,
+      };
+    }
     formResponses[fieldId].uploadError =
       err.message ||
       "File upload failed. Please check if the upload endpoint is configured correctly.";
@@ -1176,6 +1330,11 @@ const validateForm = (): boolean => {
   let isValid = true;
 
   fields.value.forEach((field) => {
+    // Skip fields without IDs
+    if (field.id === undefined) {
+      return;
+    }
+
     if (isFieldDisabled(field)) {
       return;
     }
@@ -1195,9 +1354,10 @@ const validateForm = (): boolean => {
           isValid = false;
         }
       } else {
+        const fieldResponse = formResponses[field.id];
         if (
-          !formResponses[field.id]?.value ||
-          formResponses[field.id].value.trim() === ""
+          !fieldResponse?.value ||
+          (typeof fieldResponse.value === 'string' && fieldResponse.value.trim() === "")
         ) {
           fieldErrors[field.id] = "This field is required";
           isValid = false;
@@ -1207,10 +1367,10 @@ const validateForm = (): boolean => {
 
     if (
       field.fieldType === "dropdown" &&
-      field.options &&
-      formResponses[field.id]?.value
+      field.options
     ) {
-      if (!field.options.includes(formResponses[field.id].value!)) {
+      const fieldResponse = formResponses[field.id];
+      if (fieldResponse?.value && !field.options.includes(fieldResponse.value)) {
         fieldErrors[field.id] = "Invalid option selected";
         isValid = false;
       }
@@ -1236,29 +1396,124 @@ const handleSubmit = async () => {
   error.value = "";
 
   try {
-    const responses = fields.value.map((field) => {
-      const response: any = {
-        fieldId: field.id,
-      };
-
-      if (field.fieldType === "upload") {
-        response.filePath = formResponses[field.id].filePath;
-        response.fileName = formResponses[field.id].fileName;
-        response.fileSize = formResponses[field.id].fileSize;
-      } else if (field.fieldType === "date") {
-        const date = formResponses[field.id].date;
-        if (date && date.day && date.month && date.year) {
-          const year = date.year;
-          const month = String(date.month).padStart(2, "0");
-          const day = String(date.day).padStart(2, "0");
-          response.value = `${year}-${month}-${day}`;
+    // First, upload files for negative field IDs (admin-created custom fields)
+    // These need to be uploaded during submission since the upload endpoint doesn't support negative IDs
+    const negativeFieldUploads = fields.value
+      .filter((field): field is VisaProductFieldWithResponse & { id: number } => 
+        field.id !== undefined && field.fieldType === "upload" && field.id < 0
+      )
+      .map(async (field) => {
+        const fileData = formResponses[field.id];
+        if (!fileData?.file && !fileData?.filePath) {
+          // No file to upload
+          return { fieldId: field.id, success: true };
         }
-      } else {
-        response.value = formResponses[field.id].value;
-      }
 
-      return response;
-    });
+        // If already uploaded, skip
+        if (fileData.filePath) {
+          return { fieldId: field.id, success: true, filePath: fileData.filePath };
+        }
+
+        // Upload the file
+        try {
+          const config = useRuntimeConfig();
+          const baseUrl = (config.public.apiBase as string).replace(/\/+$/, "");
+          const token = getAuthToken();
+
+          const formData = new FormData();
+          formData.append("file", fileData.file!);
+
+          // Include applicationId and travelerId for negative field IDs
+          let uploadEndpoint = `/visa-product-fields/upload?fieldId=${field.id}&applicationId=${applicationId.value}`;
+          if (selectedTravelerId.value) {
+            uploadEndpoint += `&travelerId=${selectedTravelerId.value}`;
+          }
+
+          const response = await fetch(`${baseUrl}${uploadEndpoint}`, {
+            method: "POST",
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            let errorMessage = `Upload failed with status ${response.status}`;
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch {
+              errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+
+          if (!result.status || !result.data) {
+            throw new Error(result.message || "Invalid response from server");
+          }
+
+          const filePath = result.data.filePath || result.data.url || result.data.cloudinaryUrl;
+          if (!filePath) {
+            throw new Error("File upload succeeded but no file path/URL was returned");
+          }
+
+          // Update formResponses with the uploaded file path
+          const fieldResponse = formResponses[field.id];
+          if (fieldResponse) {
+            fieldResponse.filePath = filePath;
+            fieldResponse.fileName = result.data.fileName || fileData.fileName;
+            fieldResponse.fileSize = result.data.fileSize || fileData.fileSize;
+            fieldResponse.isUploaded = true;
+          }
+
+          return { fieldId: field.id, success: true, filePath };
+        } catch (err: any) {
+          console.error(`Error uploading file for field ${field.id}:`, err);
+          throw new Error(`Failed to upload file for "${field.question}": ${err.message}`);
+        }
+      });
+
+    // Wait for all negative field uploads to complete
+    if (negativeFieldUploads.length > 0) {
+      await Promise.all(negativeFieldUploads);
+    }
+
+    // Now build responses with uploaded file paths
+    // Filter out fields without IDs
+    const responses = fields.value
+      .filter((field): field is VisaProductFieldWithResponse & { id: number } => field.id !== undefined)
+      .map((field) => {
+        const response: any = {
+          fieldId: field.id,
+        };
+
+        if (field.fieldType === "upload") {
+          const fileData = formResponses[field.id];
+          if (fileData) {
+            response.filePath = fileData.filePath;
+            response.fileName = fileData.fileName;
+            response.fileSize = fileData.fileSize;
+          }
+        } else if (field.fieldType === "date") {
+          const fileData = formResponses[field.id];
+          const date = fileData?.date;
+          if (date && date.day && date.month && date.year) {
+            const year = date.year;
+            const month = String(date.month).padStart(2, "0");
+            const day = String(date.day).padStart(2, "0");
+            response.value = `${year}-${month}-${day}`;
+          }
+        } else {
+          const fileData = formResponses[field.id];
+          if (fileData) {
+            response.value = fileData.value;
+          }
+        }
+
+        return response;
+      });
 
     // Get all travelers for status check
     const allTravelersList = travelers.value.map((t) => ({ id: t.id }));
@@ -1373,8 +1628,9 @@ const initializeData = async () => {
 
         if (firstRequest.target === "application") {
           // Application-level request - map to first traveler (since we removed application tab)
-          if (travelers.value.length > 0 && travelers.value[0].id) {
-            selectedTravelerId.value = travelers.value[0].id;
+          const firstTraveler = travelers.value[0];
+          if (travelers.value.length > 0 && firstTraveler?.id) {
+            selectedTravelerId.value = firstTraveler.id;
             selectedTravelerIndex.value = 0;
             await fetchFields(selectedTravelerId.value);
           } else {
@@ -1397,8 +1653,9 @@ const initializeData = async () => {
             await fetchFields(selectedTravelerId.value);
           } else {
             // Fallback to first traveler if traveler not found
-            if (travelers.value.length > 0 && travelers.value[0].id) {
-              selectedTravelerId.value = travelers.value[0].id;
+            const firstTraveler = travelers.value[0];
+            if (travelers.value.length > 0 && firstTraveler?.id) {
+              selectedTravelerId.value = firstTraveler.id;
               selectedTravelerIndex.value = 0;
               await fetchFields(selectedTravelerId.value);
             } else {
@@ -1409,8 +1666,9 @@ const initializeData = async () => {
           }
         } else {
           // Default to first traveler
-          if (travelers.value.length > 0 && travelers.value[0].id) {
-            selectedTravelerId.value = travelers.value[0].id;
+          const firstTraveler = travelers.value[0];
+          if (travelers.value.length > 0 && firstTraveler?.id) {
+            selectedTravelerId.value = firstTraveler.id;
             selectedTravelerIndex.value = 0;
             await fetchFields(selectedTravelerId.value);
           } else {
@@ -1421,8 +1679,9 @@ const initializeData = async () => {
         }
       } else {
         // No active requests - default to first traveler
-        if (travelers.value.length > 0 && travelers.value[0].id) {
-          selectedTravelerId.value = travelers.value[0].id;
+        const firstTraveler = travelers.value[0];
+        if (travelers.value.length > 0 && firstTraveler?.id) {
+          selectedTravelerId.value = firstTraveler.id;
           selectedTravelerIndex.value = 0;
           await fetchFields(selectedTravelerId.value);
         } else {
@@ -1433,8 +1692,9 @@ const initializeData = async () => {
       }
     } else {
       // No resubmission requests - default to first traveler
-      if (travelers.value.length > 0 && travelers.value[0].id) {
-        selectedTravelerId.value = travelers.value[0].id;
+      const firstTraveler = travelers.value[0];
+      if (travelers.value.length > 0 && firstTraveler?.id) {
+        selectedTravelerId.value = firstTraveler.id;
         selectedTravelerIndex.value = 0;
         await fetchFields(selectedTravelerId.value);
       } else {
