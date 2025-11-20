@@ -1,26 +1,24 @@
 <template>
-  <div class="flex" style="gap: 14px">
+  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px]">
     <!-- Left Side - Form -->
-    <div class="flex-1 rounded-xl" style="border-color: #e5e7eb; padding: 24px">
+    <div class="flex-1 rounded-lg sm:rounded-xl" style="padding: 16px sm:20px md:24px">
       <!-- Header -->
-      <div class="mb-6">
+      <div class="mb-4 sm:mb-6">
         <h2
+          class="text-base sm:text-lg leading-[22px] sm:leading-[24px]"
           style="
             font-family: Geist;
             font-weight: 600;
-            font-size: 18px;
-            line-height: 24px;
             color: #0b3947;
           "
         >
           Your Personal Details
         </h2>
         <p
+          class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] mt-1"
           style="
             font-family: Manrope;
             font-weight: 400;
-            font-size: 14px;
-            line-height: 20px;
             color: #6b7280;
           "
         >
@@ -40,23 +38,21 @@
           <button
             v-if="travelers.length > 1"
             @click="toggleTraveler(index)"
-            class="w-full flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-            style="padding: 24px"
+            class="w-full flex items-center justify-between text-left hover:bg-gray-50 transition-colors p-4 sm:p-6"
             type="button"
           >
             <h3
+              class="text-sm sm:text-base leading-[20px] sm:leading-[24px]"
               style="
                 font-family: Geist;
                 font-weight: 600;
-                font-size: 16px;
-                line-height: 24px;
                 color: #0b3947;
               "
             >
               Traveler {{ index + 1 }}
             </h3>
             <svg
-              class="w-5 h-5 transition-transform"
+              class="w-4 h-4 sm:w-5 sm:h-5 transition-transform"
               :class="{ 'rotate-180': expandedTravelers[index] }"
               fill="none"
               stroke="currentColor"
@@ -74,12 +70,10 @@
           <!-- Single Traveler Header (No Dropdown) -->
           <h3
             v-else
-            class="mb-5"
+            class="mb-4 sm:mb-5 text-sm sm:text-base leading-[20px] sm:leading-[24px]"
             style="
               font-family: Geist;
               font-weight: 600;
-              font-size: 16px;
-              line-height: 24px;
               color: #0b3947;
             "
           >
@@ -89,9 +83,9 @@
           <!-- Traveler Form - Collapsible for multiple, always visible for single -->
           <div
             v-show="travelers.length === 1 || expandedTravelers[index]"
-            :style="travelers.length > 1 ? 'padding: 0 24px 24px 24px;' : ''"
+            :class="travelers.length > 1 ? 'px-4 sm:px-6 pb-4 sm:pb-6' : ''"
           >
-            <div class="space-y-5">
+            <div class="space-y-4 sm:space-y-5">
               <!-- First and Middle Name -->
               <div>
                 <Label
@@ -149,9 +143,9 @@
                 >
                   Date of Birth
                 </Label>
-                <div class="grid grid-cols-3 gap-4 mt-2">
+                <div class="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-2">
                   <Select v-model="traveler.birthDate">
-                    <SelectTrigger class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4">
                       <SelectValue placeholder="Date" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[180px]" :side-offset="5">
@@ -166,7 +160,7 @@
                   </Select>
 
                   <Select v-model="traveler.birthMonth">
-                    <SelectTrigger class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[250px]" :side-offset="5">
@@ -181,7 +175,7 @@
                   </Select>
 
                   <Select v-model="traveler.birthYear">
-                    <SelectTrigger class="!h-[45px] !bg-white w-full px-4">
+                    <SelectTrigger class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
                     <SelectContent class="max-h-[300px]" :side-offset="5">
@@ -305,10 +299,10 @@
         </div>
 
         <!-- Add Another Traveler Button -->
-        <div class="mt-6">
+        <div class="mt-4 sm:mt-6">
           <Button
             @click="addTraveler"
-            class="w-auto"
+            class="w-full sm:w-auto"
             style="
               background-color: #1ece84;
               color: white;

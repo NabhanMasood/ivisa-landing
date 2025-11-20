@@ -149,36 +149,36 @@
                 Application Details
               </h2>
               
-              <div class="grid grid-cols-2 gap-6">
-                <div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Destination Country</p>
                   <p class="font-medium text-[#27272B]">{{ application.destinationCountry }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Nationality</p>
                   <p class="font-medium text-[#27272B]">{{ application.nationality }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Visa Type</p>
                   <p class="font-medium text-[#27272B]">{{ application.visaType }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Processing Type</p>
                   <p class="font-medium text-[#27272B] capitalize">{{ application.processingType }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Number of Travelers</p>
                   <p class="font-medium text-[#27272B]">{{ application.numberOfTravelers }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Total Amount</p>
                   <p class="font-medium text-[#27272B]">{{ formatPrice(Number(application.totalAmount)) }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Submitted On</p>
                   <p class="font-medium text-[#27272B]">{{ formatDate(application.submittedAt || application.createdAt) }}</p>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm text-[#64748B] font-geist mb-1">Status</p>
                   <span 
                     :class="getStatusColor(effectiveStatus)"
@@ -194,16 +194,16 @@
                 <h3 class="text-lg font-semibold font-geist text-[#27272B] mb-4">
                   Payment Information
                 </h3>
-                <div class="grid grid-cols-2 gap-6">
-                  <div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div class="min-w-0">
                     <p class="text-sm text-[#64748B] font-geist mb-1">Transaction ID</p>
-                    <p class="font-medium text-[#27272B]">{{ application.payment.transactionId }}</p>
+                    <p class="font-medium text-[#27272B] break-words">{{ application.payment.transactionId }}</p>
                   </div>
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-sm text-[#64748B] font-geist mb-1">Amount Paid</p>
-                    <p class="font-medium text-[#27272B]">{{ formatPrice(Number(application.payment.amount)) }}</p>
+                    <p class="font-medium text-[#27272B] whitespace-nowrap">{{ formatPrice(Number(application.payment.amount)) }}</p>
                   </div>
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-sm text-[#64748B] font-geist mb-1">Payment Status</p>
                     <span 
                       :class="application.payment.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
@@ -212,7 +212,7 @@
                       {{ application.payment.status }}
                     </span>
                   </div>
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-sm text-[#64748B] font-geist mb-1">Payment Date</p>
                     <p class="font-medium text-[#27272B]">{{ formatDate(application.payment.createdAt) }}</p>
                   </div>

@@ -14,23 +14,23 @@
       </div>
 
       <!-- Content Container - Centered both vertically and horizontally -->
-      <div class="relative z-20 container mx-auto max-w-6xl px-6 lg:px-8 text-center py-20">
+      <div class="relative z-20 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center py-12 sm:py-16 lg:py-20">
         <!-- Hero Text -->
-        <div class="mb-12">
-          <h1 class="text-5xl lg:text-6xl font-bold text-white mb-6 drop-shadow-2xl">
+        <div class="mb-8 sm:mb-12">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 drop-shadow-2xl">
             Your Visa. Our Priority.
           </h1>
-          <p class="text-xl lg:text-2xl text-white/95 drop-shadow-lg">
+          <p class="text-base sm:text-lg md:text-xl lg:text-2xl text-white/95 drop-shadow-lg px-2">
             Let us handle your visa any country, anywhere in the world.
           </p>
         </div>
 
         <!-- Search Card with enhanced transparency -->
         <Card 
-          class="!rounded-[24px] shadow-2xl mx-auto backdrop-blur-md" 
-          style="width: 1008px; height: 204.5px; background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.25);"
+          class="!rounded-[16px] sm:!rounded-[24px] shadow-2xl mx-auto backdrop-blur-md w-full max-w-[1008px]" 
+          style="min-height: 204.5px; background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.25);"
         >
-          <CardContent class="p-6 lg:p-8 flex items-center h-full">
+          <CardContent class="p-4 sm:p-6 lg:p-8 flex items-center min-h-[204.5px]">
             <!-- Loading State -->
             <div v-if="isLoading" class="flex items-center justify-center w-full">
               <div class="text-gray-600">Loading countries...</div>
@@ -42,17 +42,16 @@
             </div>
 
             <!-- Main Form -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end w-full">
+            <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-end w-full">
               <!-- From Select (All Countries) -->
               <div class="space-y-2 text-left">
-                <Label htmlFor="from" class="text-gray-700 font-medium text-base">
+                <Label htmlFor="from" class="text-gray-700 font-medium text-sm sm:text-base">
                   Where am I from?
                 </Label>
                 <Select v-model="selectedFrom">
                   <SelectTrigger 
                     id="from" 
-                    class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
-                    style="width: 299.33px;"
+                    class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
                   >
                     <SelectValue>
                       <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedFrom">
@@ -114,14 +113,13 @@
 
               <!-- To Select (Countries with Visa Products) -->
               <div class="space-y-2 text-left">
-                <Label htmlFor="to" class="text-gray-700 font-medium text-base">
+                <Label htmlFor="to" class="text-gray-700 font-medium text-sm sm:text-base">
                   Where am I going?
                 </Label>
                 <Select v-model="selectedTo">
                   <SelectTrigger 
                     id="to" 
-                    class="!h-[45px] !bg-white/90 !rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all"
-                    style="width: 299.33px;"
+                    class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
                   >
                     <SelectValue>
                       <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedTo">
@@ -184,7 +182,7 @@
               <!-- Get Started Button -->
               <Button 
                 size="lg"
-                class="!bg-gradient-to-r !from-[#00C6A7] !to-[#26D07A] hover:!from-[#00B599] hover:!to-[#22BD6D] !text-white !h-[52px] !rounded-[20px] w-full !font-semibold !text-lg shadow-xl transition-all hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                class="!bg-gradient-to-r !from-[#00C6A7] !to-[#26D07A] hover:!from-[#00B599] hover:!to-[#22BD6D] !text-white !h-[48px] sm:!h-[52px] !rounded-[16px] sm:!rounded-[20px] w-full !font-semibold !text-base sm:!text-lg shadow-xl transition-all hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
                 :disabled="!selectedFrom || !selectedTo || isLoading"
                 @click="handleGetStarted"
               >
@@ -197,25 +195,25 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="bg-white py-12 lg:py-16 border-t border-gray-100">
-      <div class="container mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+    <section class="bg-white py-8 sm:py-12 lg:py-16 border-t border-gray-100">
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-12 items-start">
           <!-- Happy Customers -->
           <div class="text-center">
-            <div class="text-[32px] leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
+            <div class="text-2xl sm:text-[28px] lg:text-[32px] leading-[32px] sm:leading-[36px] lg:leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
               180K
             </div>
-            <div class="text-[13px] leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
+            <div class="text-xs sm:text-[12px] lg:text-[13px] leading-[20px] sm:leading-[28px] lg:leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
               Happy Customers
             </div>
           </div>
 
           <!-- 24/7 Support -->
           <div class="text-center">
-            <div class="text-[32px] leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
+            <div class="text-2xl sm:text-[28px] lg:text-[32px] leading-[32px] sm:leading-[36px] lg:leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
               24/7
             </div>
-            <div class="text-[13px] leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
+            <div class="text-xs sm:text-[12px] lg:text-[13px] leading-[20px] sm:leading-[28px] lg:leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
               Support
             </div>
           </div>
@@ -226,27 +224,27 @@
             <img 
               src="/logos/trust-pilot.png"
               alt="Trustpilot"
-              class="w-[104px] h-[30px] object-contain translate-y-2"
+              class="w-[80px] sm:w-[104px] h-[24px] sm:h-[30px] object-contain translate-y-2"
             />
           </div>
         </div>
 
           <!-- Years of Experience -->
           <div class="text-center">
-            <div class="text-[32px] leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
+            <div class="text-2xl sm:text-[28px] lg:text-[32px] leading-[32px] sm:leading-[36px] lg:leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
               11
             </div>
-            <div class="text-[13px] leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
+            <div class="text-xs sm:text-[12px] lg:text-[13px] leading-[20px] sm:leading-[28px] lg:leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
               Years of Experience
             </div>
           </div>
 
           <!-- Visa Approval Rate -->
           <div class="text-center">
-            <div class="text-[32px] leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
+            <div class="text-2xl sm:text-[28px] lg:text-[32px] leading-[32px] sm:leading-[36px] lg:leading-[40px] font-bold text-[#0B3947] mb-1" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; letter-spacing: 0;">
               98%
             </div>
-            <div class="text-[13px] leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
+            <div class="text-xs sm:text-[12px] lg:text-[13px] leading-[20px] sm:leading-[28px] lg:leading-[34px] text-[#0B3947]" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 400; letter-spacing: 0;">
               Visa Approval Rate
             </div>
           </div>
@@ -254,7 +252,7 @@
       </div>
       
       <!-- Sleek Divider Line -->
-      <div class="container mx-auto max-w-7xl px-6 lg:px-8 mt-8 lg:mt-10">
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 lg:mt-10">
         <div class="w-full h-[1px] bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
     </section>

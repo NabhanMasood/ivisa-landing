@@ -4,9 +4,9 @@
     class="relative overflow-hidden w-full min-h-[553px]"
     style="background: linear-gradient(90deg, #31B560 0%, #0582A2 33.14%, #2567BE 51.18%, #5051DA 69.41%, #2C229B 100%);"
   >
-    <div class="w-full h-full relative">
+      <div class="w-full h-full relative">
       <!-- Logo in top right corner with high z-index, moved more right -->
-      <div class="absolute top-0 -right-2 lg:-right-4 w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] z-50">
+      <div class="absolute top-0 -right-2 lg:-right-4 w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] z-50 opacity-50 sm:opacity-100">
         <img
           src="/svg/half-logo.svg"
           alt="Visa123 Logo"
@@ -14,46 +14,46 @@
         />
       </div>
 
-      <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[553px]">
+      <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[400px] sm:min-h-[500px] lg:min-h-[553px]">
         <!-- Content - Full Width -->
-        <div class="w-full px-6 lg:pl-[144px] lg:pr-[120px]">
+        <div class="w-full px-4 sm:px-6 lg:pl-[144px] lg:pr-[120px]">
           
           <!-- Left Content -->
-          <div class="text-white z-10 relative max-w-[676px] py-12 lg:py-16">
+          <div class="text-white z-10 relative max-w-[676px] py-8 sm:py-12 lg:py-16">
             <!-- Heading and Subtext Container -->
-            <div class="mb-8">
+            <div class="mb-6 sm:mb-8">
               <!-- Main Heading - Single Line -->
-              <h1 class="font-manrope font-extrabold text-[40px] md:text-[47px] leading-[48px] md:leading-[56px] mb-4 uppercase whitespace-nowrap">
+              <h1 class="font-manrope font-extrabold text-2xl sm:text-3xl md:text-[40px] lg:text-[47px] leading-[32px] sm:leading-[40px] md:leading-[48px] lg:leading-[56px] mb-3 sm:mb-4 uppercase">
                 Your Visa. Our Priority
               </h1>
               
               <!-- Subtext -->
-              <p class="font-manrope font-semibold text-[18px] md:text-[20px] leading-[26px] md:leading-[30px] max-w-[500px]">
-                Thailand ETA, Morocco eVisa, or Egypt Standard Visa<br>
+              <p class="font-manrope font-semibold text-sm sm:text-base md:text-[18px] lg:text-[20px] leading-[20px] sm:leading-[24px] md:leading-[26px] lg:leading-[30px] max-w-[500px]">
+                Thailand ETA, Morocco eVisa, or Egypt Standard Visa<br class="hidden sm:block">
                 - we're here to make your travel dreams stress-free.
               </p>
             </div>
 
             <!-- Application Form Card -->
-            <div class="w-full max-w-[585px] lg:w-[585px] lg:h-[248px] rounded-2xl p-[25px] bg-[#F1F9FC] shadow-lg">
-              <h2 class="font-manrope font-bold text-[22px] leading-[30px] text-[#1a1a1a] mb-6">
+            <div class="w-full max-w-[585px] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[25px] bg-[#F1F9FC] shadow-lg">
+              <h2 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-[26px] sm:leading-[28px] lg:leading-[30px] text-[#1a1a1a] mb-4 sm:mb-6">
                 Start your application
               </h2>
 
               <!-- Loading State -->
-              <div v-if="isLoading" class="flex items-center justify-center py-8">
-                <div class="text-gray-600">Loading countries...</div>
+              <div v-if="isLoading" class="flex items-center justify-center py-6 sm:py-8">
+                <div class="text-gray-600 text-sm sm:text-base">Loading countries...</div>
               </div>
 
               <!-- Error State -->
-              <div v-else-if="error" class="flex items-center justify-center py-8">
-                <div class="text-red-600">{{ error }}</div>
+              <div v-else-if="error" class="flex items-center justify-center py-6 sm:py-8">
+                <div class="text-red-600 text-sm sm:text-base">{{ error }}</div>
               </div>
 
               <!-- Form Content -->
               <div v-else>
                 <!-- Country Selectors Row -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <!-- From Country Dropdown (All Countries) -->
                   <div class="space-y-2">
                     <Select v-model="selectedFrom">
@@ -193,9 +193,9 @@
                 <button
                   @click="handleApply"
                   :disabled="!selectedFrom || !selectedTo || isLoading"
-                  class="w-full h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-base rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="w-full h-[44px] sm:h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-sm sm:text-base rounded-[8px] sm:rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span class="text-lg">→</span>
+                  <span class="text-base sm:text-lg">→</span>
                   <span>Apply Now!</span>
                 </button>
               </div>

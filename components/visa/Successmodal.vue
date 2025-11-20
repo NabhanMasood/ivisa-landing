@@ -1,40 +1,40 @@
 <template>
   <Dialog :open="isOpen" @update:open="handleOpenChange">
-    <DialogContent class="w-[360px]">
-      <div class="flex flex-col items-center text-center py-4">
+    <DialogContent class="w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px]">
+      <div class="flex flex-col items-center text-center py-3 sm:py-4 px-2">
         
         <!-- Success Icon with circular background -->
-        <div class="relative mb-6">
+        <div class="relative mb-4 sm:mb-6">
           <!-- Outer light circle -->
-          <div class="w-32 h-32 rounded-full flex items-center justify-center" style="background-color: #F0F0F0;">
+          <div class="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center" style="background-color: #F0F0F0;">
             <!-- Inner white circle -->
-            <div class="w-24 h-24 rounded-full flex items-center justify-center bg-white">
+            <div class="w-[72px] h-[72px] sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-white">
               <!-- Custom SVG Icon -->
-              <img src="/svg/success.svg" alt="Success" class="w-16 h-16" />
+              <img src="/svg/success.svg" alt="Success" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16" />
             </div>
           </div>
         </div>
 
         <!-- Title -->
-        <h2 style="font-family: Manrope; font-weight: 600; font-size: 20px; line-height: 28px; color: #0B3947; margin-bottom: 8px;">
+        <h2 class="text-base sm:text-lg md:text-xl leading-[24px] sm:leading-[26px] md:leading-[28px] mb-2 sm:mb-3 px-2" style="font-family: Manrope; font-weight: 600; color: #0B3947;">
           Application Submitted Successfully!
         </h2>
 
         <!-- Application Number -->
-        <p style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #1ECE84; margin-bottom: 12px;">
+        <p class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] mb-2 sm:mb-3" style="font-family: Manrope; font-weight: 500; color: #1ECE84;">
           {{ applicationNumber || 'Processing...' }}
         </p>
 
         <!-- Email Confirmation Message -->
-        <p style="font-family: Manrope; font-weight: 400; font-size: 13px; line-height: 18px; color: #6B7280; margin-bottom: 24px;">
-          📧 A tracking link has been sent to <strong>{{ userEmail }}</strong>
+        <p class="text-xs leading-[16px] sm:leading-[18px] mb-4 sm:mb-6 px-2" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
+          📧 A tracking link has been sent to <strong class="break-all">{{ userEmail }}</strong>
         </p>
 
         <!-- OK Button -->
         <Button
           @click="handleClose"
-          class="w-full"
-          style="height: 48px; border-radius: 6px; background-color: #1ECE84; color: white; font-family: Inter; font-weight: 500; font-size: 16px;"
+          class="w-full h-11 sm:h-12 text-sm sm:text-base"
+          style="border-radius: 6px; background-color: #1ECE84; color: white; font-family: Inter; font-weight: 500;"
         >
           Create Account to Track
         </Button>

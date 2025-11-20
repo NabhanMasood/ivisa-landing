@@ -1,23 +1,23 @@
 <template>
   <div class="min-h-screen">
-    <div class="flex items-start justify-center px-4 py-8">
-      <div class="w-full max-w-[1200px] rounded-xl shadow-sm bg-white p-8">
+    <div class="flex items-start justify-center px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+      <div class="w-full max-w-[1200px] rounded-lg sm:rounded-xl shadow-sm bg-white p-4 sm:p-6 md:p-8">
         
         <!-- Header with Back Button -->
-        <div class="flex items-center gap-4 mb-6">
+        <div class="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
           <button
             v-if="currentStep > 1"
             @click="handleBack"
-            class="rounded-md w-[42px] h-[36px] border border-[#E4E4E8] flex items-center justify-center"
+            class="rounded-md w-[36px] h-[32px] sm:w-[42px] sm:h-[36px] border border-[#E4E4E8] flex items-center justify-center flex-shrink-0"
             style="border-color: #E5E7EB;"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12.5 15L7.5 10L12.5 5" stroke="#0B3947" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           
-          <h1 style="font-family: Geist, sans-serif; font-weight: 600; font-size: 24px; line-height: 32px; letter-spacing: -0.6px; color: #0B3947;">
-            {{ currentStep === 5 ? 'Review your order' : `Apply now for your ${destinationCountry} e VISA` }}
+          <h1 class="text-lg sm:text-xl md:text-2xl font-semibold leading-tight" style="font-family: Geist, sans-serif; font-weight: 600; letter-spacing: -0.6px; color: #0B3947;">
+            {{ currentStep === 6 ? 'Review your order' : `Apply now for your ${destinationCountry} e VISA` }}
           </h1>
         </div>
 
@@ -67,20 +67,32 @@
           @back="currentStep = 2"
         />
 
-        <!-- Step 4: Processing Time (Checkout) -->
-        <CheckoutForm
+        <!-- Step 4: Embassy Selection -->
+        <EmbassySelectionForm
           v-if="currentStep === 4"
           :destination="destinationCountry"
+          :nationality="tripData.nationality"
           :traveler-count="travelersData.travelers?.length || 0"
           :product-details="tripData.productDetails"
-          :initial-data="processingData"
+          :initial-data="embassyData"
           @next="handleStepFour"
           @back="currentStep = 3"
         />
 
-        <!-- Step 5: Review Order -->
-        <ReviewOrder
+        <!-- Step 5: Processing Time (Checkout) -->
+        <CheckoutForm
           v-if="currentStep === 5"
+          :destination="destinationCountry"
+          :traveler-count="travelersData.travelers?.length || 0"
+          :product-details="tripData.productDetails"
+          :initial-data="processingData"
+          @next="handleStepFive"
+          @back="currentStep = 4"
+        />
+
+        <!-- Step 6: Review Order -->
+        <ReviewOrder
+          v-if="currentStep === 6"
           :destination="destinationCountry"
           :travelers="getTravelerNames()"
           :processing-fee="processingData.processingFee || 0"
@@ -88,15 +100,16 @@
           :visa-details="getVisaDetails()"
           :product-details="tripData.productDetails"
           :application-data="completeApplicationData"
-          @next="handleStepFive"
-          @back="currentStep = 4"
+          :embassy="selectedEmbassy"
+          @next="handleStepSix"
+          @back="currentStep = 5"
         />
 
         <!-- Loading Overlay -->
-        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white rounded-lg p-6 text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1ECE84] mx-auto mb-4"></div>
-            <p class="text-lg font-semibold">Submitting your application...</p>
+        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div class="bg-white rounded-lg p-4 sm:p-6 text-center max-w-[90vw] sm:max-w-md">
+            <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[#1ECE84] mx-auto mb-3 sm:mb-4"></div>
+            <p class="text-base sm:text-lg font-semibold">Submitting your application...</p>
           </div>
         </div>
 
@@ -115,6 +128,7 @@ import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
 import YourInfoForm from '@/components/visa/YourInfoForm.vue'
 import PassportDetailsForm from '@/components/visa/PassportDetailsForm.vue'
+import EmbassySelectionForm from '@/components/visa/EmbassySelectionForm.vue'
 import CheckoutForm from '@/components/visa/CheckoutForm.vue'
 import ReviewOrder from '@/components/visa/ReviewOrder.vue'
 
@@ -151,6 +165,12 @@ const travelersData = ref<any>({
 const passportData = ref<any>({
   passportDetails: []
 })
+
+const embassyData = ref<any>({
+  embassyId: null
+})
+
+const selectedEmbassy = ref<any>(null)
 
 const processingData = ref<any>({
   processingType: '',
@@ -248,10 +268,13 @@ const completeApplicationData = computed(() => {
       if (index === 0) {
         travelerData.email = traveler.email || ''
         travelerData.phone = traveler.phone || ''
+        travelerData.receiveUpdates = traveler.receiveUpdates || false
         console.log('📞 First traveler phone:', travelerData.phone)
+        console.log('📧 First traveler receiveUpdates:', travelerData.receiveUpdates)
       } else {
         // For additional travelers, use empty string or first traveler's phone
         travelerData.phone = ''
+        travelerData.receiveUpdates = false
       }
       
       return travelerData
@@ -259,6 +282,7 @@ const completeApplicationData = computed(() => {
     processingFeeId: processingData.value.processingFeeId,
     processingType: processingData.value.processingType,
     processingTime: processingData.value.processingTime,
+    embassyId: embassyData.value.embassyId || null,
     notes: 'Application submitted via web form'
   }
 })
@@ -278,6 +302,7 @@ onMounted(() => {
     tripData.value = savedState.tripData
     travelersData.value = savedState.travelersData
     passportData.value = savedState.passportData
+    embassyData.value = savedState.embassyData || { embassyId: null }
     processingData.value = savedState.processingData
     
     console.log('✅ Application state restored from localStorage')
@@ -303,6 +328,7 @@ onMounted(() => {
     tripData,
     travelersData,
     passportData,
+    embassyData,
     processingData
   })
 })
@@ -357,17 +383,27 @@ const handleStepThree = (data: any) => {
 }
 
 const handleStepFour = (data: any) => {
-  console.log('✅ Step 4 data received:', data)
+  console.log('✅ Step 4 (Embassy) data received:', data)
+  embassyData.value = { embassyId: data.embassyId }
+  
+  // Store embassy info if available (for display in review)
+  selectedEmbassy.value = data.embassy || null
+  
+  currentStep.value = 5
+}
+
+const handleStepFive = (data: any) => {
+  console.log('✅ Step 5 (Processing Time) data received:', data)
   processingData.value = { 
     processingFeeId: data.processingFeeId,
     processingType: data.processingType,
     processingTime: data.processingTime,
     processingFee: data.processingFee
   }
-  currentStep.value = 5
+  currentStep.value = 6
 }
 
-const handleStepFive = async (result: any) => {
+const handleStepSix = async (result: any) => {
   console.log('✅ Payment completed, application submitted:', result)
   // Clear saved data after successful submission
   clearState()

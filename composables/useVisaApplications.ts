@@ -80,6 +80,7 @@ export interface Traveler {
   passportExpiryDate: string
   residenceCountry: string
   hasSchengenVisa: boolean
+  receiveUpdates?: boolean
   createdAt: string
   notes?: string
 }

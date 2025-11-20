@@ -14,6 +14,7 @@ export interface TravelerData {
   passportExpiryDate: string
   residenceCountry: string
   hasSchengenVisa: boolean
+  receiveUpdates?: boolean
   placeOfBirth?: string
 }
 

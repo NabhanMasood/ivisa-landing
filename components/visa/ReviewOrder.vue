@@ -1,53 +1,53 @@
 <template>
-  <div class="flex gap-6">
+  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
     <!-- Left Side - Order Details -->
     <div class="flex-1">
       
       <!-- Expected Delivery Date -->
-      <div class="border rounded-xl p-4 mb-6" style="border-color: #1ECE84;">
-        <p style="font-family: Geist; font-weight: 600; font-size: 14px; line-height: 20px; color: #0B3947;">
+      <div class="border rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6" style="border-color: #1ECE84;">
+        <p class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Geist; font-weight: 600; color: #0B3947;">
           Expected delivery date: {{ expectedDeliveryDate }}
         </p>
       </div>
 
       <!-- Visa Details Card -->
-      <div class="border rounded-xl p-6" style="border-color: #E5E7EB;">
+      <div class="border rounded-lg sm:rounded-xl p-4 sm:p-6" style="border-color: #E5E7EB;">
         
         <!-- Visa Title -->
-        <div class="mb-6">
-          <h3 style="font-family: Geist; font-weight: 600; font-size: 20px; line-height: 28px; color: #0B3947;">
+        <div class="mb-4 sm:mb-6">
+          <h3 class="text-lg sm:text-xl leading-[24px] sm:leading-[28px]" style="font-family: Geist; font-weight: 600; color: #0B3947;">
             {{ destination }} Visa
           </h3>
-          <p style="font-family: Manrope; font-weight: 400; font-size: 14px; line-height: 20px; color: #6B7280;">
+          <p class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] mt-1" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
             You can see the order details below.
           </p>
         </div>
 
         <!-- Visa Information -->
-        <div class="space-y-4 mb-6">
-          <div class="flex justify-between">
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+        <div class="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+          <div class="flex justify-between items-start gap-2">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] flex-shrink-0" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               Valid for:
             </span>
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] text-right" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               {{ visaDetails.validity }}
             </span>
           </div>
 
-          <div class="flex justify-between">
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+          <div class="flex justify-between items-start gap-2">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] flex-shrink-0" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               Max stay:
             </span>
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] text-right" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               {{ visaDetails.maxStay }}
             </span>
           </div>
 
-          <div class="flex justify-between">
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+          <div class="flex justify-between items-start gap-2">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] flex-shrink-0" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               Number of entries:
             </span>
-            <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px] text-right" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
               {{ visaDetails.entries }}
             </span>
           </div>
@@ -56,24 +56,45 @@
         <!-- Divider -->
         <div class="border-t mb-6" style="border-color: #E5E7EB;"></div>
 
+        <!-- Embassy Section (if selected) -->
+        <div v-if="embassy" class="mb-4 sm:mb-6">
+          <h4 class="text-sm sm:text-base leading-[20px] sm:leading-[24px] mb-2 sm:mb-3" style="font-family: Geist; font-weight: 600; color: #0B3947;">
+            Selected Embassy:
+          </h4>
+          <div class="flex flex-col gap-1">
+            <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
+              {{ embassy.embassyName || embassy.name }}
+            </span>
+            <span v-if="embassy.destinationCountry" class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
+              {{ embassy.destinationCountry || embassy.country }}
+            </span>
+            <span v-if="embassy.address" class="text-xs leading-[16px] sm:leading-[18px]" style="font-family: Manrope; font-weight: 400; color: #9CA3AF;">
+              {{ embassy.address }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Divider (if embassy selected) -->
+        <div v-if="embassy" class="border-t mb-4 sm:mb-6" style="border-color: #E5E7EB;"></div>
+
         <!-- Travelers Section -->
-        <div class="flex justify-between items-start">
-          <h4 style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0">
+          <h4 class="text-sm sm:text-base leading-[20px] sm:leading-[24px] flex-shrink-0" style="font-family: Geist; font-weight: 600; color: #0B3947;">
             Travelers:
           </h4>
-          <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="flex flex-col gap-3 sm:gap-5">
             <div 
               v-for="(traveler, index) in travelers" 
               :key="index"
-              class="flex items-center gap-3"
+              class="flex items-center gap-2 sm:gap-3"
             >
-              <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #E8FFF6;">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #E8FFF6;">
+                <svg class="w-3 h-3 sm:w-[14px] sm:h-[14px]" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M7 7C8.933 7 10.5 5.433 10.5 3.5C10.5 1.567 8.933 0 7 0C5.067 0 3.5 1.567 3.5 3.5C3.5 5.433 5.067 7 7 7Z" fill="#1ECE84"/>
                   <path d="M7 8.75C4.101 8.75 1.75 11.101 1.75 14H12.25C12.25 11.101 9.899 8.75 7 8.75Z" fill="#1ECE84"/>
                 </svg>
               </div>
-              <span style="font-family: Manrope; font-weight: 500; font-size: 14px; line-height: 20px; color: #0B3947;">
+              <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
                 {{ traveler }}
               </span>
             </div>
@@ -129,6 +150,13 @@ const props = defineProps<{
     entries: string
   }
   applicationData: any
+  embassy?: {
+    id: number
+    embassyName: string
+    destinationCountry: string
+    originCountry?: string
+    address: string
+  } | null
 }>()
 
 const emit = defineEmits<{
