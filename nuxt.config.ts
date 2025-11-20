@@ -55,7 +55,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // apiBase: process.env.API_BASE_URL ?? 'https://ivisa123-backend-production.up.railway.app',
       apiBase: process.env.API_BASE_URL ?? 'http://localhost:5001',
 
       currencyApiUrl: process.env.NUXT_PUBLIC_CURRENCY_API_URL,
