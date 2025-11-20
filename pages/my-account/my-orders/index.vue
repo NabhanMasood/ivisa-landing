@@ -264,8 +264,6 @@ const fetchApplications = async () => {
         // Maybe the data is directly in response.data?
         if (Array.isArray(response.data)) {
           applicationsArray = response.data
-        } else if (response.data && Array.isArray(response.data.applications)) {
-          applicationsArray = response.data.applications
         } else {
           console.error('❌ Applications data is not an array:', applicationsArray)
           applicationsArray = []
