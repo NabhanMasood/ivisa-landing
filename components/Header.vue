@@ -1,34 +1,34 @@
 <!-- components/Header.vue -->
 <template>
   <header v-if="isMyAccountRoute" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-    <div class="px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="px-3 sm:px-4 md:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16">
         <!-- Left Section - Logo and Search Bar -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
           <!-- Logo Section -->
           <div class="flex items-center flex-shrink-0">
             <NuxtLink to="/my-account" class="inline-flex items-center">
-              <img 
-                src="/logos/logo.png" 
-                alt="VISA123" 
-                style="width: 161.05px; height: 50px;"
-              />
+            <img 
+              src="/logos/logo.png" 
+              alt="VISA123" 
+              class="w-[100px] sm:w-[130px] md:w-[161.05px] h-auto max-h-[40px] sm:max-h-[50px]"
+            />
             </NuxtLink>
           </div>
 
           <!-- Vertical Divider -->
-          <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
+          <div class="bg-gray-300 hidden sm:block" style="width: 1px; height: 16px;"></div>
 
           <!-- Search Bar -->
-          <div class="relative" style="width: 384px;">
+          <div class="relative hidden md:block flex-1 max-w-[384px]">
             <input
               type="text"
               placeholder="Search..."
-              class="w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1ECE84] focus:border-transparent text-sm pl-4 pr-12"
+              class="w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1ECE84] focus:border-transparent text-sm pl-3 sm:pl-4 pr-10 sm:pr-12"
               style="height: 36px;"
               v-model="searchQuery"
             />
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center bg-gray-50 rounded" style="width: 30px; height: 24px; border-radius: 4px; padding: 4px;">
+            <div class="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center bg-gray-50 rounded" style="width: 28px; height: 24px; border-radius: 4px; padding: 4px;">
               <img 
                 src="/svg/my-account/search-bar.svg" 
                 alt="Search" 
@@ -39,12 +39,13 @@
         </div>
 
         <!-- Right Section - Currency, Notifications & Avatar -->
-        <div class="flex items-center flex-shrink-0" style="gap: 10px;">
+        <div class="flex items-center flex-shrink-0 gap-1 sm:gap-2">
           <!-- Currency Dropdown -->
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" class="h-[34px] px-3 font-normal text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
-                {{ selectedCurrency.code }}
+              <Button variant="ghost" size="sm" class="h-[32px] sm:h-[34px] px-2 sm:px-3 font-normal text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
+                <span class="hidden sm:inline">{{ selectedCurrency.code }}</span>
+                <span class="sm:hidden">{{ selectedCurrency.code.length > 3 ? selectedCurrency.code.substring(0, 3) : selectedCurrency.code }}</span>
                 <ChevronDown class="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -86,27 +87,27 @@
           </DropdownMenu>
 
           <!-- Vertical Divider -->
-          <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
+          <div class="bg-gray-300 hidden sm:block" style="width: 1px; height: 16px;"></div>
 
           <!-- Notification Bell with Dropdown -->
           <DropdownMenu v-if="isAuthenticated" v-model:open="notificationDropdownOpen">
             <DropdownMenuTrigger asChild>
-              <button class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+              <button class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9">
                 <img 
                   src="/svg/my-account/bell.svg" 
                   alt="Notifications" 
-                  class="w-5 h-5"
+                  class="w-4 h-4 sm:w-5 sm:h-5"
                 />
                 <span 
                   v-if="notificationCount > 0"
-                  class="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 w-5 bg-red-500 text-white text-[10px] font-semibold rounded-full border-2 border-white"
-                  style="min-width: 20px; padding: 0 2px;"
+                  class="absolute -top-0.5 -right-0.5 flex items-center justify-center h-4 w-4 sm:h-5 sm:w-5 bg-red-500 text-white text-[9px] sm:text-[10px] font-semibold rounded-full border-2 border-white"
+                  style="min-width: 16px; sm:min-width: 20px; padding: 0 2px;"
                 >
                   {{ notificationCount > 9 ? '9+' : notificationCount }}
                 </span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-80 z-[110] max-h-[400px] overflow-y-auto">
+            <DropdownMenuContent align="end" class="w-[calc(100vw-2rem)] sm:w-80 z-[110] max-h-[400px] overflow-y-auto">
               <div class="px-3 py-2 border-b">
                 <h3 class="font-semibold text-sm text-gray-900">Notifications</h3>
               </div>
@@ -170,29 +171,29 @@
           </DropdownMenu>
 
           <!-- Notification Bell (Static for non-authenticated) -->
-          <button v-else class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+          <button v-else class="relative rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9">
             <img 
               src="/svg/my-account/bell.svg" 
               alt="Notifications" 
-              class="w-5 h-5"
+              class="w-4 h-4 sm:w-5 sm:h-5"
             />
           </button>
 
           <!-- Vertical Divider -->
-          <div class="bg-gray-300" style="width: 1px; height: 16px;"></div>
+          <div class="bg-gray-300 hidden sm:block" style="width: 1px; height: 16px;"></div>
 
           <!-- User Avatar -->
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button class="rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+              <button class="rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9">
                 <img 
                   src="/svg/my-account/user.svg" 
                   alt="User" 
-                  class="w-9 h-9 rounded-full"
+                  class="w-7 h-7 sm:w-9 sm:h-9 rounded-full"
                 />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-56">
+            <DropdownMenuContent align="end" class="w-56 z-[110]">
               <DropdownMenuItem class="cursor-default">
                 <div class="flex flex-col">
                   <span class="font-medium">{{ userName }}</span>
@@ -214,28 +215,29 @@
 
   <!-- Original Header (for other routes) -->
   <header v-else class="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200">
-    <div class="container mx-auto max-w-7xl px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
+    <div class="container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
         <!-- Logo Section -->
-        <div class="flex items-center">
+        <div class="flex items-center flex-shrink-0">
           <NuxtLink to="/" class="inline-flex items-center">
             <img 
               src="/logos/logo.png" 
               alt="VISA123" 
-              style="width: 161px; height: 50px;"
+              class="w-[100px] sm:w-[130px] md:w-[161px] lg:w-[180px] h-auto max-h-[40px] sm:max-h-[50px] md:max-h-[60px]"
             />
           </NuxtLink>
         </div>
 
         <!-- Right Section -->
-        <div class="flex items-center" :class="isAuthenticated ? 'gap-6' : 'gap-20'">
+        <div class="flex items-center gap-2 sm:gap-4 md:gap-6" :class="isAuthenticated ? '' : 'lg:gap-20'">
           <!-- Currency & Language Dropdown -->
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 sm:gap-4">
             <!-- Currency Dropdown -->
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" class="h-[34px] px-3 font-normal text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
-                  {{ selectedCurrency.code }}
+                <Button variant="ghost" size="sm" class="h-[32px] sm:h-[34px] px-2 sm:px-3 font-normal text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
+                  <span class="hidden sm:inline">{{ selectedCurrency.code }}</span>
+                  <span class="sm:hidden">{{ selectedCurrency.code.length > 3 ? selectedCurrency.code.substring(0, 3) : selectedCurrency.code }}</span>
                   <ChevronDown class="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -280,34 +282,36 @@
           </div>
 
           <!-- Show Login/SignUp if NOT authenticated -->
-          <div v-if="!isAuthenticated" class="flex items-center gap-4">
+          <div v-if="!isAuthenticated" class="flex items-center gap-2 sm:gap-4">
             <!-- Login Button -->
             <Button 
               variant="ghost" 
               size="sm"
-              class="h-[34px] px-4 font-medium text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent"
+              class="h-[32px] sm:h-[34px] px-2 sm:px-4 font-medium text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent"
               @click="handleLogin"
             >
-              Login
+              <span class="hidden sm:inline">Login</span>
+              <span class="sm:hidden">Log</span>
             </Button>
 
             <!-- Sign Up Button -->
             <Button 
               size="sm"
-              class="!bg-[#1ECE84] hover:!bg-[#1AB876] !text-white !rounded-full !h-[34px] !px-5 !min-w-[95px] !font-medium !border-0"
+              class="!bg-[#1ECE84] hover:!bg-[#1AB876] !text-white !rounded-full !h-[32px] sm:!h-[34px] !px-3 sm:!px-5 !min-w-[70px] sm:!min-w-[95px] !font-medium !border-0 !text-xs sm:!text-sm"
               @click="handleSignUp"
             >
-              Sign Up
+              <span class="hidden sm:inline">Sign Up</span>
+              <span class="sm:hidden">Sign</span>
             </Button>
           </div>
 
           <!-- Show User Menu if authenticated -->
-          <div v-else class="flex items-center gap-4">
+          <div v-else class="flex items-center gap-2 sm:gap-4">
             <!-- My Account Button -->
             <Button 
               variant="ghost" 
               size="sm"
-              class="h-[34px] px-4 font-medium text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent"
+              class="h-[32px] sm:h-[34px] px-2 sm:px-4 font-medium text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent hidden sm:inline-flex"
               @click="navigateTo('/my-account')"
             >
               My Account
@@ -316,11 +320,11 @@
             <!-- User Dropdown -->
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button class="rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center" style="width: 36px; height: 36px;">
+                <button class="rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9">
                   <img 
                     src="/svg/my-account/user.svg" 
                     alt="User" 
-                    class="w-9 h-9 rounded-full"
+                    class="w-7 h-7 sm:w-9 sm:h-9 rounded-full"
                   />
                 </button>
               </DropdownMenuTrigger>
@@ -346,7 +350,7 @@
   </header>
   
   <!-- Spacer to prevent content from going under fixed header -->
-  <div :class="isMyAccountRoute ? 'h-16' : 'h-20'"></div>
+  <div :class="isMyAccountRoute ? 'h-14 sm:h-16' : 'h-16 sm:h-20'"></div>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[400px] space-y-4">
+  <div class="w-[340px] sm:w-[400px] space-y-4">
     
     <!-- Price Summary Card -->
     <div class="border-2 rounded-xl p-6" style="border-color: #1ECE84;">

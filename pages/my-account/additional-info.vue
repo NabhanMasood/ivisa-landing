@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen py-10 pb-32 px-52">
-    <div class="max-w-4xl mx-auto space-y-6">
+  <div class="min-h-screen py-6 pb-24 px-4 sm:px-6 md:px-8 lg:px-52">
+    <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       <!-- Header Section -->
       <div class="flex items-center justify-between">
         <h1
-          class="text-2xl font-semibold leading-8"
+          class="text-xl sm:text-2xl font-semibold leading-8"
           style="font-family: Geist; color: #020617; letter-spacing: -0.006em"
         >
           Additional Information
@@ -30,14 +30,14 @@
       <!-- Empty State -->
       <div
         v-else-if="!fields || fields.length === 0"
-        class="bg-white rounded-xl shadow-sm p-12 text-center border"
+        class="bg-white rounded-xl shadow-sm p-6 sm:p-12 text-center border"
       >
         <div class="max-w-md mx-auto">
           <div
-            class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center"
+            class="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center"
           >
             <svg
-              class="w-12 h-12 text-gray-400"
+              class="w-8 h-8 sm:w-12 sm:h-12 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -50,21 +50,21 @@
               />
             </svg>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
             No Additional Information Required
           </h3>
-          <p class="text-gray-600 mb-6">
+          <p class="text-sm sm:text-base text-gray-600 mb-6">
             There are no additional fields to fill for this application.
           </p>
         </div>
       </div>
 
       <!-- Multi-Traveler Form Interface -->
-      <div v-else class="space-y-6">
+      <div v-else class="space-y-4 sm:space-y-6">
         <!-- Application Info -->
         <div
           v-if="application"
-          class="bg-white rounded-xl border p-4"
+          class="bg-white rounded-xl border p-3 sm:p-4"
           style="border-color: #e4e4e8"
         >
           <h2
@@ -81,9 +81,9 @@
         <!-- Admin Note (when resubmission requested) -->
         <div
           v-if="isResubmissionActive && adminNoteToShow"
-          class="rounded-xl border p-4 bg-orange-50 border-orange-200 text-orange-900"
+          class="rounded-xl border p-3 sm:p-4 bg-orange-50 border-orange-200 text-orange-900"
         >
-          <div class="flex items-start gap-3">
+          <div class="flex items-start gap-2 sm:gap-3">
             <svg
               class="w-5 h-5 mt-0.5 text-orange-600"
               fill="none"
@@ -116,13 +116,13 @@
           <!-- Tab Headers -->
           <div
             class="border-b flex overflow-x-auto"
-            style="border-color: #e4e4e8"
+            style="border-color: #e4e4e8; -webkit-overflow-scrolling: touch;"
           >
             <button
               v-for="(traveler, index) in allTravelers"
               :key="traveler.id || `traveler-${index}`"
               @click="selectTraveler(traveler.id || null, index)"
-              class="px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors relative"
+              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors relative"
               :class="[
                 selectedTravelerId === (traveler.id || null) &&
                 selectedTravelerIndex === index
@@ -144,17 +144,17 @@
           </div>
 
           <!-- Form Content -->
-          <div class="p-6">
-            <form @submit.prevent="handleSubmit" class="space-y-6">
+          <div class="p-4 sm:p-6">
+            <form @submit.prevent="handleSubmit" class="space-y-4 sm:space-y-6">
               <!-- Current Traveler Info -->
-              <div class="pb-4 border-b" style="border-color: #e4e4e8">
+              <div class="pb-3 sm:pb-4 border-b" style="border-color: #e4e4e8">
                 <h3
-                  class="text-lg font-semibold"
+                  class="text-base sm:text-lg font-semibold"
                   style="font-family: Geist; color: #020617"
                 >
                   {{ getTravelerName(currentTraveler, selectedTravelerIndex) }}
                 </h3>
-                <p class="text-sm text-gray-600 mt-1">
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">
                   Traveler Information
                 </p>
               </div>
@@ -237,7 +237,7 @@
                 <!-- Date Input -->
                 <div
                   v-else-if="field.fieldType === 'date'"
-                  class="grid grid-cols-3 gap-4"
+                  class="grid grid-cols-3 gap-2 sm:gap-4"
                 >
                   <Select
                     :model-value="formResponses[field.id]?.date?.day ?? ''"
@@ -364,7 +364,7 @@
                       formResponses[field.id]?.isUploading ||
                       isFieldDisabled(field)
                     "
-                    class="w-full h-9 border rounded-md px-4 text-left text-sm flex items-center justify-between transition-colors"
+                    class="w-full h-9 border rounded-md px-3 sm:px-4 text-left text-xs sm:text-sm flex items-center justify-between transition-colors"
                     :class="[
                       (formResponses[field.id]?.isUploaded || (formResponses[field.id]?.file && field.id < 0))
                         ? 'bg-green-50 border-green-300 text-green-700 cursor-default'
@@ -524,7 +524,7 @@
               >
                 <Button
                   @click="handleSubmit"
-                  class="h-9 px-4 rounded-md text-white font-medium text-sm"
+                  class="h-9 px-4 sm:px-6 rounded-md text-white font-medium text-xs sm:text-sm w-full sm:w-auto"
                   style="
                     background-color: #1ece84;
                     font-family: Geist;

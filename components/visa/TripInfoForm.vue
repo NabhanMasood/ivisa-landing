@@ -1,12 +1,11 @@
 <template>
-  <div class="border rounded-xl p-6" style="border-color: #e5e7eb">
-    <div class="mb-6">
+  <div class="rounded-lg sm:rounded-xl p-4 sm:p-6">
+    <div class="mb-4 sm:mb-6">
       <p
+        class="text-xs sm:text-sm leading-[18px] sm:leading-[22px]"
         style="
           font-family: Geist;
           font-weight: 600;
-          font-size: 14px;
-          line-height: 22px;
           color: #0b3947;
         "
       >
@@ -15,7 +14,7 @@
       </p>
     </div>
 
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
       <!-- Nationality - Editable Select -->
       <div>
         <Label
@@ -127,7 +126,7 @@
         <Select v-else v-model="formData.visaType">
           <SelectTrigger
             variant="form"
-            class="w-full mt-2 h-10"
+            class="w-full mt-2 min-h-[60px] sm:min-h-[50px] h-auto py-2"
             style="
               font-family: Manrope, sans-serif;
               font-size: 14px;
@@ -136,7 +135,7 @@
             "
             :disabled="availableProducts.length === 0"
           >
-            <SelectValue />
+            <SelectValue placeholder="Select visa type" class="text-left" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem
@@ -199,7 +198,7 @@
           isLoadingProducts ||
           availableProducts.length === 0
         "
-        class="w-[143px] h-9"
+        class="w-full sm:w-[143px] h-9"
         style="
           background-color: #1ece84;
           color: white;

@@ -1,45 +1,45 @@
 <template>
-  <div class="w-full border rounded-xl mb-6" style="border-color: #BDBDBD; border-width: 1px; padding: 30px 20px;">
-    <div class="w-full flex justify-between items-center">
-      <h2 style="font-family: Manrope, sans-serif; font-weight: 700; font-size: 20px; line-height: 28px; color: #0B3947;">
+  <div class="w-full border rounded-lg sm:rounded-xl mb-4 sm:mb-6 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6" style="border-color: #BDBDBD; border-width: 1px;">
+    <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0">
+      <h2 class="text-base sm:text-lg md:text-xl leading-[24px] sm:leading-[26px] md:leading-[28px]" style="font-family: Manrope, sans-serif; font-weight: 700; color: #0B3947;">
         {{ destination }} Visa
       </h2>
 
-      <div class="flex gap-5">
+      <div class="flex flex-wrap gap-3 sm:gap-4 md:gap-5">
         <!-- Valid for -->
-        <div class="flex gap-2 items-center">
-          <div class="w-10 h-11 rounded-lg flex items-center justify-center" style="background-color: #383838;">
-            <img src="/svg/gray-calendar.svg" alt="Valid for" style="width: 19.2px; height: 19.2px;" />
+        <div class="flex gap-1.5 sm:gap-2 items-center">
+          <div class="w-8 h-9 sm:w-9 sm:h-10 md:w-10 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: #383838;">
+            <img src="/svg/gray-calendar.svg" alt="Valid for" class="w-4 h-4 sm:w-[16px] sm:h-[16px] md:w-[19.2px] md:h-[19.2px]" />
           </div>
-          <div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 12px; line-height: 20px; color: #6B7280;">Valid for</div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 14px; line-height: 24px; color: #0B3947;">
+          <div class="min-w-0">
+            <div class="text-[10px] sm:text-xs leading-[16px] sm:leading-[20px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #6B7280;">Valid for</div>
+            <div class="text-xs sm:text-sm leading-[18px] sm:leading-[22px] md:leading-[24px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #0B3947;">
               {{ validityText }}
             </div>
           </div>
         </div>
 
         <!-- Number of entries -->
-        <div class="flex gap-2 items-center">
-          <div class="w-10 h-11 rounded-lg flex items-center justify-center" style="background-color: #383838;">
-            <img src="/svg/land-plane.svg" alt="Entries" style="width: 19.2px; height: 19.2px;" />
+        <div class="flex gap-1.5 sm:gap-2 items-center">
+          <div class="w-8 h-9 sm:w-9 sm:h-10 md:w-10 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: #383838;">
+            <img src="/svg/land-plane.svg" alt="Entries" class="w-4 h-4 sm:w-[16px] sm:h-[16px] md:w-[19.2px] md:h-[19.2px]" />
           </div>
-          <div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 12px; line-height: 20px; color: #6B7280;">Number of entries</div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 14px; line-height: 24px; color: #0B3947;">
+          <div class="min-w-0">
+            <div class="text-[10px] sm:text-xs leading-[16px] sm:leading-[20px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #6B7280;">Number of entries</div>
+            <div class="text-xs sm:text-sm leading-[18px] sm:leading-[22px] md:leading-[24px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #0B3947;">
               {{ entryTypeText }}
             </div>
           </div>
         </div>
 
         <!-- Max stay -->
-        <div class="flex gap-2 items-center">
-          <div class="w-10 h-11 rounded-lg flex items-center justify-center" style="background-color: #383838;">
-            <img src="/svg/calendar-check.svg" alt="Max stay" style="width: 19.2px; height: 19.2px;" />
+        <div class="flex gap-1.5 sm:gap-2 items-center">
+          <div class="w-8 h-9 sm:w-9 sm:h-10 md:w-10 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: #383838;">
+            <img src="/svg/calendar-check.svg" alt="Max stay" class="w-4 h-4 sm:w-[16px] sm:h-[16px] md:w-[19.2px] md:h-[19.2px]" />
           </div>
-          <div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 12px; line-height: 20px; color: #6B7280;">Max stay</div>
-            <div style="font-family: Manrope, sans-serif; font-weight: 400; font-size: 14px; line-height: 24px; color: #0B3947;">
+          <div class="min-w-0">
+            <div class="text-[10px] sm:text-xs leading-[16px] sm:leading-[20px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #6B7280;">Max stay</div>
+            <div class="text-xs sm:text-sm leading-[18px] sm:leading-[22px] md:leading-[24px]" style="font-family: Manrope, sans-serif; font-weight: 400; color: #0B3947;">
               {{ durationText }}
             </div>
           </div>

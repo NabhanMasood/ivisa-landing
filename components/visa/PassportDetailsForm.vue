@@ -1,18 +1,17 @@
 <template>
-  <div class="flex" style="gap: 14px">
+  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px]">
     <!-- Left Side - Form -->
     <div
-      class="flex-1 border rounded-xl"
-      style="border-color: #e5e7eb; padding: 24px"
+      class="flex-1 rounded-lg sm:rounded-xl"
+      style="padding: 16px sm:20px md:24px"
     >
       <!-- Header -->
-      <div class="mb-6">
+      <div class="mb-4 sm:mb-6">
         <h2
+          class="text-base sm:text-lg leading-[22px] sm:leading-[24px]"
           style="
             font-family: Geist;
             font-weight: 600;
-            font-size: 18px;
-            line-height: 24px;
             color: #0b3947;
           "
         >
@@ -76,7 +75,7 @@
               <Select v-else v-model="passportDetails[0].nationality">
                 <SelectTrigger
                   variant="form"
-                  class="!h-[45px] !bg-white w-full px-4"
+                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                 >
                   <SelectValue placeholder="Select nationality" />
                 </SelectTrigger>
@@ -162,11 +161,11 @@
             >
               Passport expiration date
             </Label>
-            <div class="grid grid-cols-3 gap-4 mt-2">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-2">
               <Select v-model="passportDetails[0].expiryDate">
                 <SelectTrigger
                   variant="form"
-                  class="!h-[45px] !bg-white w-full px-4"
+                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                 >
                   <SelectValue placeholder="Date" />
                 </SelectTrigger>
@@ -187,7 +186,7 @@
               <Select v-model="passportDetails[0].expiryMonth">
                 <SelectTrigger
                   variant="form"
-                  class="!h-[45px] !bg-white w-full px-4"
+                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                 >
                   <SelectValue placeholder="Month" />
                 </SelectTrigger>
@@ -213,7 +212,7 @@
               <Select v-model="passportDetails[0].expiryYear">
                 <SelectTrigger
                   variant="form"
-                  class="!h-[45px] !bg-white w-full px-4"
+                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                 >
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
@@ -262,7 +261,7 @@
               <Select v-else v-model="passportDetails[0].residenceCountry">
                 <SelectTrigger
                   variant="form"
-                  class="!h-[45px] !bg-white w-full px-4"
+                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                 >
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
@@ -426,7 +425,7 @@
                   <Select v-else v-model="traveler.nationality">
                     <SelectTrigger
                       variant="form"
-                      class="!h-[45px] !bg-white w-full px-4"
+                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                     >
                       <SelectValue placeholder="Select nationality" />
                     </SelectTrigger>
@@ -512,11 +511,11 @@
                 >
                   Passport expiration date
                 </Label>
-                <div class="grid grid-cols-3 gap-4 mt-2">
+                <div class="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-2">
                   <Select v-model="traveler.expiryDate">
                     <SelectTrigger
                       variant="form"
-                      class="!h-[45px] !bg-white w-full px-4"
+                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                     >
                       <SelectValue placeholder="Date" />
                     </SelectTrigger>
@@ -537,7 +536,7 @@
                   <Select v-model="traveler.expiryMonth">
                     <SelectTrigger
                       variant="form"
-                      class="!h-[45px] !bg-white w-full px-4"
+                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                     >
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
@@ -563,7 +562,7 @@
                   <Select v-model="traveler.expiryYear">
                     <SelectTrigger
                       variant="form"
-                      class="!h-[45px] !bg-white w-full px-4"
+                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                     >
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
@@ -612,7 +611,7 @@
                   <Select v-else v-model="traveler.residenceCountry">
                     <SelectTrigger
                       variant="form"
-                      class="!h-[45px] !bg-white w-full px-4"
+                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                     >
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
@@ -681,7 +680,7 @@
                 <Select v-model="traveler.hasSchengenVisa">
                   <SelectTrigger
                     variant="form"
-                    class="!h-[45px] !bg-white w-full px-4"
+                    class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
                   >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>

@@ -171,10 +171,10 @@
         <div>
           <!-- Office Info Container -->
           <Card
-            :class="'w-full max-w-[590px] h-[676px] rounded-2xl border border-[#D4D4D8]'"
+            :class="'w-full max-w-[590px] min-h-[676px] h-auto rounded-2xl border border-[#D4D4D8]'"
           >
             <CardContent :class="'p-6'">
-              <div class="space-y-8 max-w-[542px]">
+              <div class="space-y-6 sm:space-y-8 max-w-[542px]">
                 <!-- Location Section -->
                 <div>
                   <img src="/svg/pin.svg" alt="pin" class="h-6 w-6 mb-4" />
@@ -202,17 +202,47 @@
                   <h4 class="font-manrope font-semibold text-lg leading-8 mb-2">
                     Contact
                   </h4>
-                  <div class="space-y-2">
+                  <div class="space-y-3">
                     <p
                       class="font-manrope font-medium text-base leading-7 text-gray-700"
                     >
                       +971 585743188
                     </p>
-                    <p
-                      class="font-manrope font-normal text-base leading-7 text-[#3F3F46]"
-                    >
-                      support@visa123.com
-                    </p>
+                    <div class="space-y-2.5">
+                      <div>
+                        <p class="font-manrope font-medium text-xs sm:text-sm leading-5 sm:leading-6 text-gray-600 mb-0.5">
+                          General Inquiry / Contact Us:
+                        </p>
+                        <a
+                          href="mailto:opportunity@visa123.co.uk"
+                          class="font-manrope font-normal text-sm sm:text-base leading-6 sm:leading-7 text-[#3F3F46] hover:text-[#1ECB84] transition-colors break-all"
+                        >
+                          opportunity@visa123.co.uk
+                        </a>
+                      </div>
+                      <div>
+                        <p class="font-manrope font-medium text-xs sm:text-sm leading-5 sm:leading-6 text-gray-600 mb-0.5">
+                          For new order:
+                        </p>
+                        <a
+                          href="mailto:sophie@visa123.co.uk"
+                          class="font-manrope font-normal text-sm sm:text-base leading-6 sm:leading-7 text-[#3F3F46] hover:text-[#1ECB84] transition-colors break-all"
+                        >
+                          sophie@visa123.co.uk
+                        </a>
+                      </div>
+                      <div>
+                        <p class="font-manrope font-medium text-xs sm:text-sm leading-5 sm:leading-6 text-gray-600 mb-0.5">
+                          For customer support:
+                        </p>
+                        <a
+                          href="mailto:support@visa123.co.uk"
+                          class="font-manrope font-normal text-sm sm:text-base leading-6 sm:leading-7 text-[#3F3F46] hover:text-[#1ECB84] transition-colors break-all"
+                        >
+                          support@visa123.co.uk
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

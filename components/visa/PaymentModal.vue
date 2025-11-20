@@ -6,10 +6,10 @@
       :open="isOpen && !showSuccessModal"
       @update:open="handleOpenChange"
     >
-      <DialogContent class="w-[440px]">
+      <DialogContent class="w-[calc(100vw-2rem)] sm:w-[440px] max-w-[440px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Payment Method</DialogTitle>
-          <DialogDescription>
+          <DialogTitle class="text-lg sm:text-xl">Payment Method</DialogTitle>
+          <DialogDescription class="text-sm sm:text-base">
             <span
               v-if="
                 isAuthenticated &&
@@ -34,10 +34,10 @@
           </DialogDescription>
         </DialogHeader>
 
-        <form @submit.prevent="handlePayment" class="space-y-4">
+        <form @submit.prevent="handlePayment" class="space-y-3 sm:space-y-4">
           <!-- Loading State -->
-          <div v-if="isAuthenticated && loadingCards" class="text-center py-4">
-            <p class="text-sm text-gray-500">Loading saved cards...</p>
+          <div v-if="isAuthenticated && loadingCards" class="text-center py-3 sm:py-4">
+            <p class="text-xs sm:text-sm text-gray-500">Loading saved cards...</p>
           </div>
 
           <!-- Default Card Display (when authenticated and has saved cards) -->
@@ -49,22 +49,22 @@
               paymentMethod === 'saved' &&
               !showOtherCards
             "
-            class="space-y-4"
+            class="space-y-3 sm:space-y-4"
           >
             <!-- Default/Selected Card Display -->
             <div
-              class="p-4 border-2 rounded-lg"
+              class="p-3 sm:p-4 border-2 rounded-lg"
               :style="{ borderColor: '#1ECE84' }"
             >
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-semibold text-gray-700">
+              <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm font-semibold text-gray-700">
                     {{ getSelectedCard()?.cardBrand.toUpperCase() }} ••••
                     {{ getSelectedCard()?.cardLast4 }}
                   </span>
                   <span
                     v-if="getSelectedCard()?.isDefault"
-                    class="px-2 py-0.5 text-xs font-medium rounded"
+                    class="px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap"
                     style="background-color: #1ece84; color: white"
                   >
                     Default
@@ -80,7 +80,7 @@
                   )
                 }}
               </p>
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-gray-500 mt-1 break-words">
                 {{ getSelectedCard()?.cardholderName }}
               </p>
             </div>
@@ -91,7 +91,7 @@
                 type="button"
                 variant="outline"
                 @click="showOtherCards = true"
-                class="w-full"
+                class="w-full text-sm sm:text-base"
                 style="border-color: #1ece84; color: #1ece84"
               >
                 Use another card
@@ -103,7 +103,7 @@
                   paymentMethod = 'new';
                   showOtherCards = false;
                 "
-                class="w-full"
+                class="w-full text-sm sm:text-base"
                 style="border-color: #1ece84; color: #1ece84"
               >
                 Use a new card
@@ -120,20 +120,20 @@
               paymentMethod === 'saved' &&
               showOtherCards
             "
-            class="space-y-4"
+            class="space-y-3 sm:space-y-4"
           >
             <div class="flex items-center justify-between mb-2">
-              <h3 class="text-sm font-semibold text-gray-700">Select a card</h3>
+              <h3 class="text-xs sm:text-sm font-semibold text-gray-700">Select a card</h3>
               <button
                 type="button"
                 @click="showOtherCards = false"
-                class="text-sm text-gray-500 hover:text-gray-700"
+                class="text-xs sm:text-sm text-gray-500 hover:text-gray-700"
               >
                 Cancel
               </button>
             </div>
 
-            <div class="space-y-2 max-h-60 overflow-y-auto">
+            <div class="space-y-2 max-h-[200px] sm:max-h-60 overflow-y-auto">
               <div
                 v-for="card in otherCards"
                 :key="card.id"
@@ -141,7 +141,7 @@
                   selectedCardId = card.id;
                   showOtherCards = false;
                 "
-                class="p-3 border-2 rounded-lg cursor-pointer transition-colors"
+                class="p-2 sm:p-3 border-2 rounded-lg cursor-pointer transition-colors"
                 :class="
                   selectedCardId === card.id
                     ? 'bg-green-50'
@@ -152,10 +152,10 @@
                     selectedCardId === card.id ? '#1ECE84' : '#e5e7eb',
                 }"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2 flex-wrap flex-1 min-w-0">
                     <span
-                      class="text-sm font-medium"
+                      class="text-xs sm:text-sm font-medium truncate"
                       :class="
                         selectedCardId === card.id
                           ? 'text-gray-900'
@@ -167,14 +167,14 @@
                     </span>
                     <span
                       v-if="card.isDefault"
-                      class="px-2 py-0.5 text-xs font-medium rounded"
+                      class="px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap"
                       style="background-color: #1ece84; color: white"
                     >
                       Default
                     </span>
                     <span
                       v-if="selectedCardId === card.id"
-                      class="px-2 py-0.5 text-xs font-medium rounded"
+                      class="px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap"
                       style="background-color: #1ece84; color: white"
                     >
                       Selected
@@ -183,12 +183,12 @@
                   <input
                     type="radio"
                     :checked="selectedCardId === card.id"
-                    class="w-4 h-4"
+                    class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                     style="accent-color: #1ece84"
                     @click.stop
                   />
                 </div>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-gray-500 mt-1 break-words">
                   Expires
                   {{
                     formatCardExpiryDisplay(card.expiryMonth, card.expiryYear)
@@ -205,7 +205,7 @@
                 paymentMethod = 'new';
                 showOtherCards = false;
               "
-              class="w-full"
+              class="w-full text-sm sm:text-base"
               style="border-color: #1ece84; color: #1ece84"
             >
               Use a new card
@@ -221,14 +221,14 @@
                 !isAuthenticated ||
                 (paymentMethod === 'saved' && savedCards.length > 0))
             "
-            class="space-y-4"
+            class="space-y-3 sm:space-y-4"
           >
             <!-- Note for saved cards -->
             <div
               v-if="paymentMethod === 'saved' && savedCards.length > 0"
-              class="p-3 bg-blue-50 border border-blue-200 rounded-md"
+              class="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md"
             >
-              <p class="text-sm text-blue-800">
+              <p class="text-xs sm:text-sm text-blue-800">
                 <strong>Note:</strong> Please enter your card details below to
                 complete the payment with Stripe.
               </p>
@@ -245,15 +245,15 @@
                   savedCards.length === 0 ||
                   paymentMethod === 'saved'
                 "
-                class="pr-20 h-12"
+                class="pr-16 sm:pr-20 h-10 sm:h-12 text-sm sm:text-base"
                 style="border: 1px solid #1ece84"
               />
               <!-- Stripe Logo -->
-              <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div class="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
                 <img
                   src="/svg/payment-strip.svg"
                   alt="Stripe"
-                  class="h-6"
+                  class="h-5 sm:h-6"
                   style="width: auto"
                 />
               </div>
@@ -262,14 +262,14 @@
             <!-- Stripe Card Element -->
             <div
               id="card-element"
-              class="h-12 px-3 py-2 border rounded-md"
+              class="h-10 sm:h-12 px-2 sm:px-3 py-2 border rounded-md"
               style="border: 1px solid #1ece84"
             ></div>
             <div
               v-if="cardErrors"
               id="card-errors"
               role="alert"
-              class="text-sm text-red-600 mt-1"
+              class="text-xs sm:text-sm text-red-600 mt-1"
             >
               {{ cardErrors }}
             </div>
@@ -278,11 +278,10 @@
           <!-- Pay Button -->
           <Button
             type="submit"
-            class="w-full"
+            class="w-full h-10 sm:h-11 text-sm sm:text-base"
             style="
-              height: 36px;
               border-radius: 6px;
-              padding: 8px 24px;
+              padding: 8px 16px;
               background-color: #1ece84;
             "
             :disabled="isProcessing || !isFormValid"
@@ -816,7 +815,7 @@ const transformApplicationData = (applicationData: any) => {
   const travelers = applicationData.travelers || [];
   const numberOfTravelers = travelers.length;
 
-  // ✅ CRITICAL: Ensure phone field is explicitly included for all travelers
+  // ✅ CRITICAL: Ensure phone and receiveUpdates fields are explicitly included for all travelers
   const travelersWithPhone = travelers.map((t: any, index: number) => {
     const traveler = { ...t };
     // Ensure phone is always present, especially for first traveler
@@ -827,18 +826,23 @@ const transformApplicationData = (applicationData: any) => {
     if (!("phone" in traveler)) {
       traveler.phone = index === 0 ? traveler.phone || "" : "";
     }
+    // Explicitly ensure receiveUpdates field exists (boolean, defaults to false)
+    if (!("receiveUpdates" in traveler)) {
+      traveler.receiveUpdates = index === 0 ? (traveler.receiveUpdates || false) : false;
+    }
     return traveler;
   });
 
   console.log("👥 Number of travelers:", numberOfTravelers);
   console.log(
-    "📞 Travelers data with phone:",
+    "📞 Travelers data with phone and receiveUpdates:",
     travelersWithPhone.map((t: any) => ({
       firstName: t.firstName,
       lastName: t.lastName,
       email: t.email,
       phone: t.phone,
       hasPhone: !!t.phone && t.phone.trim() !== "",
+      receiveUpdates: t.receiveUpdates,
     }))
   );
 
@@ -907,6 +911,7 @@ const transformApplicationData = (applicationData: any) => {
     processingTime: applicationData.processingTime || "",
     processingFee: totalProcessingFee, // ✅ TOTAL
     processingFeeId: applicationData.processingFeeId || null,
+    embassyId: applicationData.embassyId || null, // ✅ Include embassyId if selected
     govtFee: totalGovtFee, // ✅ TOTAL
     serviceFee: totalServiceFee, // ✅ TOTAL
     totalAmount: totalAmountToUse, // ✅ USE DISCOUNTED AMOUNT
@@ -934,11 +939,12 @@ const transformApplicationData = (applicationData: any) => {
 
   console.log("✅ Final payload:", payload);
   console.log(
-    "📞 Phone numbers in payload travelers:",
+    "📞 Traveler details in payload:",
     payload.travelers.map((t: any) => ({
       name: `${t.firstName} ${t.lastName}`,
       phone: t.phone,
       hasPhone: !!t.phone,
+      receiveUpdates: t.receiveUpdates,
     }))
   );
 

@@ -1,26 +1,27 @@
 <!-- components/HeaderLoggedIn.vue -->
 <template>
   <header class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-    <div class="container mx-auto max-w-7xl px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
+    <div class="container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
         <!-- Logo Section -->
-        <div class="flex items-center">
+        <div class="flex items-center flex-shrink-0">
           <NuxtLink to="/" class="inline-flex items-center">
             <img 
               src="/logos/logo.png" 
               alt="VISA123" 
-              style="width: 161px; height: 50px;"
+              class="w-[100px] sm:w-[130px] md:w-[161px] lg:w-[180px] h-auto max-h-[40px] sm:max-h-[50px] md:max-h-[60px]"
             />
           </NuxtLink>
         </div>
 
         <!-- Right Section -->
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2 sm:gap-4 md:gap-6">
           <!-- Language/Currency Dropdown -->
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" class="h-[34px] px-3 font-normal text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
-                {{ currentLanguage }}
+              <Button variant="ghost" size="sm" class="h-[32px] sm:h-[34px] px-2 sm:px-3 font-normal text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
+                <span class="hidden sm:inline">{{ currentLanguage }}</span>
+                <span class="sm:hidden">EN</span>
                 <ChevronDown class="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -47,7 +48,7 @@
   </header>
   
   <!-- Spacer to prevent content from going under fixed header -->
-  <div class="h-20"></div>
+  <div class="h-16 sm:h-20"></div>
 </template>
 
 <script setup lang="ts">

@@ -104,3 +104,4 @@ export interface TermsSection {
       content: "The Company reserves the right to revise these terms of service for its website at any time without notice. By using this website, you are agreeing to be bound by the then-current version of these terms of service."
     }
   ]
+
