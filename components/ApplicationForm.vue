@@ -244,13 +244,22 @@ const getCountryName = (countryId: string) => {
   return country?.countryName || ''
 }
 
-const getCountryLogo = (countryId: string) => {
+const getCountryLogo = (countryId: string): string | undefined => {
   const country = countries.value.find(c => String(c.id) === countryId)
-  if (!country?.logoUrl) return null
-  return getFullLogoUrl(country.logoUrl)
+  if (!country?.logoUrl) {
+    return undefined
+  }
+  // logoUrl is defined, but could still be null per the type definition
+  // Filter out null explicitly
+  const logoUrl = country.logoUrl
+  if (logoUrl === null || logoUrl === '') {
+    return undefined
+  }
+  // Now logoUrl is definitely a non-empty string
+  return getFullLogoUrl(logoUrl)
 }
 
-const getFullLogoUrl = (logoUrl: string) => {
+const getFullLogoUrl = (logoUrl: string): string => {
   if (!logoUrl) {
     console.warn('⚠️ Empty logo URL')
     return ''
@@ -258,7 +267,6 @@ const getFullLogoUrl = (logoUrl: string) => {
   
   // Check if it's already a full URL (Cloudinary)
   if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
-    console.log('✅ Full URL (Cloudinary):', logoUrl)
     return logoUrl
   }
   
@@ -282,7 +290,7 @@ const fetchCountries = async () => {
       console.log('✅ Loaded countries:', countries.value.length)
       
       // Set default "From" value
-      if (countries.value.length > 0) {
+      if (countries.value.length > 0 && countries.value[0]) {
         selectedFrom.value = String(countries.value[0].id)
       }
     } else {
@@ -312,7 +320,7 @@ const fetchDestinationCountries = async () => {
       console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
       
       // Set default "To" value
-      if (destinationCountries.value.length > 0) {
+      if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
         selectedTo.value = String(destinationCountries.value[0].id)
       }
     } else {

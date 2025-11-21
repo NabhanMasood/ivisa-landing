@@ -191,10 +191,62 @@
         />
       </div>
 
+      <!-- Email Address - Capture on first step -->
+      <div>
+        <Label
+          htmlFor="email"
+          style="
+            font-family: Manrope, sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 20px;
+            color: #0b3947;
+          "
+        >
+          Email Address <span style="color: #dc2626;">*</span>
+        </Label>
+        <Input
+          id="email"
+          v-model="formData.email"
+          type="email"
+          class="w-full mt-2"
+          placeholder="your.email@example.com"
+          :readonly="isAuthenticated && currentUser?.email"
+          required
+        />
+        <p
+          v-if="emailError"
+          style="
+            font-family: Manrope;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 16px;
+            color: #dc2626;
+          "
+          class="mt-1"
+        >
+          {{ emailError }}
+        </p>
+        <p
+          style="
+            font-family: Manrope;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 16px;
+            color: #6b7280;
+          "
+          class="mt-1"
+        >
+          We'll send your visa updates to this email address.
+        </p>
+      </div>
+
       <Button
         @click="handleNext"
         :disabled="
           !formData.visaType ||
+          !formData.email ||
+          emailError ||
           isLoadingProducts ||
           availableProducts.length === 0
         "
@@ -233,6 +285,7 @@ import { useNationalitiesApi } from "@/composables/useNationalities";
 import { useCountriesApi } from "@/composables/useCountries";
 import { useVisaProductsApi } from "@/composables/useVisaProducts";
 import { useCurrency } from "@/composables/useCurrency";
+import { useAuthApi } from "@/composables/useAuth";
 
 const props = defineProps<{
   nationality: string;
@@ -251,12 +304,14 @@ const { getCountries } = useCountriesApi();
 const { getVisaProductById } = useVisaProductsApi();
 const { formatPrice, initializeRates, selectedCurrency, getCurrentRate } =
   useCurrency();
+const { currentUser, isAuthenticated } = useAuthApi();
 
 // State
 const formData = ref({
   nationality: props.nationality,
   visaType: "",
   applicants: 1,
+  email: "",
 });
 
 interface Country {
@@ -284,6 +339,7 @@ const availableProducts = ref<
 >([]);
 const isLoadingProducts = ref(false);
 const productError = ref<string | null>(null);
+const emailError = ref<string>("");
 
 // ✅ Computed property to get selected country with flag
 const selectedCountry = computed(() => {
@@ -519,6 +575,7 @@ watch(selectedProduct, (newProduct) => {
       nationality: formData.value.nationality,
       visaType: formData.value.visaType,
       applicants: formData.value.applicants,
+      email: formData.value.email,
       productDetails: newProduct,
     });
   } else {
@@ -526,11 +583,41 @@ watch(selectedProduct, (newProduct) => {
   }
 });
 
+// Validate email
+const validateEmail = () => {
+  const email = formData.value.email?.trim() || "";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  if (!email) {
+    emailError.value = "Email is required";
+    return false;
+  } else if (!emailRegex.test(email)) {
+    emailError.value = "Please enter a valid email address";
+    return false;
+  } else {
+    emailError.value = "";
+    return true;
+  }
+};
+
+// Watch email for real-time validation
+watch(() => formData.value.email, () => {
+  if (formData.value.email && emailError.value) {
+    validateEmail();
+  }
+});
+
 const handleNext = () => {
+  // Validate email before proceeding
+  if (!validateEmail()) {
+    return;
+  }
+
   console.log("➡️ Moving to next step with:", {
     nationality: formData.value.nationality,
     visaType: formData.value.visaType,
     applicants: formData.value.applicants,
+    email: formData.value.email,
     productDetails: selectedProduct.value
   })
   
@@ -539,6 +626,7 @@ const handleNext = () => {
     nationality: formData.value.nationality,
     visaType: formData.value.visaType,
     applicants: formData.value.applicants,
+    email: formData.value.email,
     productDetails: selectedProduct.value,
   });
 };
@@ -553,6 +641,12 @@ onMounted(async () => {
 
   fetchNationalityOptions();
 
+  // Pre-fill email from logged-in user if available
+  if (isAuthenticated.value && currentUser.value?.email && !formData.value.email) {
+    formData.value.email = currentUser.value.email;
+    console.log("✅ Pre-filled email from logged-in user:", currentUser.value.email);
+  }
+
   if (props.initialData) {
     // ✅ PRIORITY 1: If we have actual travelers data, use that count
     // This ensures when user goes back, the number reflects actual travelers added
@@ -563,12 +657,14 @@ onMounted(async () => {
       nationality: props.initialData.nationality || props.nationality,
       visaType: props.initialData.visaType || "",
       applicants: actualTravelersCount, // ✅ Use actual travelers count, not initially selected count
+      email: props.initialData.email || formData.value.email || "",
     };
 
     console.log("✅ Restored from initialData:", {
       nationality: formData.value.nationality,
       visaType: formData.value.visaType,
       applicants: formData.value.applicants,
+      email: formData.value.email,
       actualTravelersAdded: actualTravelersCount,
       hasTravelersData: !!props.initialData.travelers,
     });
