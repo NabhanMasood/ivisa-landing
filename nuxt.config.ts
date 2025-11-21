@@ -24,7 +24,7 @@ export default defineNuxtConfig({
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         { rel: "icon", type: "image/svg+xml", href: "/logo/Visa123logo.svg" },
-        // 👇 Add Google Fonts
+        // 👇 Add Google Font
         {
           rel: "preconnect",
           href: "https://fonts.googleapis.com"
