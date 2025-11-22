@@ -41,6 +41,18 @@ export interface CompleteApplicationData {
   notes?: string
 }
 
+export interface DraftApplicationData {
+  customerId?: number
+  visaProductId: number
+  nationality: string
+  destinationCountry: string
+  visaType: string
+  numberOfTravelers: number
+  phoneNumber?: string
+  embassyId?: number
+  email?: string
+}
+
 export const useApplication = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -233,6 +245,173 @@ export const useApplication = () => {
     }
   }
 
+  /**
+   * Get customer by email using search
+   */
+  const getCustomerByEmail = async (email: string) => {
+    try {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      // Use search parameter to find customer by email
+      const url = new URL(`${baseUrl}/customers`)
+      url.searchParams.append('search', email)
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.status && result.data) {
+        // Find exact email match from search results
+        const customers = Array.isArray(result.data) ? result.data : [result.data]
+        const customer = customers.find((c: any) => c.email && c.email.toLowerCase() === email.toLowerCase())
+        if (customer && customer.id) {
+          return customer
+        }
+      }
+
+      return null
+    } catch (err: any) {
+      console.warn('Failed to fetch customer by email:', err.message)
+      return null
+    }
+  }
+
+  /**
+   * Create or get customer with just email (for draft applications)
+   */
+  const createOrGetCustomer = async (email: string, nationality?: string) => {
+    try {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      // First, try to get existing customer by email
+      const existingCustomer = await getCustomerByEmail(email)
+      if (existingCustomer && existingCustomer.id) {
+        console.log('✅ Found existing customer with ID:', existingCustomer.id)
+        return existingCustomer
+      }
+
+      // If not found, create new customer
+      console.log('📧 Creating new customer with email:', email)
+      const response = await fetch(`${baseUrl}/customers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullname: 'Guest User',
+          email: email,
+          phone: '',
+          residenceCountry: nationality || '',
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.status) {
+        // If email already exists error, try to fetch again
+        if (result.message && result.message.toLowerCase().includes('email already exists')) {
+          console.log('📧 Email exists, fetching customer...')
+          const customer = await getCustomerByEmail(email)
+          if (customer && customer.id) {
+            return customer
+          }
+        }
+        throw new Error(result.message || 'Failed to create customer')
+      }
+
+      return result.data
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to create or get customer')
+    }
+  }
+
+  /**
+   * Create a draft visa application (Step 1)
+   * Called when user completes first step and moves to next step
+   * Creates minimal customer if needed, just to capture email
+   */
+  const createDraftApplication = async (data: DraftApplicationData) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const config = useRuntimeConfig()
+      const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+      
+      // ✅ Handle customerId - create minimal customer if not provided but email is available
+      let customerId = data.customerId
+      
+      if (!customerId && data.email) {
+        try {
+          console.log('📧 Getting or creating customer from email:', data.email)
+          const customer = await createOrGetCustomer(data.email, data.nationality)
+          customerId = customer.id
+          console.log('✅ Got customer with ID:', customerId)
+        } catch (err: any) {
+          console.error('❌ Failed to get or create customer:', err.message)
+          // If we can't get/create a customer, we can't create the draft
+          throw new Error(`Unable to get or create customer: ${err.message}`)
+        }
+      }
+      
+      // If still no customerId, throw error as backend requires it
+      if (!customerId) {
+        throw new Error('Customer ID is required')
+      }
+
+      const payload: any = {
+        customerId: customerId,
+        visaProductId: data.visaProductId,
+        nationality: data.nationality,
+        destinationCountry: data.destinationCountry,
+        visaType: data.visaType,
+        numberOfTravelers: data.numberOfTravelers,
+      }
+      
+      // Add optional fields if provided
+      if (data.phoneNumber) {
+        payload.phoneNumber = data.phoneNumber
+      }
+      if (data.embassyId) {
+        payload.embassyId = data.embassyId
+      }
+      
+      // ✅ Add email field for email capture - this is the main requirement
+      if (data.email) {
+        payload.email = data.email
+      }
+
+      const response = await fetch(`${baseUrl}/visa-applications/draft`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for auth
+        body: JSON.stringify(payload),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.status) {
+        throw new Error(result.message || 'Failed to create draft application')
+      }
+
+      return result.data
+    } catch (err: any) {
+      error.value = err.message || 'An error occurred'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -241,5 +420,6 @@ export const useApplication = () => {
     getApplication,
     getCustomerApplications,
     getApplicationSummary,
+    createDraftApplication,
   }
 }

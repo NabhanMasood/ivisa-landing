@@ -106,10 +106,12 @@
         />
 
         <!-- Loading Overlay -->
-        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div v-if="loading || isCreatingDraft" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div class="bg-white rounded-lg p-4 sm:p-6 text-center max-w-[90vw] sm:max-w-md">
             <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[#1ECE84] mx-auto mb-3 sm:mb-4"></div>
-            <p class="text-base sm:text-lg font-semibold">Submitting your application...</p>
+            <p class="text-base sm:text-lg font-semibold">
+              {{ isCreatingDraft ? 'Saving your application...' : 'Submitting your application...' }}
+            </p>
           </div>
         </div>
 
@@ -123,6 +125,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApplication } from '@/composables/useApplication'
 import { useFormPersistence } from '@/composables/useFormPersistence'
+import { useAuthApi } from '@/composables/useAuth'
 import VisaStepper from '@/components/visa/VisaStepper.vue'
 import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
@@ -134,7 +137,8 @@ import ReviewOrder from '@/components/visa/ReviewOrder.vue'
 
 const route = useRoute()
 const router = useRouter()
-const { submitCompleteApplication, loading, error } = useApplication()
+const { submitCompleteApplication, createDraftApplication, loading, error } = useApplication()
+const { currentUser, isAuthenticated } = useAuthApi()
 
 // ✅ Get storage key based on route
 const getStorageKey = () => {
@@ -155,8 +159,13 @@ const tripData = ref<any>({
   nationality: '',
   visaType: '',
   applicants: 1,
+  email: '',
   productDetails: null
 })
+
+// Store application ID from draft creation
+const applicationId = ref<number | null>(null)
+const isCreatingDraft = ref(false)
 
 const travelersData = ref<any>({
   travelers: []
@@ -331,6 +340,13 @@ onMounted(() => {
     embassyData,
     processingData
   })
+
+  // Restore application ID from localStorage if available
+  const savedApplicationId = localStorage.getItem('currentApplicationId')
+  if (savedApplicationId) {
+    applicationId.value = parseInt(savedApplicationId)
+    console.log('✅ Restored application ID from localStorage:', applicationId.value)
+  }
 })
 
 // Cleanup watchers on unmount
@@ -355,18 +371,116 @@ const handleStepOneUpdate = (data: any) => {
     ...tripData.value,
     ...data,
     applicants: parseInt(data.applicants),
+    email: data.email || tripData.value.email,
     productDetails: data.productDetails
   }
   // Don't change step, just update the data
 }
 
-const handleStepOne = (data: any) => {
+const handleStepOne = async (data: any) => {
   console.log('✅ Step 1 data received:', data)
+  
   tripData.value = {
     ...data,
     applicants: parseInt(data.applicants),
+    email: data.email || '',
     productDetails: data.productDetails
   }
+
+  // ✅ Create draft application with email capture
+  if (data.productDetails && data.email) {
+    isCreatingDraft.value = true
+    try {
+      const product = data.productDetails
+      const productId = product.id || product.visaProductId
+      
+      if (!productId) {
+        console.error('❌ No product ID available')
+        throw new Error('Product ID is required')
+      }
+
+      // Get customer ID if user is authenticated
+      let customerId: number | undefined
+      if (isAuthenticated.value && currentUser.value?.id) {
+        customerId = currentUser.value.id
+        console.log('✅ Using authenticated customer ID:', customerId)
+      }
+
+      // Parse visa type from the format "productName|entryType"
+      // Backend only accepts: "180-single", "180-multiple", or "90-single"
+      // Map based on entryType (single vs multiple)
+      const visaTypeParts = data.visaType?.split('|') || []
+      const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+      
+      // Map to backend's accepted visa types based on entryType
+      // Default to 180-single, use 180-multiple for multiple entry, 90-single for 90-day visas
+      let visaType = '180-single' // Default fallback
+      
+      if (product) {
+        const duration = Number(product.duration) || Number(product.validity) || 180
+        
+        // Check if it's a 90-day visa
+        if (duration === 90) {
+          visaType = '90-single'
+        } 
+        // Check if it's multiple entry (case-insensitive)
+        else if (entryType === 'multiple') {
+          visaType = '180-multiple'
+        } 
+        // Default to single entry for all other cases
+        else {
+          visaType = '180-single'
+        }
+      }
+      
+      console.log('🎫 Mapped visaType:', { 
+        original: data.visaType, 
+        mapped: visaType, 
+        productDuration: product?.duration,
+        productEntryType: product?.entryType,
+        entryType
+      })
+
+      const draftData: any = {
+        visaProductId: productId,
+        nationality: data.nationality,
+        destinationCountry: destinationCountry.value,
+        visaType: visaType,
+        numberOfTravelers: parseInt(data.applicants) || 1,
+        email: data.email,
+      }
+      
+      // Only include customerId if user is authenticated
+      if (customerId) {
+        draftData.customerId = customerId
+      }
+
+      console.log('📧 Creating draft application with email:', draftData)
+
+      const result = await createDraftApplication(draftData)
+      
+      if (result && result.id) {
+        applicationId.value = result.id
+        console.log('✅ Draft application created with ID:', result.id)
+        console.log('📧 Email captured:', data.email)
+        
+        // Store application ID in localStorage for persistence
+        localStorage.setItem('currentApplicationId', result.id.toString())
+      } else {
+        console.warn('⚠️ Draft creation succeeded but no ID returned')
+      }
+    } catch (err: any) {
+      console.error('❌ Failed to create draft application:', err)
+      // Don't block user from proceeding - email capture is the main goal
+      // If draft creation fails, the email will still be captured in final submission
+      console.warn('⚠️ Draft creation failed, but continuing - email will be captured on final submission')
+    } finally {
+      isCreatingDraft.value = false
+    }
+  } else {
+    console.warn('⚠️ Skipping draft creation - missing product details or email')
+  }
+
   currentStep.value = 2
 }
 
@@ -407,5 +521,8 @@ const handleStepSix = async (result: any) => {
   console.log('✅ Payment completed, application submitted:', result)
   // Clear saved data after successful submission
   clearState()
+  // Clear application ID from localStorage
+  localStorage.removeItem('currentApplicationId')
+  applicationId.value = null
 }
 </script>
