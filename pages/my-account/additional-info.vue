@@ -645,9 +645,19 @@ const yearOptions = Array.from({ length: 100 }, (_, i) => ({
 
 // Computed properties
 const sortedFields = computed(() => {
-  // Filter out fields without IDs and sort by displayOrder
+  // Filter out fields without IDs, deduplicate by ID, and sort by displayOrder
+  const seenIds = new Set<number>();
   return [...fields.value]
-    .filter((field): field is VisaProductFieldWithResponse & { id: number } => field.id !== undefined)
+    .filter((field): field is VisaProductFieldWithResponse & { id: number } => {
+      if (field.id === undefined) return false;
+      // Deduplicate: only include first occurrence of each ID
+      if (seenIds.has(field.id)) {
+        console.warn(`Duplicate field detected with ID ${field.id}: "${field.question}"`);
+        return false;
+      }
+      seenIds.add(field.id);
+      return true;
+    })
     .sort((a, b) => a.displayOrder - b.displayOrder);
 });
 
@@ -972,7 +982,19 @@ const fetchFields = async (travelerId: number | null = null) => {
     );
 
     if (response.success && response.data) {
-      fields.value = response.data;
+      // Deduplicate fields by ID before setting (in case API returns duplicates)
+      const seenIds = new Set<number>();
+      const uniqueFields = response.data.filter((field: VisaProductFieldWithResponse) => {
+        if (field.id === undefined) return false;
+        if (seenIds.has(field.id)) {
+          console.warn(`Duplicate field detected in API response with ID ${field.id}: "${field.question}"`);
+          return false;
+        }
+        seenIds.add(field.id);
+        return true;
+      });
+      
+      fields.value = uniqueFields;
 
       // Initialize form responses with existing data or empty values
       fields.value.forEach((field) => {
