@@ -78,23 +78,7 @@
             <div>
               <h3 class="text-xl font-semibold text-foreground">Personal Details</h3>
               <p class="text-muted-foreground">
-                Update your email and language settings
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <!-- Security & Privacy Card -->
-        <Card 
-          @click="navigateTo('/security-privacy')"
-          class="rounded-xl p-6 cursor-pointer hover:shadow-md transition-shadow bg-[#F8F9F9]"
-        >
-          <div class="flex flex-col gap-6">
-            <img src="/svg/my-account/security.svg" alt="Security & Privacy Icon" class="w-[39px] h-[39px]" />
-            <div>
-              <h3 class="text-xl font-semibold text-foreground">Security & Privacy</h3>
-              <p class="text-muted-foreground">
-                Update your account email and password
+                Update your language settings
               </p>
             </div>
           </div>

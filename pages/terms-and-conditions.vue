@@ -4,8 +4,8 @@
     <!-- Header -->
     <HeaderLoggedIn />
 
-    <!-- Main Container: width: 1200, top: 174px, left: 120px, gap: 121px -->
-    <div class="container mx-auto px-6 lg:px-8 pt-[174px]">
+    <!-- Main Container: width: 1200, gap: 121px -->
+    <div class="container mx-auto px-6 lg:px-8 pt-8 sm:pt-12">
       <div class="max-w-[1200px] mx-auto flex flex-col gap-[121px]">
 
         <!-- Tag and Heading: width: 558, height: 110, gap: 12px -->

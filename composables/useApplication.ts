@@ -28,6 +28,7 @@ export interface PaymentData {
 }
 
 export interface CompleteApplicationData {
+  applicationId?: number
   customerId?: number
   visaProductId: number
   nationality: string
@@ -51,6 +52,16 @@ export interface DraftApplicationData {
   phoneNumber?: string
   embassyId?: number
   email?: string
+  // ✅ NEW: Support for step-by-step saving
+  draftData?: {
+    step1?: any
+    step2?: any
+    step3?: any
+    step4?: any
+    step5?: any
+    currentStep?: number
+  }
+  currentStep?: number
 }
 
 export const useApplication = () => {
@@ -61,7 +72,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       const response = await fetch(`${baseUrl}/customers`, {
         method: 'POST',
         headers: {
@@ -94,7 +105,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       let customerId = data.customerId
 
       if (!customerId && data.travelers.length > 0) {
@@ -146,7 +157,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       const url = new URL(`${baseUrl}/visa-applications`)
       if (search) {
         url.searchParams.append('search', search)
@@ -175,7 +186,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       const response = await fetch(`${baseUrl}/visa-applications/${id}`)
       const result = await response.json()
 
@@ -199,7 +210,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       const url = new URL(`${baseUrl}/visa-applications/customer/${customerId}`)
       if (search) {
         url.searchParams.append('search', search)
@@ -228,7 +239,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       const response = await fetch(`${baseUrl}/visa-applications/summary`)
       const result = await response.json()
 
@@ -252,11 +263,11 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       // Use search parameter to find customer by email
       const url = new URL(`${baseUrl}/customers`)
       url.searchParams.append('search', email)
-      
+
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
@@ -289,7 +300,7 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       // First, try to get existing customer by email
       const existingCustomer = await getCustomerByEmail(email)
       if (existingCustomer && existingCustomer.id) {
@@ -344,10 +355,10 @@ export const useApplication = () => {
     try {
       const config = useRuntimeConfig()
       const baseUrl = config.public.apiBase.replace(/\/+$/, '')
-      
+
       // ✅ Handle customerId - create minimal customer if not provided but email is available
       let customerId = data.customerId
-      
+
       if (!customerId && data.email) {
         try {
           console.log('📧 Getting or creating customer from email:', data.email)
@@ -360,7 +371,7 @@ export const useApplication = () => {
           throw new Error(`Unable to get or create customer: ${err.message}`)
         }
       }
-      
+
       // If still no customerId, throw error as backend requires it
       if (!customerId) {
         throw new Error('Customer ID is required')
@@ -368,13 +379,21 @@ export const useApplication = () => {
 
       const payload: any = {
         customerId: customerId,
-        visaProductId: data.visaProductId,
         nationality: data.nationality,
         destinationCountry: data.destinationCountry,
-        visaType: data.visaType,
         numberOfTravelers: data.numberOfTravelers,
       }
-      
+
+      // Add visaProductId only if provided (might not be selected yet)
+      if (data.visaProductId) {
+        payload.visaProductId = data.visaProductId
+      }
+
+      // Add visaType only if provided
+      if (data.visaType) {
+        payload.visaType = data.visaType
+      }
+
       // Add optional fields if provided
       if (data.phoneNumber) {
         payload.phoneNumber = data.phoneNumber
@@ -382,11 +401,22 @@ export const useApplication = () => {
       if (data.embassyId) {
         payload.embassyId = data.embassyId
       }
-      
+
       // ✅ Add email field for email capture - this is the main requirement
       if (data.email) {
         payload.email = data.email
       }
+
+      // ✅ Add draftData and currentStep if provided
+      if (data.draftData) {
+        payload.draftData = data.draftData
+      }
+      if (data.currentStep) {
+        payload.currentStep = data.currentStep
+      }
+
+      console.log('📤 Sending draft creation request to:', `${baseUrl}/visa-applications/draft`)
+      console.log('📦 Payload being sent:', JSON.stringify(payload, null, 2))
 
       const response = await fetch(`${baseUrl}/visa-applications/draft`, {
         method: 'POST',
@@ -397,12 +427,32 @@ export const useApplication = () => {
         body: JSON.stringify(payload),
       })
 
+      console.log('📥 Draft creation response status:', response.status, response.statusText)
+
       const result = await response.json()
 
+      console.log('📥 Draft creation response data:', result)
+
       if (!response.ok || !result.status) {
-        throw new Error(result.message || 'Failed to create draft application')
+        console.error('❌ Draft creation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          result: result,
+          message: result.message
+        })
+
+        // Extract error message from response
+        let errorMessage = 'Failed to create draft application'
+        if (Array.isArray(result.message)) {
+          errorMessage = result.message.join(', ')
+        } else if (result.message) {
+          errorMessage = result.message
+        }
+
+        throw new Error(errorMessage)
       }
 
+      console.log('✅ Draft creation successful, returning:', result.data)
       return result.data
     } catch (err: any) {
       error.value = err.message || 'An error occurred'

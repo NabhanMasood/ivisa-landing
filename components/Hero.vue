@@ -31,24 +31,31 @@
           style="min-height: 204.5px; background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.25);"
         >
           <CardContent class="p-4 sm:p-6 lg:p-8 flex items-center min-h-[204.5px]">
-            <!-- Loading State -->
-            <div v-if="isLoading" class="flex items-center justify-center w-full">
-              <div class="text-gray-600">Loading countries...</div>
-            </div>
-
             <!-- Error State -->
-            <div v-else-if="error" class="flex items-center justify-center w-full">
-              <div class="text-red-600">{{ error }}</div>
+            <div v-if="error && !countries.length && !destinationCountries.length" class="flex items-center justify-center w-full">
+              <div class="text-red-600 text-center">
+                <p class="font-medium">{{ error }}</p>
+                <button 
+                  @click="fetchAllData" 
+                  class="mt-2 text-sm text-blue-600 hover:underline"
+                >
+                  Try again
+                </button>
+              </div>
             </div>
 
-            <!-- Main Form -->
+            <!-- Main Form (shows even while loading if we have cached data) -->
             <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-end w-full">
               <!-- From Select (All Countries) -->
               <div class="space-y-2 text-left">
                 <Label htmlFor="from" class="text-gray-700 font-medium text-sm sm:text-base">
                   Where am I from?
                 </Label>
-                <Select v-model="selectedFrom">
+                <!-- Skeleton loader for From dropdown -->
+                <div v-if="isLoading && !countries.length" class="space-y-2">
+                  <Skeleton size="lg" width="w-full" className="!h-[45px] !rounded-[16px]" />
+                </div>
+                <Select v-else v-model="selectedFrom" :disabled="isLoading && !countries.length">
                   <SelectTrigger 
                     id="from" 
                     class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
@@ -116,7 +123,11 @@
                 <Label htmlFor="to" class="text-gray-700 font-medium text-sm sm:text-base">
                   Where am I going?
                 </Label>
-                <Select v-model="selectedTo">
+                <!-- Skeleton loader for To dropdown -->
+                <div v-if="isLoading && !destinationCountries.length" class="space-y-2">
+                  <Skeleton size="lg" width="w-full" className="!h-[45px] !rounded-[16px]" />
+                </div>
+                <Select v-else v-model="selectedTo" :disabled="isLoading && !destinationCountries.length">
                   <SelectTrigger 
                     id="to" 
                     class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
@@ -180,14 +191,21 @@
               </div>
 
               <!-- Get Started Button -->
-              <Button 
-                size="lg"
-                class="!bg-gradient-to-r !from-[#00C6A7] !to-[#26D07A] hover:!from-[#00B599] hover:!to-[#22BD6D] !text-white !h-[48px] sm:!h-[52px] !rounded-[16px] sm:!rounded-[20px] w-full !font-semibold !text-base sm:!text-lg shadow-xl transition-all hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
-                :disabled="!selectedFrom || !selectedTo || isLoading"
-                @click="handleGetStarted"
-              >
-                Get Started
-              </Button>
+              <div class="space-y-2">
+                <!-- Skeleton loader for button -->
+                <div v-if="isLoading && (!selectedFrom || !selectedTo)" class="w-full">
+                  <Skeleton size="lg" width="w-full" className="!h-[48px] sm:!h-[52px] !rounded-[16px]" />
+                </div>
+                <Button 
+                  v-else
+                  size="lg"
+                  class="!bg-gradient-to-r !from-[#00C6A7] !to-[#26D07A] hover:!from-[#00B599] hover:!to-[#22BD6D] !text-white !h-[48px] sm:!h-[52px] !rounded-[16px] sm:!rounded-[20px] w-full !font-semibold !text-base sm:!text-lg shadow-xl transition-all hover:shadow-2xl"
+                  :disabled="!selectedFrom || !selectedTo || isLoading"
+                  @click="handleGetStarted"
+                >
+                  Get Started
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -260,7 +278,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Button from '@/components/ui/button.vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
@@ -270,8 +289,11 @@ import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
 import SelectContent from '@/components/ui/select/SelectContent.vue'
 import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
+import Skeleton from '@/components/ui/skeleton.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
+
+const route = useRoute()
 
 // State
 const countries = ref<Country[]>([])
@@ -339,19 +361,13 @@ const getFullLogoUrl = (logoUrl: string): string => {
   return fullUrl
 }
 
-// Fetch countries for "From" dropdown
+// Fetch countries for "From" dropdown - uses cached data from plugin
 const fetchCountries = async () => {
   try {
-    const response = await getCountries()
+    const response = await getCountries() // Will use cache (populated by plugin)
     
     if (response.success && response.data) {
-      countries.value = response.data
-      console.log('✅ Loaded countries:', countries.value.length)
-      
-      // Set default "From" value
-      if (countries.value.length > 0 && countries.value[0]) {
-        selectedFrom.value = String(countries.value[0].id)
-      }
+      return response
     } else {
       throw new Error(response.message || 'Failed to load countries')
     }
@@ -362,27 +378,13 @@ const fetchCountries = async () => {
 }
 
 
-// Fetch destination countries for "To" dropdown (from visa products, matched with countries table for logos)
+// Fetch destination countries for "To" dropdown - uses cached data from plugin
 const fetchDestinationCountries = async () => {
   try {
-    const response = await getGroupedVisaProductsByCountries()
+    const response = await getGroupedVisaProductsByCountries() // Will use cache (populated by plugin)
     
     if (response.success && response.data) {
-      // Get country names from visa products
-      const visaProductCountryNames = response.data.map(item => item.country)
-      
-      // Match with countries table to get logos
-      destinationCountries.value = countries.value
-        .filter(country => visaProductCountryNames.includes(country.countryName))
-        .sort((a, b) => a.countryName.localeCompare(b.countryName))
-      
-      console.log('✅ Loaded destination countries with logos:', destinationCountries.value.length)
-      console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
-      
-      // Set default "To" value
-      if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-        selectedTo.value = String(destinationCountries.value[0].id)
-      }
+      return response
     } else {
       throw new Error(response.message || 'Failed to load destination countries')
     }
@@ -392,17 +394,42 @@ const fetchDestinationCountries = async () => {
   }
 }
 
-// Fetch all data on mount
+// Fetch all data on mount - uses cached data from plugin
 const fetchAllData = async () => {
   isLoading.value = true
   error.value = null
   
   try {
-    // First fetch all countries (needed for both dropdowns)
-    await fetchCountries()
+    // Fetch countries (will use cache if available, populated by plugin)
+    const countriesResponse = await fetchCountries()
+    if (countriesResponse.success && countriesResponse.data) {
+      countries.value = countriesResponse.data
+      const firstCountry = countries.value[0]
+      if (firstCountry && !selectedFrom.value) {
+        selectedFrom.value = String(firstCountry.id)
+      }
+    }
     
-    // Then fetch destination countries and match with countries table
-    await fetchDestinationCountries()
+    // Fetch destination countries (will use cache if available, populated by plugin)
+    const destinationsResponse = await fetchDestinationCountries()
+    if (destinationsResponse.success && destinationsResponse.data) {
+      // Match destination countries with countries table
+      const visaProductCountryNames = destinationsResponse.data.map(item => item.country)
+      destinationCountries.value = countries.value
+        .filter(country => visaProductCountryNames.includes(country.countryName))
+        .sort((a, b) => a.countryName.localeCompare(b.countryName))
+      
+      // Set default "To" value
+      const toIdFromQuery = route.query.toId as string | undefined
+      if (toIdFromQuery && destinationCountries.value.some(c => String(c.id) === toIdFromQuery)) {
+        selectedTo.value = toIdFromQuery
+      } else {
+        const firstDestination = destinationCountries.value[0]
+        if (firstDestination && !selectedTo.value) {
+          selectedTo.value = String(firstDestination.id)
+        }
+      }
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load data'
   } finally {
@@ -424,6 +451,16 @@ const handleGetStarted = () => {
   // Pass both country IDs and names as query parameters
   navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
 }
+
+// Watch for route query changes (when navigating from header)
+watch(() => route.query.toId, (newToId) => {
+  if (newToId && destinationCountries.value.length > 0) {
+    const toIdString = String(newToId)
+    if (destinationCountries.value.some(c => String(c.id) === toIdString)) {
+      selectedTo.value = toIdString
+    }
+  }
+})
 
 // Fetch data on component mount
 onMounted(() => {

@@ -29,6 +29,21 @@
             >
               Contact us
             </Button>
+            <Button 
+              variant="link"
+              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              @click="() => navigateTo('/faq')"
+            >
+              FAQ
+            </Button>
+            <Button 
+              variant="link"
+              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              @click="() => navigateTo('/terms-and-conditions')"
+            >
+              Our Policies
+            </Button>
+         
             
             <!-- Email button moved here for mobile to stay on same line -->
             <Button 
@@ -99,8 +114,19 @@
 
 <script setup lang="ts">
 import Button from '@/components/ui/button.vue'
+import DropdownMenu from '@/components/ui/dropdown-menu/DropdownMenu.vue'
+import DropdownMenuTrigger from '@/components/ui/dropdown-menu/DropdownMenuTrigger.vue'
+import DropdownMenuContent from '@/components/ui/dropdown-menu/DropdownMenuContent.vue'
+import DropdownMenuItem from '@/components/ui/dropdown-menu/DropdownMenuItem.vue'
+import { ChevronDown } from 'lucide-vue-next'
 
 // navigateTo is auto-imported in Nuxt, no need to declare it
+
+
+
+const handleCountrySelect = (countrySlug: string) => {
+  navigateTo(`/travel-article/${countrySlug}`)
+}
 
 // Handle email click
 const handleEmailClick = () => {

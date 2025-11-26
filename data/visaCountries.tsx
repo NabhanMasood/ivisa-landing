@@ -24,7 +24,7 @@ export interface VisaType {
   }
   
   export const visaCountries: Record<string, CountryData> = {
-    Turkey: {
+    Schengen: {
       name: 'Schengen',
       flag: '🇪🇺',
       heroImage: '/images/turkey-article.jpg',
@@ -65,179 +65,162 @@ export interface VisaType {
         whyVisa123: 'Visa123 simplifies the entire process with step-by-step guidance, document checks, and expert support — making your Schengen visa application faster and easier than ever.'
       }
     },
-  
-    spain: {
-      name: 'Spain',
-      flag: '🇪🇸',
-      heroImage: '/images/spain-hero.jpg',
-      title: 'Explore Spain with Ease',
-      introduction: 'Planning your Spanish adventure? From the beaches of Barcelona to the cultural richness of Madrid, Spain welcomes you with open arms.',
+
+    UK: {
+      name: 'UK ETA',
+      flag: '🇬🇧',
+      heroImage: '/images/uk-article.jpg',
+      title: 'Travel to the UK with ETA',
+      introduction: "Planning a trip to the United Kingdom? The UK ETA (Electronic Travel Authorisation) is your digital gateway to exploring England, Scotland, Wales, and Northern Ireland. Whether you're visiting for tourism, business, short-term study, or transit, this online authorization simplifies your entry process.",
       sections: {
         whatIs: {
-          title: 'What is a Spanish Schengen Visa?',
-          content: 'The Spanish Schengen Visa allows you to visit Spain for tourism, business, or visiting family and friends. As part of the Schengen area, it also grants access to other Schengen countries.'
+          title: 'What is UK ETA?',
+          content: "The UK ETA (Electronic Travel Authorisation) is an online approval required for travelers from visa-free countries before visiting the UK. It allows you to enter the UK for short stays including tourism, business activities, short-term study, or transit purposes. Once approved, your ETA is electronically linked to your passport, eliminating the need for additional documents upon arrival."
         },
         documents: [
-          'A completed visa application form',
-          'A valid passport (valid for at least 3 months beyond stay)',
-          'Two recent passport-size photos',
-          'Travel insurance covering €30,000',
-          'Flight bookings',
-          'Hotel reservations or invitation letter',
-          'Proof of financial means',
-          'Cover letter explaining travel purpose'
+          'A valid passport from an eligible country',
+          'Digital copy of your passport\'s photo page',
+          'Recent headshot photo of yourself',
+          'Personal details including full name, date of birth, nationality, and contact information',
+          'Travel details including trip dates and purpose of visit',
+          'Access to a smartphone or computer to complete the online application'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for exploring Spanish culture and attractions' },
-          { name: 'Business Visa', description: 'for business meetings and conferences' },
-          { name: 'Family Visit Visa', description: 'for visiting family members' },
-          { name: 'Cultural/Sports Visa', description: 'for events and performances' }
+          { name: 'Tourism', description: 'for sightseeing, visiting attractions, and exploring the UK' },
+          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
+          { name: 'Short-term Study', description: 'for educational courses and training programs up to 6 months' },
+          { name: 'Transit', description: 'for passing through the UK to another destination' }
         ],
         howToApply: [
-          'Complete the online application form',
-          'Gather required documents',
-          'Schedule an appointment at the Spanish consulate',
-          'Attend your appointment and submit biometrics',
-          'Pay the visa fee',
-          'Wait for visa decision (usually 15 days)'
+          'Start your application online through the official UK ETA portal.',
+          'Enter all your personal details accurately, including name, birthdate, nationality, and contact information.',
+          'Upload a clear digital copy of your passport\'s photo page and a recent headshot photo.',
+          'Answer all questions about your trip details and background information truthfully.',
+          'Pay the application fee securely using a credit card or mobile payment method.',
+          'Save your confirmation email. Your UK ETA will be electronically linked to your passport once approved.'
         ],
-        whyVisa123: 'Visa123 makes applying for your Spanish visa simple with expert guidance, document verification, and appointment scheduling assistance.'
+        whyVisa123: 'Visa123 streamlines your UK ETA application with expert guidance, document verification, and 24/7 support. Our experienced team ensures your application is complete and accurate, helping you avoid delays and get approved faster.'
       }
     },
-  
-    france: {
-      name: 'France',
-      flag: '🇫🇷',
-      heroImage: '/images/france-hero.jpg',
-      title: 'Experience France Like Never Before',
-      introduction: 'Dream of strolling through Paris, tasting wine in Bordeaux, or skiing in the Alps? A French visa opens doors to these unforgettable experiences.',
+
+    USA: {
+      name: 'US ESTA',
+      flag: '🇺🇸',
+      heroImage: '/images/usa-article.jpg',
+      title: 'Travel to the USA with ESTA',
+      introduction: "Ready to explore the United States? The US ESTA (Electronic System for Travel Authorization) is your digital travel authorization for visiting America. Whether you're planning a vacation, business trip, or transit through the US, ESTA allows eligible travelers from Visa Waiver Program countries to visit for up to 90 days without a traditional visa.",
       sections: {
         whatIs: {
-          title: 'What is a French Schengen Visa?',
-          content: 'The French Schengen Visa permits short stays in France and other Schengen countries for tourism, business, or family visits, typically up to 90 days within a 180-day period.'
+          title: 'What is US ESTA?',
+          content: "ESTA (Electronic System for Travel Authorization) is a web-based system administered by the U.S. Department of Homeland Security. It determines the eligibility of visitors to travel to the United States under the Visa Waiver Program (VWP) without requiring a traditional visa. ESTA is not a visa, but rather a travel authorization that allows eligible travelers to visit the US for tourism, business, or transit purposes for up to 90 days."
         },
         documents: [
-          'Completed Schengen visa application form',
-          'Valid passport (at least 3 months beyond intended stay)',
-          'Two passport photographs',
-          'Travel health insurance (minimum €30,000 coverage)',
-          'Proof of accommodation in France',
-          'Round-trip flight reservation',
-          'Bank statements (last 3-6 months)',
-          'Employment letter or business documents',
-          'Cover letter stating purpose of visit'
+          'A valid electronic passport from a Visa Waiver Program (VWP) country',
+          'A valid email address for receiving your ESTA confirmation',
+          'Credit or debit card for payment of the application fee',
+          'Basic personal information including full name, date of birth, and nationality',
+          'Travel information including trip dates and purpose of visit',
+          'Emergency contact details',
+          'Employment information'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for leisure travel and sightseeing' },
-          { name: 'Business Visa', description: 'for professional meetings and conferences' },
-          { name: 'Family/Friend Visit', description: 'for visiting relatives or friends' },
-          { name: 'Cultural Visa', description: 'for cultural events and activities' }
+          { name: 'Tourism', description: 'for vacations, sightseeing, and visiting attractions across the United States' },
+          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
+          { name: 'Transit', description: 'for passing through the United States to another destination' }
         ],
         howToApply: [
-          'Determine which French consulate has jurisdiction over your area',
-          'Complete the online visa application',
-          'Collect all required supporting documents',
-          'Schedule your visa appointment',
-          'Attend the appointment and provide biometrics',
-          'Pay the applicable visa fee',
-          'Track your application and await decision'
+          'Apply online through the official ESTA portal or with Visa123\'s streamlined application service.',
+          'Enter your passport and travel information accurately, ensuring all details match your passport exactly.',
+          'Provide your personal details, emergency contact information, and employment details.',
+          'Pay the application fee securely using a credit or debit card.',
+          'Submit your application and wait for approval, which is typically processed within minutes to 72 hours.',
+          'Save your ESTA confirmation email. Your ESTA is electronically linked to your passport and valid for multiple trips over two years.'
         ],
-        whyVisa123: 'Visa123 streamlines your French visa journey with personalized support, document review, and expert advice to maximize your approval chances.'
+        whyVisa123: 'Visa123 makes your US ESTA application simple and stress-free. Our expert team guides you through every step, ensures your information is accurate, and provides 24/7 support. With our streamlined process, you can get approved quickly and travel to the USA with confidence.'
       }
     },
-  
-    italy: {
-      name: 'Italy',
-      flag: '🇮🇹',
-      heroImage: '/images/italy-hero.jpg',
-      title: 'Discover Italy\'s Timeless Beauty',
-      introduction: 'From Rome\'s ancient history to Venice\'s romantic canals and Tuscany\'s rolling hills, Italy captivates every visitor. Start your Italian journey with the right visa.',
+
+    Turkey: {
+      name: 'Turkey e-Visa',
+      flag: '🇹🇷',
+      heroImage: '/images/turkey-article.jpg',
+      title: 'Travel to Turkey with e-Visa',
+      introduction: "Ready to explore the rich history and stunning landscapes of Turkey? The Turkey e-Visa is your electronic visa that's linked directly to your passport, allowing you to enter Turkey for up to 90 days. Whether you're visiting for tourism, business, or transit, the entire application process is quick and completed entirely online.",
       sections: {
         whatIs: {
-          title: 'What is an Italian Schengen Visa?',
-          content: 'The Italian Schengen Visa allows entry to Italy and free movement across the Schengen Zone for up to 90 days within a 180-day period for tourism, business, or family visits.'
+          title: 'What is a Turkey e-Visa?',
+          content: "A Turkey e-Visa is an electronic visa linked to your passport that allows you to enter Turkey for up to 90 days for tourism, business, or transit purposes. The whole process is completed online and is quick and straightforward. Once approved, your e-Visa is electronically linked to your passport, making travel to Turkey simple and convenient."
         },
         documents: [
-          'Completed and signed visa application form',
-          'Valid passport (minimum 6 months validity)',
-          'Two recent color photographs',
-          'Travel medical insurance (€30,000 minimum)',
-          'Proof of accommodation (hotel bookings or invitation)',
-          'Flight itinerary',
-          'Financial proof (bank statements, sponsorship letter)',
-          'Employment verification or student enrollment',
-          'Travel itinerary and purpose letter'
+          'A valid passport with at least 6 months validity from your date of entry',
+          'A valid email address for receiving your e-Visa confirmation',
+          'Credit or debit card for payment of the visa fee',
+          'Travel itinerary including flight details and accommodation information',
+          'Passport-sized digital photograph',
+          'Additional documents may be required based on your nationality'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for vacations and exploring Italy' },
-          { name: 'Business Visa', description: 'for business activities and meetings' },
-          { name: 'Visit Visa', description: 'for visiting family or friends' },
-          { name: 'Medical Visa', description: 'for medical treatment in Italy' }
+          { name: 'Tourism', description: 'for sightseeing, visiting historical sites, and exploring Turkey\'s beautiful destinations' },
+          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
+          { name: 'Transit', description: 'for passing through Turkey to another destination' }
         ],
         howToApply: [
-          'Identify the Italian consulate serving your region',
-          'Fill out the visa application accurately',
-          'Prepare all supporting documents',
-          'Book your visa appointment online',
-          'Attend your appointment with all documents',
-          'Submit biometric data',
-          'Pay the visa processing fee',
-          'Wait for your visa (typically 10-15 working days)'
+          'Start your application online through the official Turkey e-Visa portal or with Visa123\'s streamlined service.',
+          'Upload a clear scan of your passport\'s photo page, ensuring all details are visible and legible.',
+          'Pay the visa fee securely using your credit or debit card.',
+          'Get your e-Visa by email within 24 hours of submission. Most applications are processed much faster.',
+          'Print your e-Visa or save it on your mobile device and present it when you arrive in Turkey.'
         ],
-        whyVisa123: 'Visa123 takes the stress out of Italian visa applications with comprehensive guidance, document checks, and real-time application tracking.'
+        whyVisa123: 'Visa123 simplifies your Turkey e-Visa application with expert guidance and document verification. Our experienced team ensures your application is complete and accurate, helping you get approved quickly. With our 24/7 support and streamlined process, you can travel to Turkey with confidence and peace of mind.'
       }
     },
-  
-    germany: {
-      name: 'Germany',
-      flag: '🇩🇪',
-      heroImage: '/images/germany-hero.jpg',
-      title: 'Experience Germany\'s Innovation and Culture',
-      introduction: 'Whether you\'re visiting Berlin\'s vibrant culture, Munich\'s festivals, or Germany\'s beautiful countryside, the German Schengen visa is your gateway to this incredible destination.',
+
+    Morocco: {
+      name: 'Morocco eVisa',
+      flag: '🇲🇦',
+      heroImage: '/images/morocco-article.jpg',
+      title: 'Travel to Morocco with eVisa',
+      introduction: "Ready to explore the vibrant culture and stunning landscapes of Morocco? The Morocco eVisa is your fully online electronic visa that's digitally linked to your passport. With approval in as fast as 24 to 72 hours and no embassy visits required, getting your Morocco eVisa is quick, easy, and convenient.",
       sections: {
         whatIs: {
-          title: 'What is a German Schengen Visa?',
-          content: 'The German Schengen Visa permits travelers to visit Germany and other Schengen countries for tourism, business, or personal reasons for stays up to 90 days within 180 days.'
+          title: 'What is Morocco eVisa?',
+          content: "Morocco eVisa is a fully online electronic visa that's digitally linked to your passport. The entire application process is completed online with no need to visit an embassy. Your eVisa is valid for 180 days from issue and allows you to stay in Morocco for up to 30 days (can be extended). The application is quick, with approval typically received within 24 to 72 hours."
         },
         documents: [
-          'Fully completed visa application form',
-          'Valid passport (at least 3 months after planned departure)',
-          'Two biometric passport photos',
-          'Travel health insurance (€30,000 coverage)',
-          'Proof of accommodation in Germany',
-          'Flight reservations (round trip)',
-          'Financial evidence (bank statements, payslips)',
-          'Employment letter or school enrollment',
-          'Detailed travel itinerary',
-          'Cover letter explaining visit purpose'
+          'A valid passport with at least 6 months validity from your date of entry',
+          'Digital passport photo (recent, color photograph)',
+          'Confirmed accommodation details (hotel reservation or invitation letter)',
+          'Return flight tickets or travel itinerary',
+          'Proof of sufficient funds (bank statements or financial documents)',
+          'A valid email address for receiving your eVisa confirmation',
+          'Credit or debit card for payment of the visa fee'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for sightseeing and leisure travel' },
-          { name: 'Business Visa', description: 'for business trips and conferences' },
-          { name: 'Visitor Visa', description: 'for visiting relatives or friends' },
-          { name: 'Medical Treatment Visa', description: 'for medical purposes' },
-          { name: 'Cultural/Sports Visa', description: 'for attending events' }
+          { name: 'Tourism', description: 'for sightseeing, exploring Morocco\'s cities, and experiencing its rich culture' },
+          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
+          { name: 'Transit', description: 'for passing through Morocco to another destination' }
         ],
         howToApply: [
-          'Find your nearest German embassy or consulate',
-          'Complete the visa application online',
-          'Gather all required documentation',
-          'Schedule your visa appointment',
-          'Attend your appointment and submit documents',
-          'Provide fingerprints and photo',
-          'Pay the visa fee',
-          'Track your application status online',
-          'Collect your passport with visa'
+          'Start your application online through the official Morocco eVisa portal or with Visa123\'s streamlined service.',
+          'Upload a clear scan of your passport and a recent digital passport photo, ensuring all details are visible.',
+          'Pay the visa fee securely using your credit or debit card.',
+          'Get a confirmation email with your application number for tracking your status.',
+          'Wait 1-3 working days for approval. Most applications are processed within 24 to 72 hours.',
+          'Download and print your eVisa PDF once approved. Apply at least 7 days before your travel date to ensure timely processing.'
         ],
-        whyVisa123: 'Visa123 offers end-to-end support for your German visa application, including document preparation, appointment booking, and expert consultation to ensure success.'
+        whyVisa123: 'Visa123 makes your Morocco eVisa application simple and stress-free. With our fully online process, you can apply from anywhere without visiting an embassy. Our expert team guides you through every step, ensures your documents are complete, and provides 24/7 support. Get approved in as fast as 24 to 72 hours and travel to Morocco with confidence.'
       }
-    }
+    },
+ 
   }
   
   export const getCountryData = (slug: string): CountryData => {
-    const country = visaCountries[slug]
+    // Normalize slug to match keys (handle case variations)
+    const normalizedSlug = slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase()
+    const country = visaCountries[normalizedSlug] || visaCountries[slug]
     if (!country) {
-      return visaCountries['Turkey'] as CountryData
+      // Default fallback
+      return visaCountries['Schengen'] as CountryData
     }
     return country
   }

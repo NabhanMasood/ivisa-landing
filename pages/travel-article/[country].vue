@@ -6,9 +6,9 @@
 
             <!-- Hero Section -->
             <section class="relative w-full">
-            <div class="container mx-auto px-6 lg:px-8">
-                <!-- Hero Container: width: 1200, height: 554, border-radius: 16px, reduced top margin -->
-                <div class="relative w-full max-w-[1200px] h-[554px] mx-auto rounded-2xl overflow-hidden mt-8">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Hero Container: responsive height and margin -->
+                <div class="relative w-full max-w-[1200px] h-[550px] sm:h-[500px] lg:h-[554px] mx-auto rounded-xl sm:rounded-2xl overflow-hidden mt-4 sm:mt-6 lg:mt-8">
                 <!-- Background Image -->
                 <img 
                     :src="countryData.heroImage" 
@@ -19,36 +19,39 @@
                 <!-- Overlay -->
                 <div class="absolute inset-0 bg-black/30"></div>
                 
-                <!-- Container Content: width: 1012, height: 336, top: 99px, left: 89px, gap: 54px -->
-                <div class="absolute top-[99px] left-[89px] flex gap-[54px] w-[1012px] h-[336px]">
+                <!-- Container Content: responsive positioning and layout -->
+                <div class="absolute top-4 left-4 sm:top-8 sm:left-6 md:top-12 md:left-8 lg:top-[99px] lg:left-[89px] flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[54px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-[1012px]">
                     
-                    <!-- Left Section: width: 585, height: 336, gap: 24px, border-radius: 16px, padding: 25px, bg: #68919C80 with blur -->
-                    <div class="w-[585px] h-[336px] flex flex-col gap-6 rounded-2xl p-[25px] bg-[#68919C80] backdrop-blur-[20px]">
-                    <!-- Start your application text: width: 535, height: 32, font-size: 28px, line-height: 32px -->
-                    <h2 class="w-[535px] h-[32px] font-manrope font-bold text-[28px] leading-[32px] text-white">
+                    <!-- Left Section: responsive width and padding -->
+                    <div class="w-full lg:w-[585px] flex flex-col gap-4 sm:gap-6 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-[25px] bg-[#68919C80] backdrop-blur-[20px]">
+                    <!-- Start your application text: responsive font size -->
+                    <h2 class="w-full font-manrope font-bold text-xl sm:text-2xl lg:text-[28px] leading-tight sm:leading-[32px] text-white">
                         Start your application
                     </h2>
                     
                     <!-- Form -->
-                    <!-- Loading State -->
-                    <div v-if="isLoading" class="flex items-center justify-center py-8">
-                      <div class="text-white">Loading countries...</div>
-                    </div>
-
                     <!-- Error State -->
-                    <div v-else-if="error" class="flex items-center justify-center py-8">
-                      <div class="text-red-200">{{ error }}</div>
+                    <div v-if="error && !countries.length && !destinationCountries.length" class="flex items-center justify-center py-8">
+                      <div class="text-red-200 text-center">
+                        <p class="font-medium">{{ error }}</p>
+                        <button 
+                          @click="fetchAllData" 
+                          class="mt-2 text-sm text-white/80 hover:text-white underline"
+                        >
+                          Try again
+                        </button>
+                      </div>
                     </div>
 
-                    <!-- Form Fields -->
+                    <!-- Form Fields (shows even while loading if we have cached data) -->
                     <div v-else class="flex flex-col gap-4">
                       <!-- Where are you from (All Countries) -->
                       <div>
                         <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
                           Where are you from?
                         </label>
-                        <Select v-model="selectedFrom">
-                          <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                        <Select v-model="selectedFrom" :disabled="isLoading && !countries.length">
+                          <SelectTrigger class="!h-12 sm:!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
                             <SelectValue placeholder="Select country">
                               <div class="flex items-center gap-2 pl-4" v-if="selectedFrom">
                                 <!-- Logo with fallback -->
@@ -112,8 +115,8 @@
                         <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
                           Where are you going?
                         </label>
-                        <Select v-model="selectedTo">
-                          <SelectTrigger class="!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                        <Select v-model="selectedTo" :disabled="isLoading && !destinationCountries.length">
+                          <SelectTrigger class="!h-12 sm:!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
                             <SelectValue placeholder="Select destination">
                               <div class="flex items-center gap-2 pl-4" v-if="selectedTo">
                                 <!-- Logo with fallback -->
@@ -172,30 +175,30 @@
                         </Select>
                       </div>
 
-                      <!-- Apply Now Button -->
+                      <!-- Apply Now Button - responsive -->
                       <button
                         @click="handleApplyNowHero"
                         :disabled="!selectedFrom || !selectedTo || isLoading"
-                        class="w-full h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-base rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full h-12 sm:h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-sm sm:text-base rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <span class="text-lg">→</span>
+                        <span class="text-base sm:text-lg">→</span>
                         <span>Apply Now!</span>
                       </button>
                     </div>
                     </div>
 
-                    <!-- Right Section: width: 373, height: 154, gap: 20px -->
-                <div class="w-[373px] flex flex-col gap-5">
+                    <!-- Right Section: responsive width and spacing -->
+                <div class="w-full lg:w-[373px] flex flex-col gap-3 sm:gap-4 lg:gap-5">
                     <!-- Heading -->
-                    <div class="w-[373px]">
-                        <h1 class="text-white text-5xl font-bold leading-tight">
-                            Apply now for your Schengen Visa
+                    <div class="w-full">
+                        <h1 class="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                            Apply now for your {{ countryData.name }}
                         </h1>
                     </div>
                     
                     <!-- Text under heading -->
-                    <p class="w-[373px] font-manrope font-medium text-[20px] leading-[26px] text-white">
-                        Plan your trip to Schengen confidently, easy, online, and optimised for travellers just like you.
+                    <p class="w-full font-manrope font-medium text-sm sm:text-base lg:text-[20px] leading-relaxed sm:leading-[24px] lg:leading-[26px] text-white">
+                        Plan your trip to {{ countryData.name === 'UK ETA' ? 'the UK' : countryData.name === 'US ESTA' ? 'the USA' : countryData.name === 'Turkey e-Visa' ? 'Turkey' : countryData.name === 'Morocco eVisa' ? 'Morocco' : countryData.name }} confidently, easy, online, and optimised for travellers just like you.
                     </p>
                 </div>
 
@@ -206,102 +209,102 @@
 
 
 <!-- Streamlined Application Process - Same for all countries -->
-<section class="py-16 bg-gray-50">
-  <div class="container mx-auto px-6 lg:px-8">
-    <!-- Container: width: 1002, height: 404, gap: 40px -->
-    <div class="max-w-[1002px] mx-auto flex flex-col gap-10">
+<section class="py-8 sm:py-12 lg:py-16 bg-gray-50">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Container: responsive gap -->
+    <div class="max-w-[1002px] mx-auto flex flex-col gap-6 sm:gap-8 lg:gap-10">
       
-      <!-- Heading: font-size: 32px, line-height: 40px, letter-spacing: 0% -->
-      <h2 class="font-manrope font-bold text-[32px] leading-[40px] tracking-normal text-center text-[#0A3D3F]">
+      <!-- Heading: responsive font size -->
+      <h2 class="font-manrope font-bold text-2xl sm:text-3xl lg:text-[32px] leading-tight sm:leading-[36px] lg:leading-[40px] tracking-normal text-center text-[#0A3D3F]">
         Streamlined Application Process
       </h2>
 
-      <!-- Frame with steps and cards: width: 1002, height: 324, gap: 40px -->
-      <div class="flex flex-col gap-10">
+      <!-- Frame with steps and cards: responsive gap -->
+      <div class="flex flex-col gap-6 sm:gap-8 lg:gap-10">
         
-        <!-- Steps Row with Icons and Separators -->
-        <div class="flex items-center justify-center">
+        <!-- Steps Row with Icons and Separators - responsive layout -->
+        <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-4 lg:gap-8">
           <!-- Step 1 Icon -->
           <div class="flex flex-col items-center">
-            <!-- Numeric Icon: width: 44px, height: 44px with drop shadow -->
-            <div class="w-[44px] h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <!-- Number: width: 32px, height: 28px, font-size: 20px, line-height: 28px, letter-spacing: -2% -->
-              <span class="font-manrope font-medium text-[20px] leading-[28px] tracking-[-0.02em] text-white text-center">1</span>
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">1</span>
             </div>
           </div>
 
-          <!-- Gap before separator - increased -->
-          <div class="w-8"></div>
+          <!-- Gap before separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
 
-          <!-- Separator: width: 182, border: 1px, color: #EEEEF0 -->
-          <div class="w-[182px] h-0 border-t border-[#EEEEF0]"></div>
+          <!-- Separator: responsive width -->
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
 
-          <!-- Gap after separator - increased -->
-          <div class="w-8"></div>
+          <!-- Gap after separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
 
           <!-- Step 2 Icon -->
           <div class="flex flex-col items-center">
-            <!-- Numeric Icon: width: 44px, height: 44px with drop shadow -->
-            <div class="w-[44px] h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <!-- Number: width: 32px, height: 28px, font-size: 20px, line-height: 28px, letter-spacing: -2% -->
-              <span class="font-manrope font-medium text-[20px] leading-[28px] tracking-[-0.02em] text-white text-center">2</span>
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">2</span>
             </div>
           </div>
 
-          <!-- Gap before separator - increased -->
-          <div class="w-8"></div>
+          <!-- Gap before separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
 
-          <!-- Separator: width: 182, border: 1px, color: #EEEEF0 -->
-          <div class="w-[182px] h-0 border-t border-[#EEEEF0]"></div>
+          <!-- Separator: responsive width -->
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
 
-          <!-- Gap after separator - increased -->
-          <div class="w-8"></div>
+          <!-- Gap after separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
 
           <!-- Step 3 Icon -->
           <div class="flex flex-col items-center">
-            <!-- Numeric Icon: width: 44px, height: 44px with drop shadow -->
-            <div class="w-[44px] h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <!-- Number: width: 32px, height: 28px, font-size: 20px, line-height: 28px, letter-spacing: -2% -->
-              <span class="font-manrope font-medium text-[20px] leading-[28px] tracking-[-0.02em] text-white text-center">3</span>
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">3</span>
             </div>
           </div>
         </div>
 
-        <!-- Cards Container: width: 1002, height: 220, gap: 45px -->
-        <div class="flex gap-[45px] justify-center">
+        <!-- Cards Container: responsive layout -->
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-[45px] justify-center">
           
-          <!-- Card 1: width: 304, height: 220, gap: 16px, border-radius: 16px, padding: 40px 20px, bg: #F1F9FC -->
-          <div class="w-[304px] h-[220px] flex flex-col items-center gap-4 rounded-2xl bg-[#F1F9FC] px-5 py-10">
-            <!-- Heading: width: 264, height: 64, font-size: 22px, line-height: 32px, letter-spacing: -2% -->
-            <h3 class="w-[264px] h-[64px] font-manrope font-bold text-[22px] leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
+          <!-- Card 1: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Smarter Task Management Flow
             </h3>
-            <!-- Subtext: width: 264, height: 60, opacity: 0.7, font-size: 16px, line-height: 20px, letter-spacing: -0.6% -->
-            <p class="w-[264px] h-[60px] font-manrope font-normal text-base leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
               Minimal, organized structure to help you manage, sort, and access every task.
             </p>
           </div>
 
-          <!-- Card 2: width: 304, height: 220 -->
-          <div class="w-[304px] h-[220px] flex flex-col items-center gap-4 rounded-2xl bg-[#F1F9FC] px-5 py-10">
-            <!-- Heading: width: 264, height: 64 -->
-            <h3 class="w-[264px] h-[64px] font-manrope font-bold text-[22px] leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
+          <!-- Card 2: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               All-in-One Project Beam Control
             </h3>
-            <!-- Subtext: width: 264, height: 60 -->
-            <p class="w-[264px] h-[60px] font-manrope font-normal text-base leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
               Design, edit, publish, and manage projects without leaving your workspace.
             </p>
           </div>
 
-          <!-- Card 3: width: 304, height: 220 -->
-          <div class="w-[304px] h-[220px] flex flex-col items-center gap-4 rounded-2xl bg-[#F1F9FC] px-5 py-10">
-            <!-- Heading: width: 264, height: 64 -->
-            <h3 class="w-[264px] h-[64px] font-manrope font-bold text-[22px] leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
+          <!-- Card 3: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Real-Time Usage Analytics
             </h3>
-            <!-- Subtext: width: 264, height: 60 -->
-            <p class="w-[264px] h-[60px] font-manrope font-normal text-base leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
               Compare free and premium user activity at a glance — track growth.
             </p>
           </div>
@@ -314,91 +317,91 @@
 </section>
 
 <!-- Features Grid - Same for all countries -->
-<section class="py-16 bg-white">
-  <div class="container mx-auto px-6 lg:px-8">
+<section class="py-8 sm:py-12 lg:py-16 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Main Container -->
-    <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
+    <div class="max-w-[1200px] mx-auto flex flex-col gap-4 sm:gap-6">
       
-      <!-- First Row -->
-      <div class="flex gap-6">
-        <!-- Feature 1 Card -->
-        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
-          <!-- Icon: width: 61.875, height: 60 -->
-          <div class="w-[61.875px] h-[60px]">
+      <!-- First Row - responsive layout -->
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+        <!-- Feature 1 Card - responsive sizing -->
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[35px] gap-3 sm:gap-4">
+          <!-- Icon: responsive size -->
+          <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-[61.875px] lg:h-[60px]">
             <img src="/svg/protect.svg" alt="visa alerts" class="w-full h-full" />
           </div>
           
           <!-- Text Container -->
           <div class="flex flex-col gap-2">
-            <!-- Heading -->
-            <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
+            <!-- Heading - responsive font size -->
+            <h3 class="font-manrope font-semibold text-base sm:text-lg leading-tight sm:leading-6 tracking-[-0.24px] text-[#0A3D3F]">
               Risk-Free Applications
             </h3>
-            <!-- Subheading -->
-            <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
+            <!-- Subheading - responsive font size -->
+            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 tracking-[-0.08px] text-[#40444C]">
               If your visa isn't approved, you don't lose a thing. With Visa123's Application Protection, you can apply with total confidence and zero financial risk.
             </p>
           </div>
         </div>
 
-        <!-- Feature 2 Card -->
-        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
-          <!-- Icon -->
-          <div class="w-[61.875px] h-[60px]">
+        <!-- Feature 2 Card - responsive sizing -->
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[35px] gap-3 sm:gap-4">
+          <!-- Icon: responsive size -->
+          <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-[61.875px] lg:h-[60px]">
             <img src="/svg/check-2.svg" alt="travel guidance" class="w-full h-full" />
           </div>
           
           <!-- Text Container -->
           <div class="flex flex-col gap-2">
-            <!-- Heading -->
-            <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
+            <!-- Heading - responsive font size -->
+            <h3 class="font-manrope font-semibold text-base sm:text-lg leading-tight sm:leading-6 tracking-[-0.24px] text-[#0A3D3F]">
               17+ Years of Experience
             </h3>
-            <!-- Subheading -->
-            <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
+            <!-- Subheading - responsive font size -->
+            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 tracking-[-0.08px] text-[#40444C]">
              Our visa experts have been helping travelers navigate global visa processes for over 17 years. Every application is carefully reviewed by our experienced team to ensure accuracy and approval readiness
             </p>
           </div>
         </div>
       </div>
 
-      <!-- Second Row -->
-      <div class="flex gap-6">
-        <!-- Feature 3 Card -->
-        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
-          <!-- Icon -->
-          <div class="w-[61.875px] h-[60px]">
+      <!-- Second Row - responsive layout -->
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+        <!-- Feature 3 Card - responsive sizing -->
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[35px] gap-3 sm:gap-4">
+          <!-- Icon: responsive size -->
+          <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-[61.875px] lg:h-[60px]">
             <img src="/svg/doc.svg" alt="visa alerts" class="w-full h-full" />
           </div>
           
           <!-- Text Container -->
           <div class="flex flex-col gap-2">
-            <!-- Heading -->
-            <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
+            <!-- Heading - responsive font size -->
+            <h3 class="font-manrope font-semibold text-base sm:text-lg leading-tight sm:leading-6 tracking-[-0.24px] text-[#0A3D3F]">
             60+ Global Destinations
             </h3>
-            <!-- Subheading -->
-            <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
+            <!-- Subheading - responsive font size -->
+            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 tracking-[-0.08px] text-[#40444C]">
              Visa123 supports visa processing for more than 60 countries worldwide. Wherever you're headed, our team provides the right guidance to make your travel plans simple and stress-free.
             </p>
           </div>
         </div>
 
-        <!-- Feature 4 Card -->
-        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-2xl" style="width: 588px; height: 250px; padding: 35px; gap: 16px;">
-          <!-- Icon -->
-          <div class="w-[61.875px] h-[60px]">
+        <!-- Feature 4 Card - responsive sizing -->
+        <div class="flex-1 flex flex-col bg-[#F1F9FC] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[35px] gap-3 sm:gap-4">
+          <!-- Icon: responsive size -->
+          <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-[61.875px] lg:h-[60px]">
             <img src="/svg/audience.svg" alt="travel guidance" class="w-full h-full" />
           </div>
           
           <!-- Text Container -->
           <div class="flex flex-col gap-2">
-            <!-- Heading -->
-            <h3 class="font-manrope font-semibold text-lg leading-6 tracking-[-0.24px] text-[#0A3D3F]">
+            <!-- Heading - responsive font size -->
+            <h3 class="font-manrope font-semibold text-base sm:text-lg leading-tight sm:leading-6 tracking-[-0.24px] text-[#0A3D3F]">
              10K+ Successful Consultations
             </h3>
-            <!-- Subheading -->
-            <p class="font-manrope font-normal text-base leading-6 tracking-[-0.08px] text-[#40444C]">
+            <!-- Subheading - responsive font size -->
+            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 tracking-[-0.08px] text-[#40444C]">
               Over 10,000 travelers have trusted Visa123 to guide their applications. We tailor each consultation to your unique travel goals and personal circumstances, ensuring the best possible outcome.
             </p>
           </div>
@@ -409,95 +412,95 @@
   </div>
 </section>
         <!-- Application Form Section -->
-        <section class="py-16 bg-white">
-        <div class="container mx-auto px-6 lg:px-8">
-            <!-- Article page wrapper: width: 1200px, height: 540px, border-radius: 30px -->
-            <div class="max-w-[1200px] h-[540px] mx-auto rounded-[30px] overflow-hidden">
-            <ApplicationForm />
+        <section class="py-8 sm:py-12 lg:py-16 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Article page wrapper: responsive height and border radius -->
+            <div class="max-w-[1200px] min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] mx-auto rounded-2xl sm:rounded-[30px] overflow-hidden">
+            <ApplicationForm :country-slug="countrySlug || ''" />
             </div>
             
         </div>
         </section>
 
 <!-- Country-Specific Content Section -->
-<section class="py-16 bg-white">
-  <div class="container mx-auto px-6 lg:px-8">
+<section class="py-8 sm:py-12 lg:py-16 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
     
-    <!-- Main Container: width: 1200, height: 1384, gap: 60px -->
-    <div class="max-w-[1200px] mx-auto flex flex-col gap-[60px]">
+    <!-- Main Container: responsive gap -->
+    <div class="max-w-[1200px] mx-auto flex flex-col gap-8 sm:gap-12 lg:gap-[60px]">
       
       <!-- Country Title - NO GRADIENT LINE -->
       <div class="mb-0">
-        <!-- Title: font-size: 24px, line-height: 32px -->
-        <h1 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+        <!-- Title: responsive font size -->
+        <h1 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           {{ countryData.title }}
         </h1>
       </div>
 
-      <!-- Introduction Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Subtext: width: 1200, height: 56, font-size: 16px, line-height: 28px -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full">
+      <!-- Introduction Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Subtext: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full">
           {{ countryData.introduction }}
         </p>
       </div>
 
-      <!-- What is the Visa Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Heading: font-size: 24px, line-height: 32px -->
-        <h2 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+      <!-- What is the Visa Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           {{ countryData.sections.whatIs.title }}
         </h2>
-        <!-- Content: width: 1200, height: 56 -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full">
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full">
           {{ countryData.sections.whatIs.content }}
         </p>
       </div>
 
-      <!-- Documents Needed Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Heading: font-size: 24px, line-height: 32px -->
-        <h2 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+      <!-- Documents Needed Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           Documents You'll Need
         </h2>
-        <!-- Content -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full mb-4">
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full mb-3 sm:mb-4">
           When applying for a {{ countryData.name }} visa, prepare the following:
         </p>
         <!-- Bullets List -->
-        <ul class="space-y-2">
+        <ul class="space-y-2 sm:space-y-3">
           <li 
             v-for="(doc, index) in countryData.sections.documents" 
             :key="index" 
-            class="flex items-start gap-3"
+            class="flex items-start gap-2 sm:gap-3"
           >
             <span class="text-[#0B3947] mt-1">•</span>
-            <span class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947]">
+            <span class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947]">
               {{ doc }}
             </span>
           </li>
         </ul>
       </div>
 
-      <!-- Types of Visas Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Heading: font-size: 24px, line-height: 32px -->
-        <h2 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+      <!-- Types of Visas Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           Types of {{ countryData.name }} Visas
         </h2>
-        <!-- Content -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full mb-4">
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full mb-3 sm:mb-4">
           Choose the visa that best fits your travel purpose:
         </p>
         <!-- Visa Types List with Bold Names -->
-        <ul class="space-y-2">
+        <ul class="space-y-2 sm:space-y-3">
           <li 
             v-for="(visa, index) in countryData.sections.visaTypes" 
             :key="index" 
-            class="flex items-start gap-3"
+            class="flex items-start gap-2 sm:gap-3"
           >
             <span class="text-[#0B3947] mt-1">•</span>
-            <span class="font-manrope text-base leading-7 tracking-normal text-[#0B3947]">
+            <span class="font-manrope text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947]">
               <strong class="font-bold">{{ visa.name }}</strong>
               <span class="font-normal"> – {{ visa.description }}</span>
             </span>
@@ -505,39 +508,39 @@
         </ul>
       </div>
 
-      <!-- How to Apply Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Heading: font-size: 24px, line-height: 32px -->
-        <h2 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+      <!-- How to Apply Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           How to Apply for a {{ countryData.name }} Visa
         </h2>
-        <!-- Content -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full mb-4">
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full mb-3 sm:mb-4">
           Here's how to start your application through Visa123:
         </p>
         <!-- Numbered List -->
-        <ol class="space-y-2">
+        <ol class="space-y-2 sm:space-y-3">
           <li 
             v-for="(step, index) in countryData.sections.howToApply" 
             :key="index" 
-            class="flex items-start gap-3"
+            class="flex items-start gap-2 sm:gap-3"
           >
-            <span class="font-manrope font-bold text-base leading-7 text-[#0B3947]">{{ index + 1 }}.</span>
-            <span class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947]">
+            <span class="font-manrope font-bold text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 text-[#0B3947]">{{ index + 1 }}.</span>
+            <span class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947]">
               {{ step }}
             </span>
           </li>
         </ol>
       </div>
 
-      <!-- Why Apply with Visa123 Section: gap: 20px -->
-      <div class="flex flex-col gap-5">
-        <!-- Heading: font-size: 24px, line-height: 32px -->
-        <h2 class="font-manrope font-bold text-[24px] leading-[32px] tracking-normal text-[#0B3947]">
+      <!-- Why Apply with Visa123 Section: responsive gap -->
+      <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           Why Apply with Visa123
         </h2>
-        <!-- Content: width: 1200, height: 56 -->
-        <p class="font-manrope font-normal text-base leading-7 tracking-normal text-[#0B3947] w-full">
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full">
           {{ countryData.sections.whyVisa123 }}
         </p>
       </div>
@@ -546,8 +549,8 @@
   </div>
 </section>
 
-    <!-- Spacing before footer -->
-    <div class="h-[211px]"></div>
+    <!-- Spacing before footer - responsive -->
+    <div class="h-16 sm:h-24 lg:h-[211px]"></div>
 
   </div>
 </template>
@@ -569,12 +572,26 @@ import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
+import { getCachedData, CACHE_KEYS } from '@/composables/useCache'
 
 const route = useRoute()
 
 // Get country from route parameter
 const countrySlug = computed(() => route.params.country as string || 'turkey')
 const countryData = computed(() => getCountryData(countrySlug.value))
+
+// Map route slugs to possible API country names
+const getCountryNameFromSlug = (slug: string): string[] => {
+  const slugLower = slug.toLowerCase()
+  const mappings: Record<string, string[]> = {
+    'uk': ['United Kingdom', 'UK', 'U.K.', 'United Kingdom (UK)'],
+    'schengen': ['Schengen', 'Europe', 'Schengen Area', 'Schengen Zone'],
+    'usa': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
+    'turkey': ['Turkey', 'Türkiye', 'Turkiye'],
+    'morocco': ['Morocco', 'Moroccan', 'Kingdom of Morocco']
+  }
+  return mappings[slugLower] || [slug]
+}
 
 // State
 const countries = ref<Country[]>([])
@@ -642,19 +659,13 @@ const getFullLogoUrl = (logoUrl: string): string => {
   return fullUrl
 }
 
-// Fetch countries for "From" dropdown
+// Fetch countries for "From" dropdown - uses cached data from plugin
 const fetchCountries = async () => {
   try {
-    const response = await getCountries()
+    const response = await getCountries() // Will use cache (populated by plugin)
     
     if (response.success && response.data) {
-      countries.value = response.data
-      console.log('✅ Loaded countries:', countries.value.length)
-      
-      // Set default "From" value
-      if (countries.value.length > 0 && countries.value[0]) {
-        selectedFrom.value = String(countries.value[0].id)
-      }
+      return response
     } else {
       throw new Error(response.message || 'Failed to load countries')
     }
@@ -664,27 +675,13 @@ const fetchCountries = async () => {
   }
 }
 
-// Fetch destination countries for "To" dropdown (from visa products, matched with countries table for logos)
+// Fetch destination countries for "To" dropdown - uses cached data from plugin
 const fetchDestinationCountries = async () => {
   try {
-    const response = await getGroupedVisaProductsByCountries()
+    const response = await getGroupedVisaProductsByCountries() // Will use cache (populated by plugin)
     
     if (response.success && response.data) {
-      // Get country names from visa products
-      const visaProductCountryNames = response.data.map(item => item.country)
-      
-      // Match with countries table to get logos
-      destinationCountries.value = countries.value
-        .filter(country => visaProductCountryNames.includes(country.countryName))
-        .sort((a, b) => a.countryName.localeCompare(b.countryName))
-      
-      console.log('✅ Loaded destination countries with logos:', destinationCountries.value.length)
-      console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
-      
-      // Set default "To" value
-      if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-        selectedTo.value = String(destinationCountries.value[0].id)
-      }
+      return response
     } else {
       throw new Error(response.message || 'Failed to load destination countries')
     }
@@ -694,17 +691,65 @@ const fetchDestinationCountries = async () => {
   }
 }
 
-// Fetch all data on mount
+// Fetch all data on mount - uses cached data from plugin
 const fetchAllData = async () => {
-  isLoading.value = true
+  // Only show loading if we don't have cached data
+  const hasCachedCountries = countries.value.length > 0
+  const hasCachedDestinations = destinationCountries.value.length > 0
+  
+  if (!hasCachedCountries || !hasCachedDestinations) {
+    isLoading.value = true
+  }
+  
   error.value = null
   
   try {
-    // First fetch all countries (needed for both dropdowns)
-    await fetchCountries()
+    // Fetch countries (will use cache if available, populated by plugin)
+    const countriesResponse = await fetchCountries()
+    if (countriesResponse.success && countriesResponse.data) {
+      countries.value = countriesResponse.data
+      console.log('✅ Loaded countries:', countries.value.length)
+      
+      // Set default "From" value
+      const firstCountry = countries.value[0]
+      if (firstCountry && !selectedFrom.value) {
+        selectedFrom.value = String(firstCountry.id)
+      }
+    }
     
-    // Then fetch destination countries and match with countries table
-    await fetchDestinationCountries()
+    // Fetch destination countries (will use cache if available, populated by plugin)
+    const destinationsResponse = await fetchDestinationCountries()
+    if (destinationsResponse.success && destinationsResponse.data) {
+      // Match destination countries with countries table
+      const visaProductCountryNames = destinationsResponse.data.map(item => item.country)
+      destinationCountries.value = countries.value
+        .filter(country => visaProductCountryNames.includes(country.countryName))
+        .sort((a, b) => a.countryName.localeCompare(b.countryName))
+      
+      console.log('✅ Loaded destination countries with logos:', destinationCountries.value.length)
+      console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
+      
+      // Try to pre-select the country based on route parameter
+      const possibleNames = getCountryNameFromSlug(countrySlug.value)
+      const matchedCountry = destinationCountries.value.find(country => 
+        possibleNames.some(name => 
+          country.countryName.toLowerCase() === name.toLowerCase() ||
+          country.countryName.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(country.countryName.toLowerCase())
+        )
+      )
+      
+      if (matchedCountry) {
+        selectedTo.value = String(matchedCountry.id)
+        console.log('✅ Pre-selected destination country:', matchedCountry.countryName)
+      } else {
+        // Set default "To" value
+        const firstDestination = destinationCountries.value[0]
+        if (firstDestination && !selectedTo.value) {
+          selectedTo.value = String(firstDestination.id)
+        }
+      }
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load data'
   } finally {
@@ -728,8 +773,63 @@ const handleApplyNowHero = () => {
   navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
 }
 
+// Load cached data synchronously on mount to avoid showing skeleton loaders
+const loadCachedData = () => {
+  // Load countries from cache
+  const cachedCountries = getCachedData<Country[]>(CACHE_KEYS.COUNTRIES)
+  if (cachedCountries && cachedCountries.length > 0) {
+    countries.value = cachedCountries
+    console.log('✅ Loaded countries from cache:', countries.value.length)
+    
+    // Set default "From" value
+    const firstCountry = countries.value[0]
+    if (firstCountry && !selectedFrom.value) {
+      selectedFrom.value = String(firstCountry.id)
+    }
+  }
+  
+  // Load destination countries from cache
+  const cachedDestinations = getCachedData<any[]>(CACHE_KEYS.DESTINATION_COUNTRIES)
+  if (cachedDestinations && cachedDestinations.length > 0 && countries.value.length > 0) {
+    // Get country names from visa products
+    const visaProductCountryNames = cachedDestinations.map(item => item.country)
+    
+    // Match with countries table to get logos
+    destinationCountries.value = countries.value
+      .filter(country => visaProductCountryNames.includes(country.countryName))
+      .sort((a, b) => a.countryName.localeCompare(b.countryName))
+    
+    console.log('✅ Loaded destination countries from cache:', destinationCountries.value.length)
+    
+    // Try to pre-select the country based on route parameter
+    const possibleNames = getCountryNameFromSlug(countrySlug.value)
+    const matchedCountry = destinationCountries.value.find(country => 
+      possibleNames.some(name => 
+        country.countryName.toLowerCase() === name.toLowerCase() ||
+        country.countryName.toLowerCase().includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(country.countryName.toLowerCase())
+      )
+    )
+    
+    if (matchedCountry) {
+      selectedTo.value = String(matchedCountry.id)
+      console.log('✅ Pre-selected destination country from cache:', matchedCountry.countryName)
+    } else {
+      // Set default "To" value
+      const firstDestination = destinationCountries.value[0]
+      if (firstDestination && !selectedTo.value) {
+        selectedTo.value = String(firstDestination.id)
+      }
+    }
+  }
+}
+
 // Fetch data on component mount
 onMounted(() => {
+  // Load cached data first (synchronously) to avoid showing skeleton loaders
+  loadCachedData()
+  
+  // Then fetch fresh data in background (will update cache)
   fetchAllData()
 })
 

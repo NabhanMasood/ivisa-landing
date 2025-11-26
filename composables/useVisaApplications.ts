@@ -245,6 +245,83 @@ export const useVisaApplications = () => {
   }
 
   /**
+   * Update a draft visa application
+   * PATCH /visa-applications/:id
+   * Used to update draft applications with new data as user progresses through steps
+   */
+  const updateDraftApplication = async (
+    id: number | string,
+    data: Partial<{
+      visaProductId?: number
+      nationality?: string
+      destinationCountry?: string
+      visaType?: string
+      numberOfTravelers?: number
+      embassyId?: number | null
+      email?: string
+      phoneNumber?: string
+      processingType?: string
+      processingFee?: number
+      processingFeeId?: number | string | null
+      processingTime?: string
+      // ✅ NEW: Support for step-by-step saving
+      draftData?: {
+        step1?: any
+        step2?: any
+        step3?: any
+        step4?: any
+        step5?: any
+        currentStep?: number
+      }
+      currentStep?: number
+      step1Data?: any
+      step2Data?: any
+      step3Data?: any
+      step4Data?: any
+      step5Data?: any
+    }>
+  ): Promise<ApiResponse<VisaApplication>> => {
+    try {
+      console.log('🔄 Updating draft application:', { id, data })
+
+      const response = await api.patch<VisaApplication | { status: boolean; message: string; data: VisaApplication }>(
+        `/visa-applications/${id}`,
+        data
+      )
+
+      let applicationData: VisaApplication
+
+      if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
+        const wrappedResponse = response.data as { status: boolean; message: string; data: VisaApplication }
+        if (wrappedResponse.status && wrappedResponse.data) {
+          applicationData = wrappedResponse.data
+        } else {
+          throw new Error(wrappedResponse.message || 'Failed to update draft application')
+        }
+      } else {
+        applicationData = response.data as VisaApplication
+      }
+
+      console.log('✅ Draft application updated successfully')
+
+      return {
+        data: applicationData,
+        message: 'Draft application updated successfully',
+        success: true,
+      }
+    } catch (error: any) {
+      console.error('❌ Update draft application error:', error)
+      const errorMessage = handleApiError(error)
+      return {
+        data: null as any,
+        message: errorMessage,
+        success: false,
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
    * Update application status
    * PATCH /visa-applications/:id/status
    * 
@@ -492,6 +569,7 @@ export const useVisaApplications = () => {
     getMyApplications,
     getApplicationById,
     getApplicationByNumber,
+    updateDraftApplication,
     updateApplicationStatus,
     requestResubmission,
     getResubmissionRequests,

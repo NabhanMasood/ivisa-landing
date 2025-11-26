@@ -1,12 +1,12 @@
 <template>
   <!-- Your Visa Our Priority Section -->
   <section 
-    class="relative overflow-hidden w-full min-h-[553px]"
+    class="relative overflow-hidden w-full min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]"
     style="background: linear-gradient(90deg, #31B560 0%, #0582A2 33.14%, #2567BE 51.18%, #5051DA 69.41%, #2C229B 100%);"
   >
       <div class="w-full h-full relative">
-      <!-- Logo in top right corner with high z-index, moved more right -->
-      <div class="absolute top-0 -right-2 lg:-right-4 w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] z-50 opacity-50 sm:opacity-100">
+      <!-- Logo in top right corner - moved to background -->
+      <div class="absolute top-0 -right-2 lg:-right-4 w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] z-0 opacity-30 sm:opacity-40 lg:opacity-50">
         <img
           src="/svg/half-logo.svg"
           alt="Visa123 Logo"
@@ -14,12 +14,12 @@
         />
       </div>
 
-      <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[400px] sm:min-h-[500px] lg:min-h-[553px]">
+      <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]">
         <!-- Content - Full Width -->
         <div class="w-full px-4 sm:px-6 lg:pl-[144px] lg:pr-[120px]">
           
           <!-- Left Content -->
-          <div class="text-white z-10 relative max-w-[676px] py-8 sm:py-12 lg:py-16">
+          <div class="text-white z-10 relative max-w-[676px] py-6 sm:py-8 lg:py-12">
             <!-- Heading and Subtext Container -->
             <div class="mb-6 sm:mb-8">
               <!-- Main Heading - Single Line -->
@@ -210,6 +210,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import Select from '@/components/ui/select/Select.vue'
 import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
 import SelectContent from '@/components/ui/select/SelectContent.vue'
@@ -217,6 +218,39 @@ import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
+
+// Props - optional country slug for pre-selection
+interface Props {
+  countrySlug?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  countrySlug: ''
+})
+
+const route = useRoute()
+
+// Get country slug from props or route
+const getCountrySlug = () => {
+  if (props.countrySlug) return props.countrySlug
+  if (route.params.country) return route.params.country as string
+  return ''
+}
+
+// Map route slugs to possible API country names
+const getCountryNameFromSlug = (slug: string): string[] => {
+  if (!slug) return []
+  const slugLower = slug.toLowerCase()
+  const mappings: Record<string, string[]> = {
+    'uk': ['United Kingdom', 'UK', 'U.K.', 'United Kingdom (UK)'],
+    'schengen': ['Schengen', 'Europe', 'Schengen Area', 'Schengen Zone'],
+    'usa': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
+    'us': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
+    'turkey': ['Turkey', 'Türkiye', 'Turkiye'],
+    'morocco': ['Morocco', 'Moroccan', 'Kingdom of Morocco']
+  }
+  return mappings[slugLower] || [slug]
+}
 
 // State
 const countries = ref<Country[]>([])
@@ -319,8 +353,27 @@ const fetchDestinationCountries = async () => {
       console.log('✅ Loaded destination countries with logos:', destinationCountries.value.length)
       console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
       
-      // Set default "To" value
-      if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
+      // Try to pre-select the country based on route parameter or prop
+      const countrySlug = getCountrySlug()
+      if (countrySlug) {
+        const possibleNames = getCountryNameFromSlug(countrySlug)
+        const matchedCountry = destinationCountries.value.find(country => 
+          possibleNames.some(name => 
+            country.countryName.toLowerCase() === name.toLowerCase() ||
+            country.countryName.toLowerCase().includes(name.toLowerCase()) ||
+            name.toLowerCase().includes(country.countryName.toLowerCase())
+          )
+        )
+        
+        if (matchedCountry) {
+          selectedTo.value = String(matchedCountry.id)
+          console.log('✅ Pre-selected destination country in ApplicationForm:', matchedCountry.countryName)
+        } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
+          // Fallback to first country if no match found
+          selectedTo.value = String(destinationCountries.value[0].id)
+        }
+      } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
+        // Set default "To" value if no country slug provided
         selectedTo.value = String(destinationCountries.value[0].id)
       }
     } else {

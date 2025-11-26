@@ -121,11 +121,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useApplication } from '@/composables/useApplication'
 import { useFormPersistence } from '@/composables/useFormPersistence'
 import { useAuthApi } from '@/composables/useAuth'
+import { useVisaApplications } from '@/composables/useVisaApplications'
 import VisaStepper from '@/components/visa/VisaStepper.vue'
 import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
@@ -139,6 +140,7 @@ const route = useRoute()
 const router = useRouter()
 const { submitCompleteApplication, createDraftApplication, loading, error } = useApplication()
 const { currentUser, isAuthenticated } = useAuthApi()
+const { getApplicationById, updateDraftApplication } = useVisaApplications()
 
 // ✅ Get storage key based on route
 const getStorageKey = () => {
@@ -251,11 +253,57 @@ const completeApplicationData = computed(() => {
   const serviceFeePerTraveler = Number(product.serviceFee) || 0
   const processingFeePerTraveler = Number(processingData.value.processingFee) || 0
   
+  // ✅ Ensure applicationId is included if we have a draft
+  const draftId = applicationId.value || (process.client ? parseInt(localStorage.getItem('currentApplicationId') || '0') || undefined : undefined)
+  
+  console.log('🔑 completeApplicationData - applicationId:', draftId || 'NOT SET')
+  
+  // ✅ Ensure visaType is in the correct format for PaymentModal
+  // PaymentModal expects format: "ProductName|entryType" (e.g., "Morocco e-Visa|single")
+  // Check if visaType is in backend format (e.g., "90-single") or PaymentModal format (e.g., "Morocco e-Visa|single")
+  let visaTypeForPayment = tripData.value.visaType
+  
+  // If visaType is in backend format (digits-dash-word like "90-single"), reconstruct PaymentModal format
+  if (visaTypeForPayment && visaTypeForPayment.match(/^\d+-\w+$/)) {
+    // It's in backend format, reconstruct from product
+    const entryType = product.entryType || 'single'
+    visaTypeForPayment = `${product.productName || 'Visa'}|${entryType}`
+    console.log('🔄 Reconstructed visaType for PaymentModal from backend format:', {
+      original: tripData.value.visaType,
+      reconstructed: visaTypeForPayment,
+      productName: product.productName,
+      entryType: entryType
+    })
+  } else if (!visaTypeForPayment || !visaTypeForPayment.includes('|')) {
+    // Construct from product details if missing or invalid
+    const entryType = product.entryType || 'single'
+    const productName = product.productName || product.name || 'Visa'
+    visaTypeForPayment = `${productName}|${entryType}`
+    console.log('⚠️ visaType missing or invalid, constructing from product:', {
+      visaTypeForPayment,
+      productName,
+      entryType,
+      product: product
+    })
+  }
+  
+  // ✅ Final validation - ensure visaType is never empty
+  if (!visaTypeForPayment || !visaTypeForPayment.includes('|')) {
+    console.error('❌ CRITICAL: visaType is still invalid after reconstruction:', visaTypeForPayment)
+    console.error('❌ Product details:', product)
+    // Last resort fallback
+    visaTypeForPayment = `${product.name || product.productName || 'Visa'}|${product.entryType || 'single'}`
+    console.error('❌ Using fallback visaType:', visaTypeForPayment)
+  }
+  
+  console.log('✅ Using visaType for PaymentModal:', visaTypeForPayment)
+  
   return {
+    applicationId: draftId || undefined,
     visaProductId: product.id || null,
     nationality: tripData.value.nationality,
     destinationCountry: destinationCountry.value,
-    visaType: tripData.value.visaType,
+    visaType: visaTypeForPayment,
     numberOfTravelers: numberOfTravelers,
     govtFee: govtFeePerTraveler,
     serviceFee: serviceFeePerTraveler,
@@ -299,7 +347,186 @@ const completeApplicationData = computed(() => {
 // ✅ Setup auto-save when component mounts
 let cleanupAutoSave: (() => void) | null = null
 
-onMounted(() => {
+onMounted(async () => {
+  // Check if we're loading a draft application
+  const draftId = route.query.draftId as string | undefined
+  
+  if (draftId) {
+    // Load draft application from API
+    try {
+      console.log('📋 Loading draft application:', draftId)
+      const response = await getApplicationById(parseInt(draftId))
+      
+      if (response.success && response.data) {
+        const draft: any = response.data.data || response.data
+        const draftData = draft.draftData || {}
+        
+        // Set application ID
+        applicationId.value = draft.id
+        localStorage.setItem('currentApplicationId', String(draft.id))
+        
+        // ✅ Restore from draftData if available, otherwise fall back to main fields
+        if (draftData.step1) {
+          // Restore Step 1 data
+          const step1 = draftData.step1
+          nationalityCountry.value = step1.nationality || draft.nationality || 'Pakistan'
+          destinationCountry.value = step1.destination || draft.destinationCountry || 'Morocco'
+          tripData.value = {
+            nationality: step1.nationality || draft.nationality || '',
+            destination: step1.destination || draft.destinationCountry || '',
+            // ✅ Restore visaType - use original format if available, otherwise construct from product
+            visaType: step1.visaTypeOriginal || step1.visaType || draft.visaType || '',
+            applicants: step1.applicants || draft.numberOfTravelers || 1,
+            email: step1.email || draft.email || '',
+            productDetails: step1.productDetails || (draft as any).visaProduct || null,
+            phoneNumber: step1.phoneNumber || ''
+          }
+          
+          // ✅ If visaType is in backend format (e.g., "90-single"), reconstruct original format for PaymentModal
+          if (tripData.value.visaType && tripData.value.visaType.match(/^\d+-\w+$/)) {
+            // It's in backend format, reconstruct from product
+            const product = tripData.value.productDetails
+            if (product) {
+              const entryType = product.entryType || 'single'
+              tripData.value.visaType = `${product.productName || 'Visa'}|${entryType}`
+              console.log('🔄 Reconstructed visaType for PaymentModal:', tripData.value.visaType)
+            }
+          }
+        } else {
+          // Fallback to main fields
+          nationalityCountry.value = draft.nationality || 'Pakistan'
+          destinationCountry.value = draft.destinationCountry || 'Morocco'
+          tripData.value = {
+            nationality: draft.nationality || '',
+            destination: draft.destinationCountry || '',
+            visaType: draft.visaType || '',
+            applicants: draft.numberOfTravelers || 1,
+            email: draft.email || '',
+            productDetails: (draft as any).visaProduct || null
+          }
+        }
+        
+        // ✅ Restore Step 2 data (travelers)
+        if (draftData.step2 && draftData.step2.travelers) {
+          travelersData.value = {
+            travelers: draftData.step2.travelers
+          }
+        } else if (draft.travelers && Array.isArray(draft.travelers) && draft.travelers.length > 0) {
+          // Fallback to travelers from relations
+          travelersData.value = {
+            travelers: draft.travelers.map((t: any) => ({
+              firstName: t.firstName || '',
+              lastName: t.lastName || '',
+              email: t.email || '',
+              phone: t.phone || '',
+              birthYear: t.dateOfBirth ? new Date(t.dateOfBirth).getFullYear().toString() : '',
+              birthMonth: t.dateOfBirth ? String(new Date(t.dateOfBirth).getMonth() + 1).padStart(2, '0') : '',
+              birthDate: t.dateOfBirth ? String(new Date(t.dateOfBirth).getDate()).padStart(2, '0') : '',
+              receiveUpdates: t.receiveUpdates || false
+            }))
+          }
+        }
+        
+        // ✅ Restore Step 3 data (passport details)
+        if (draftData.step3 && draftData.step3.passportDetails) {
+          passportData.value = {
+            passportDetails: draftData.step3.passportDetails
+          }
+        } else if (draft.travelers && Array.isArray(draft.travelers) && draft.travelers.length > 0) {
+          // Fallback to passport data from travelers
+          passportData.value = {
+            passportDetails: draft.travelers.map((t: any) => ({
+              nationality: t.passportNationality || '',
+              passportNumber: t.passportNumber || '',
+              expiryYear: t.passportExpiryDate ? new Date(t.passportExpiryDate).getFullYear().toString() : '',
+              expiryMonth: t.passportExpiryDate ? String(new Date(t.passportExpiryDate).getMonth() + 1).padStart(2, '0') : '',
+              expiryDate: t.passportExpiryDate ? String(new Date(t.passportExpiryDate).getDate()).padStart(2, '0') : '',
+              residenceCountry: t.residenceCountry || '',
+              hasSchengenVisa: t.hasSchengenVisa ? 'yes' : 'no'
+            }))
+          }
+        }
+        
+        // ✅ Restore Step 4 data (embassy)
+        if (draftData.step4) {
+          embassyData.value = {
+            embassyId: draftData.step4.embassyId || (draft as any).embassyId || null
+          }
+          selectedEmbassy.value = draftData.step4.embassy || null
+        } else if ((draft as any).embassyId) {
+          embassyData.value = {
+            embassyId: (draft as any).embassyId
+          }
+        }
+        
+        // ✅ Restore Step 5 data (processing options)
+        if (draftData.step5) {
+          processingData.value = {
+            processingType: draftData.step5.processingType || draft.processingType || 'standard',
+            processingFee: Number(draftData.step5.processingFee) || Number(draft.processingFee) || 0,
+            processingTime: draftData.step5.processingTime || (draft as any).processingTime || '',
+            processingFeeId: draftData.step5.processingFeeId || (draft as any).processingFeeId || null
+          }
+        } else if (draft.processingType || draft.processingFee) {
+          processingData.value = {
+            processingType: draft.processingType || 'standard',
+            processingFee: Number(draft.processingFee) || 0,
+            processingTime: (draft as any).processingTime || '',
+            processingFeeId: (draft as any).processingFeeId || null
+          }
+        }
+        
+        // ✅ Set current step from draftData or determine from available data
+        if (draftData.currentStep) {
+          currentStep.value = draftData.currentStep
+        } else if (draft.currentStep) {
+          currentStep.value = draft.currentStep
+        } else {
+          // Determine step from available data
+          if (draftData.step5 || (draft.processingType && draft.processingFee)) {
+            currentStep.value = 6 // Review step
+          } else if (draftData.step4 || (draft as any).embassyId) {
+            currentStep.value = 5 // Processing options
+          } else if (draftData.step3 || (draft.travelers && draft.travelers[0]?.passportNumber)) {
+            currentStep.value = 4 // Embassy selection
+          } else if (draftData.step2 || (draft.travelers && draft.travelers.length > 0)) {
+            currentStep.value = 3 // Passport details
+          } else {
+            currentStep.value = 2 // Travelers info
+          }
+        }
+        
+        console.log('✅ Draft application loaded successfully from draftData')
+      } else {
+        console.error('❌ Failed to load draft application')
+        // Fall back to normal initialization
+        initializeForm()
+      }
+    } catch (err) {
+      console.error('❌ Error loading draft application:', err)
+      // Fall back to normal initialization
+      initializeForm()
+    }
+  } else {
+    // Normal initialization
+    initializeForm()
+  }
+  
+  // Setup auto-save watchers
+  cleanupAutoSave = setupAutoSave({
+    currentStep,
+    nationalityCountry,
+    destinationCountry,
+    tripData,
+    travelersData,
+    passportData,
+    embassyData,
+    processingData
+  })
+})
+
+// Helper function to initialize form normally
+const initializeForm = () => {
   // Try to restore from localStorage first
   const savedState = loadState()
   
@@ -329,30 +556,166 @@ onMounted(() => {
     }
   }
   
-  // Setup auto-save watchers
-  cleanupAutoSave = setupAutoSave({
-    currentStep,
-    nationalityCountry,
-    destinationCountry,
-    tripData,
-    travelersData,
-    passportData,
-    embassyData,
-    processingData
-  })
-
   // Restore application ID from localStorage if available
   const savedApplicationId = localStorage.getItem('currentApplicationId')
   if (savedApplicationId) {
     applicationId.value = parseInt(savedApplicationId)
     console.log('✅ Restored application ID from localStorage:', applicationId.value)
   }
+}
+
+// Function to save draft before leaving
+const saveDraftBeforeLeaving = async () => {
+  // Only save if we have minimum required data (email and product)
+  if (!tripData.value.email || !tripData.value.productDetails) {
+    console.log('⚠️ Not enough data to save draft - missing email or product')
+    return
+  }
+
+  try {
+    const product = tripData.value.productDetails
+    const productId = product.id || product.visaProductId
+    
+    if (!productId) {
+      console.log('⚠️ No product ID available for draft')
+      return
+    }
+
+    // Get customer ID if user is authenticated
+    let customerId: number | undefined
+    if (isAuthenticated.value && currentUser.value?.id) {
+      customerId = currentUser.value.id
+    }
+
+    // Parse visa type
+    const visaTypeParts = tripData.value.visaType?.split('|') || []
+    const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+    const duration = Number(product.duration) || Number(product.validity) || 180
+    const visaType = `${duration}-${entryType}`
+
+    // Build complete draftData object with all step data
+    const completeDraftData: any = {
+      step1: tripData.value.email && tripData.value.productDetails ? {
+        nationality: tripData.value.nationality || nationalityCountry.value,
+        destination: destinationCountry.value,
+        visaType: visaType,
+        email: tripData.value.email,
+        applicants: travelersData.value.travelers?.length || tripData.value.applicants || 1,
+        productDetails: tripData.value.productDetails,
+        phoneNumber: tripData.value.phoneNumber || ''
+      } : null,
+      step2: travelersData.value.travelers && travelersData.value.travelers.length > 0 ? {
+        travelers: travelersData.value.travelers
+      } : null,
+      step3: passportData.value.passportDetails && passportData.value.passportDetails.length > 0 ? {
+        passportDetails: passportData.value.passportDetails
+      } : null,
+      step4: embassyData.value.embassyId ? {
+        embassyId: embassyData.value.embassyId,
+        embassy: selectedEmbassy.value
+      } : null,
+      step5: processingData.value.processingType ? {
+        processingType: processingData.value.processingType,
+        processingFee: processingData.value.processingFee,
+        processingFeeId: processingData.value.processingFeeId,
+        processingTime: processingData.value.processingTime
+      } : null,
+      currentStep: currentStep.value
+    }
+
+    // Remove null steps
+    Object.keys(completeDraftData).forEach(key => {
+      if (completeDraftData[key] === null) {
+        delete completeDraftData[key]
+      }
+    })
+
+    // If we already have a draft, update it; otherwise create a new one
+    if (applicationId.value) {
+      console.log('💾 Updating existing draft before leaving:', applicationId.value)
+      await updateDraftApplication(applicationId.value, {
+        visaProductId: productId,
+        nationality: tripData.value.nationality || nationalityCountry.value,
+        destinationCountry: destinationCountry.value,
+        visaType: visaType,
+        numberOfTravelers: travelersData.value.travelers?.length || tripData.value.applicants || 1,
+        email: tripData.value.email,
+        embassyId: embassyData.value.embassyId || null,
+        processingType: processingData.value.processingType || undefined,
+        processingFee: processingData.value.processingFee || undefined,
+        draftData: completeDraftData,
+        currentStep: currentStep.value
+      })
+      console.log('✅ Draft updated successfully with all step data')
+    } else {
+      console.log('💾 Creating new draft before leaving')
+      const createData: any = {
+        visaProductId: productId,
+        nationality: tripData.value.nationality || nationalityCountry.value,
+        destinationCountry: destinationCountry.value,
+        visaType: visaType,
+        numberOfTravelers: travelersData.value.travelers?.length || tripData.value.applicants || 1,
+        email: tripData.value.email,
+        draftData: completeDraftData,
+        currentStep: currentStep.value
+      }
+      
+      if (customerId) {
+        createData.customerId = customerId
+      }
+      
+      const result = await createDraftApplication(createData)
+      if (result && result.id) {
+        applicationId.value = result.id
+        localStorage.setItem('currentApplicationId', result.id.toString())
+        console.log('✅ Draft created successfully with ID:', result.id)
+      }
+    }
+  } catch (err: any) {
+    console.error('❌ Failed to save draft before leaving:', err)
+    // Don't block navigation - just log the error
+  }
+}
+
+// Save draft when user navigates away (route change)
+onBeforeRouteLeave(async (to, from, next) => {
+  console.log('🚪 User navigating away from visa application')
+  await saveDraftBeforeLeaving()
+  next() // Allow navigation to proceed
 })
+
+// Save draft when user closes/refreshes page
+// Note: beforeunload has limited async support, so we use navigator.sendBeacon as fallback
+if (process.client) {
+  const handleBeforeUnload = () => {
+    console.log('🚪 Page unloading, attempting to save draft')
+    // Try to save synchronously - if we have enough data
+    if (tripData.value.email && tripData.value.productDetails && applicationId.value) {
+      // For beforeunload, we can't use async, so we'll rely on periodic saves
+      // But we can at least ensure localStorage is up to date
+      if (applicationId.value) {
+        localStorage.setItem('currentApplicationId', applicationId.value.toString())
+      }
+    }
+  }
+  
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  
+  // Cleanup on unmount
+  onBeforeUnmount(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+  })
+}
 
 // Cleanup watchers on unmount
 onUnmounted(() => {
   if (cleanupAutoSave) {
     cleanupAutoSave()
+  }
+  
+  // Save draft one more time on unmount
+  if (process.client) {
+    saveDraftBeforeLeaving()
   }
 })
 
@@ -365,7 +728,7 @@ const handleBack = () => {
 
 // Step handlers
 // Handle real-time updates from Step 1 (for VisaStats)
-const handleStepOneUpdate = (data: any) => {
+const handleStepOneUpdate = async (data: any) => {
   console.log('🔄 Step 1 update received:', data)
   tripData.value = {
     ...tripData.value,
@@ -374,29 +737,122 @@ const handleStepOneUpdate = (data: any) => {
     email: data.email || tripData.value.email,
     productDetails: data.productDetails
   }
+  
+  // ✅ Auto-create draft when email and product are available (even before completing step 1)
+  if (data.email && data.productDetails && !applicationId.value) {
+    console.log('💾 Auto-creating draft from step 1 update (email + product available)')
+    try {
+      const product = data.productDetails
+      const productId = product.id || product.visaProductId
+      
+      if (productId) {
+        let customerId: number | undefined
+        if (isAuthenticated.value && currentUser.value?.id) {
+          customerId = currentUser.value.id
+        }
+
+        const visaTypeParts = data.visaType?.split('|') || []
+        const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+        const duration = Number(product.duration) || Number(product.validity) || 180
+        
+        // ✅ Map visa type to backend-accepted format
+        // Backend only accepts: 180-single, 180-multiple, or 90-single
+        // Map based on duration and entry type
+        let visaType: string
+        if (duration <= 90) {
+          visaType = '90-single' // For durations <= 90, use 90-single
+        } else {
+          // For durations > 90, use 180-single or 180-multiple based on entry type
+          visaType = entryType === 'multiple' ? '180-multiple' : '180-single'
+        }
+        
+        console.log('🎫 Mapped visaType:', {
+          originalDuration: duration,
+          entryType: entryType,
+          mappedVisaType: visaType
+        })
+
+        const draftData: any = {
+          visaProductId: productId,
+          nationality: data.nationality || nationalityCountry.value,
+          destinationCountry: destinationCountry.value,
+          visaType: visaType,
+          numberOfTravelers: parseInt(data.applicants) || 1,
+          email: data.email,
+          // ✅ Save Step 1 data in draftData
+        draftData: {
+          step1: {
+            nationality: data.nationality || nationalityCountry.value,
+            destination: destinationCountry.value,
+            visaType: visaType, // Backend format (90-single, 180-single, etc.)
+            visaTypeOriginal: data.visaType, // Original format for PaymentModal (ProductName|entryType)
+            email: data.email,
+            applicants: parseInt(data.applicants) || 1,
+            productDetails: data.productDetails,
+            phoneNumber: data.phoneNumber || ''
+          },
+          currentStep: 1
+        },
+          currentStep: 1
+        }
+
+        if (customerId) {
+          draftData.customerId = customerId
+        }
+
+        console.log('📧 Auto-creating draft with Step 1 data:', draftData)
+
+        const result = await createDraftApplication(draftData)
+        if (result && result.id) {
+          applicationId.value = result.id
+          localStorage.setItem('currentApplicationId', result.id.toString())
+          console.log('✅ Auto-created draft with ID:', result.id)
+        }
+      }
+    } catch (err: any) {
+      console.error('❌ Failed to auto-create draft:', err)
+      // Don't block user - just log error
+    }
+  }
+  
   // Don't change step, just update the data
 }
 
 const handleStepOne = async (data: any) => {
   console.log('✅ Step 1 data received:', data)
+  console.log('📋 Step 1 data check:', {
+    hasProductDetails: !!data.productDetails,
+    hasEmail: !!data.email,
+    productDetails: data.productDetails,
+    email: data.email,
+    nationality: data.nationality,
+    visaType: data.visaType
+  })
   
   tripData.value = {
     ...data,
     applicants: parseInt(data.applicants),
     email: data.email || '',
-    productDetails: data.productDetails
+    productDetails: data.productDetails,
+    // ✅ Ensure visaType is preserved in PaymentModal format (ProductName|entryType)
+    visaType: data.visaType || (data.productDetails ? `${data.productDetails.productName || data.productDetails.name || 'Visa'}|${data.productDetails.entryType || 'single'}` : '')
   }
+  
+  console.log('✅ Step 1 - tripData.value.visaType set to:', tripData.value.visaType)
 
   // ✅ Create draft application with email capture
-  if (data.productDetails && data.email) {
+  // Check if we have minimum required data (email is critical, product can be added later)
+  if (data.email) {
     isCreatingDraft.value = true
     try {
+      // Handle case where productDetails might not be available yet
       const product = data.productDetails
-      const productId = product.id || product.visaProductId
+      let productId = product?.id || product?.visaProductId
       
       if (!productId) {
-        console.error('❌ No product ID available')
-        throw new Error('Product ID is required')
+        console.warn('⚠️ No product ID available yet, but creating draft with email')
+        // Still create draft, product can be added later
+        // Use a placeholder or skip product-related fields
       }
 
       // Get customer ID if user is authenticated
@@ -404,50 +860,74 @@ const handleStepOne = async (data: any) => {
       if (isAuthenticated.value && currentUser.value?.id) {
         customerId = currentUser.value.id
         console.log('✅ Using authenticated customer ID:', customerId)
+      } else {
+        console.log('⚠️ User not authenticated - customer will be created from email')
       }
 
+      // ✅ Use the SAME visaType mapping logic as PaymentModal to ensure consistency
       // Parse visa type from the format "productName|entryType"
-      // Backend only accepts: "180-single", "180-multiple", or "90-single"
-      // Map based on entryType (single vs multiple)
       const visaTypeParts = data.visaType?.split('|') || []
       const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
       
-      // Map to backend's accepted visa types based on entryType
-      // Default to 180-single, use 180-multiple for multiple entry, 90-single for 90-day visas
-      let visaType = '180-single' // Default fallback
+      // ✅ Get duration from productDetails (same as PaymentModal)
+      const duration = Number(product.duration) || Number(product.validity) || 180
       
-      if (product) {
-        const duration = Number(product.duration) || Number(product.validity) || 180
-        
-        // Check if it's a 90-day visa
-        if (duration === 90) {
-          visaType = '90-single'
-        } 
-        // Check if it's multiple entry (case-insensitive)
-        else if (entryType === 'multiple') {
-          visaType = '180-multiple'
-        } 
-        // Default to single entry for all other cases
-        else {
-          visaType = '180-single'
-        }
+      // ✅ Map visa type to backend-accepted format
+      // Backend only accepts: 180-single, 180-multiple, or 90-single
+      // Map based on duration and entry type
+      let visaType: string
+      if (duration <= 90) {
+        visaType = '90-single' // For durations <= 90, use 90-single
+      } else {
+        // For durations > 90, use 180-single or 180-multiple based on entry type
+        visaType = entryType === 'multiple' ? '180-multiple' : '180-single'
       }
       
-      console.log('🎫 Mapped visaType:', { 
+      console.log('🎫 Mapped visaType for DRAFT:', { 
         original: data.visaType, 
-        mapped: visaType, 
+        originalDuration: duration,
+        entryType: entryType,
+        mapped: visaType,
         productDuration: product?.duration,
-        productEntryType: product?.entryType,
-        entryType
+        productValidity: product?.validity,
+        productEntryType: product?.entryType
       })
+      console.log('✅ Draft will be created with visaType:', visaType, '(backend-accepted format)')
 
       const draftData: any = {
-        visaProductId: productId,
-        nationality: data.nationality,
-        destinationCountry: destinationCountry.value,
-        visaType: visaType,
-        numberOfTravelers: parseInt(data.applicants) || 1,
         email: data.email,
+        nationality: data.nationality || nationalityCountry.value,
+        destinationCountry: destinationCountry.value,
+        numberOfTravelers: parseInt(data.applicants) || 1,
+        // ✅ Save Step 1 data in draftData
+        draftData: {
+          step1: {
+            nationality: data.nationality || nationalityCountry.value,
+            destination: destinationCountry.value,
+            email: data.email,
+            applicants: parseInt(data.applicants) || 1,
+            phoneNumber: data.phoneNumber || '',
+            ...(data.productDetails && { productDetails: data.productDetails }),
+            ...(data.visaType && { visaType: visaType })
+          },
+          currentStep: 1
+        },
+        currentStep: 1
+      }
+      
+      // Only add product-related fields if product is available
+      if (productId) {
+        draftData.visaProductId = productId
+        draftData.visaType = visaType
+        if (draftData.draftData.step1) {
+          draftData.draftData.step1.visaType = visaType
+        }
+      } else {
+        // If no product selected, we still need visaProductId for backend
+        // Use a default or skip creating draft until product is selected
+        console.warn('⚠️ No product selected - draft will be created without visaProductId')
+        // Backend might require visaProductId, so we'll try without it first
+        // If it fails, we'll catch the error
       }
       
       // Only include customerId if user is authenticated
@@ -455,9 +935,13 @@ const handleStepOne = async (data: any) => {
         draftData.customerId = customerId
       }
 
-      console.log('📧 Creating draft application with email:', draftData)
+      console.log('📧 Creating draft application with Step 1 data:', draftData)
+      console.log('📦 Draft payload:', JSON.stringify(draftData, null, 2))
+      console.log('🔄 Calling createDraftApplication...')
 
       const result = await createDraftApplication(draftData)
+      
+      console.log('📥 createDraftApplication response:', result)
       
       if (result && result.id) {
         applicationId.value = result.id
@@ -467,46 +951,134 @@ const handleStepOne = async (data: any) => {
         // Store application ID in localStorage for persistence
         localStorage.setItem('currentApplicationId', result.id.toString())
       } else {
-        console.warn('⚠️ Draft creation succeeded but no ID returned')
+        console.error('❌ Draft creation succeeded but no ID returned')
+        console.error('❌ Result object:', result)
+        console.error('❌ Result type:', typeof result)
+        console.error('❌ Result keys:', result ? Object.keys(result) : 'result is null/undefined')
       }
     } catch (err: any) {
       console.error('❌ Failed to create draft application:', err)
+      console.error('❌ Error type:', typeof err)
+      console.error('❌ Error details:', {
+        message: err?.message,
+        stack: err?.stack,
+        response: err?.response,
+        data: err?.data,
+        status: err?.status,
+        statusText: err?.statusText
+      })
+      
+      // Log the full error object
+      console.error('❌ Full error object:', err)
+      
       // Don't block user from proceeding - email capture is the main goal
       // If draft creation fails, the email will still be captured in final submission
       console.warn('⚠️ Draft creation failed, but continuing - email will be captured on final submission')
     } finally {
       isCreatingDraft.value = false
+      console.log('🏁 handleStepOne finished, isCreatingDraft set to false')
     }
   } else {
-    console.warn('⚠️ Skipping draft creation - missing product details or email')
+    console.warn('⚠️ Skipping draft creation - missing email')
+    console.warn('📋 Available data:', {
+      hasEmail: !!data.email,
+      hasProductDetails: !!data.productDetails,
+      email: data.email,
+      productDetails: data.productDetails
+    })
   }
 
   currentStep.value = 2
 }
 
-const handleStepTwo = (data: any) => {
+const handleStepTwo = async (data: any) => {
   console.log('✅ Step 2 data saved:', data)
   travelersData.value = { ...data }
+  
+  // ✅ Update draft with Step 2 data (travelers info)
+  if (applicationId.value) {
+    try {
+      await updateDraftApplication(applicationId.value, {
+        numberOfTravelers: data.travelers?.length || tripData.value.applicants || 1,
+        // ✅ Save Step 2 data in draftData
+        draftData: {
+          step2: {
+            travelers: data.travelers || []
+          },
+          currentStep: 2
+        },
+        currentStep: 2
+      })
+      console.log('✅ Draft updated with Step 2 data (travelers)')
+    } catch (err) {
+      console.error('❌ Failed to update draft with Step 2 data:', err)
+      // Don't block user from proceeding
+    }
+  }
+  
   currentStep.value = 3
 }
 
-const handleStepThree = (data: any) => {
+const handleStepThree = async (data: any) => {
   console.log('✅ Step 3 data saved:', data)
   passportData.value = { ...data }
+  
+  // ✅ Update draft with Step 3 data (passport details)
+  if (applicationId.value) {
+    try {
+      await updateDraftApplication(applicationId.value, {
+        // ✅ Save Step 3 data in draftData
+        draftData: {
+          step3: {
+            passportDetails: data.passportDetails || []
+          },
+          currentStep: 3
+        },
+        currentStep: 3
+      })
+      console.log('✅ Draft updated with Step 3 data (passport details)')
+    } catch (err) {
+      console.error('❌ Failed to update draft with Step 3 data:', err)
+      // Don't block user from proceeding
+    }
+  }
+  
   currentStep.value = 4
 }
 
-const handleStepFour = (data: any) => {
+const handleStepFour = async (data: any) => {
   console.log('✅ Step 4 (Embassy) data received:', data)
   embassyData.value = { embassyId: data.embassyId }
   
   // Store embassy info if available (for display in review)
   selectedEmbassy.value = data.embassy || null
   
+  // ✅ Update draft with Step 4 data (embassy selection)
+  if (applicationId.value) {
+    try {
+      await updateDraftApplication(applicationId.value, {
+        embassyId: data.embassyId || null,
+        // ✅ Save Step 4 data in draftData
+        draftData: {
+          step4: {
+            embassyId: data.embassyId || null,
+            embassy: data.embassy || null
+          },
+          currentStep: 4
+        },
+        currentStep: 4
+      })
+      console.log('✅ Draft updated with Step 4 data (embassy selection)')
+    } catch (err) {
+      console.error('❌ Failed to update draft with Step 4 data:', err)
+      // Don't block user from proceeding
+    }
+  }
+  
   currentStep.value = 5
 }
 
-const handleStepFive = (data: any) => {
+const handleStepFive = async (data: any) => {
   console.log('✅ Step 5 (Processing Time) data received:', data)
   processingData.value = { 
     processingFeeId: data.processingFeeId,
@@ -514,15 +1086,50 @@ const handleStepFive = (data: any) => {
     processingTime: data.processingTime,
     processingFee: data.processingFee
   }
+  
+  // ✅ Update draft with Step 5 data (processing options)
+  if (applicationId.value) {
+    try {
+      await updateDraftApplication(applicationId.value, {
+        processingType: data.processingType,
+        processingFee: Number(data.processingFee) || 0,
+        processingFeeId: data.processingFeeId || null,
+        processingTime: data.processingTime || '',
+        // ✅ Save Step 5 data in draftData
+        draftData: {
+          step5: {
+            processingType: data.processingType,
+            processingFee: Number(data.processingFee) || 0,
+            processingFeeId: data.processingFeeId || null,
+            processingTime: data.processingTime || ''
+          },
+          currentStep: 5
+        },
+        currentStep: 5
+      })
+      console.log('✅ Draft updated with Step 5 data (processing options)')
+    } catch (err) {
+      console.error('❌ Failed to update draft with Step 5 data:', err)
+      // Don't block user from proceeding
+    }
+  }
+  
   currentStep.value = 6
 }
 
 const handleStepSix = async (result: any) => {
   console.log('✅ Payment completed, application submitted:', result)
+  console.log('🔑 Final applicationId that was submitted:', applicationId.value)
+  
   // Clear saved data after successful submission
   clearState()
-  // Clear application ID from localStorage
-  localStorage.removeItem('currentApplicationId')
-  applicationId.value = null
+  
+  // ✅ Clear application ID from localStorage AFTER successful submission
+  // This ensures the draft is finalized and won't be reused
+  if (applicationId.value) {
+    console.log('🗑️ Clearing draft applicationId:', applicationId.value)
+    localStorage.removeItem('currentApplicationId')
+    applicationId.value = null
+  }
 }
 </script>

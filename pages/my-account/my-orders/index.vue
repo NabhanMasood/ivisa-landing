@@ -149,6 +149,14 @@
               <TableCell>
                 <div class="flex items-center gap-2">
                   <Button 
+                    v-if="getEffectiveStatus(order) === 'draft'"
+                    @click="continueDraftApplication(order.id)"
+                    class="h-8 px-3 rounded-md text-white text-xs font-medium"
+                    style="background-color: #1ECE84;"
+                  >
+                    Continue
+                  </Button>
+                  <Button 
                   v-if="(getEffectiveStatus(order) === 'resubmission' || getEffectiveStatus(order) === 'Additional Info required') && !isAdditionalInfoSubmitted(order.id)"
                   @click="navigateToAdditionalInfo(order.id)"
                   class="h-8 px-3 rounded-md text-white text-xs font-medium"
@@ -326,6 +334,11 @@ const viewOrder = (order: any) => {
 
 const navigateToAdditionalInfo = (applicationId: number) => {
   router.push(`/my-account/additional-info?applicationId=${applicationId}`)
+}
+
+const continueDraftApplication = (applicationId: number) => {
+  // Navigate to visa application form with draft ID
+  router.push(`/visa-application?draftId=${applicationId}`)
 }
 
 const toggleOrderSelection = (id: number) => {
