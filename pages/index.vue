@@ -1,5 +1,6 @@
 <template>
     <Hero />
+    <ApplicationProcess />
     <WhyChooseUs />
     <WorldWide />
     <ApplicationForm />
