@@ -804,7 +804,8 @@ const transformApplicationData = (applicationData: any) => {
     visaType = `${duration}-${entryType}`;
   }
 
-  console.log("✅ Visa type:", visaType);
+  console.log("✅ Visa type for SUBMISSION:", visaType);
+  console.log("⚠️ NOTE: This visaType will be sent to backend. If draft was created with different visaType, backend might not match it.");
 
   // Use processing type as-is from backend (no transformation)
   const processingType = applicationData.processingType || "standard";
@@ -902,6 +903,8 @@ const transformApplicationData = (applicationData: any) => {
 
   // Build the final payload with TOTAL amounts
   const payload: any = {
+    // ✅ CRITICAL: Preserve applicationId if provided (used to finalize existing draft)
+    applicationId: applicationData.applicationId || undefined,
     visaProductId: applicationData.visaProductId || null,
     nationality: applicationData.nationality || "",
     destinationCountry: applicationData.destinationCountry || "",
@@ -922,6 +925,9 @@ const transformApplicationData = (applicationData: any) => {
     paymentStatus: "pending",
     notes: applicationData.notes || "",
   };
+  
+  // ✅ Log applicationId specifically for debugging
+  console.log("🔑 applicationId in transformed payload:", payload.applicationId || "❌ MISSING - Will create new record");
 
   // ✅ CRITICAL: Include customerId if user is logged in
   // This ensures the application is associated with the correct customer
@@ -1112,20 +1118,27 @@ const handlePayment = async () => {
     transformedData.payment = paymentData;
 
     console.log("🌐 Making API call to submit application...");
-    console.log(
-      "📤 Payload being sent to backend:",
-      JSON.stringify(transformedData, null, 2)
-    );
+    console.log("=".repeat(80));
+    console.log("📤 COMPLETE PAYLOAD BEING SENT TO /visa-applications/submit-complete:");
+    console.log("=".repeat(80));
+    console.log(JSON.stringify(transformedData, null, 2));
+    console.log("=".repeat(80));
+    
+    // ✅ CRITICAL: Log applicationId specifically
+    console.log("🔑 applicationId in payload:", transformedData.applicationId || "❌ MISSING");
+    console.log("👤 customerId in payload:", transformedData.customerId || "❌ MISSING");
+    console.log("🎫 visaProductId in payload:", transformedData.visaProductId);
+    console.log("🌍 destinationCountry in payload:", transformedData.destinationCountry);
+    console.log("🌍 nationality in payload:", transformedData.nationality);
+    console.log("🎫 visaType in payload:", transformedData.visaType);
+    console.log("👥 numberOfTravelers in payload:", transformedData.numberOfTravelers);
     console.log("💰 totalAmount in payload:", transformedData.totalAmount);
-    console.log(
-      "💰 payment.amount in payload:",
-      transformedData.payment.amount
-    );
-    console.log(
-      "💰 discountAmount in payload:",
-      transformedData.discountAmount
-    );
-    console.log("💰 couponCode in payload:", transformedData.couponCode);
+    console.log("💰 payment.amount in payload:", transformedData.payment.amount);
+    console.log("💰 discountAmount in payload:", transformedData.discountAmount || 0);
+    console.log("💰 couponCode in payload:", transformedData.couponCode || null);
+    console.log("📞 First traveler phone:", transformedData.travelers?.[0]?.phone || "❌ MISSING");
+    console.log("📧 First traveler email:", transformedData.travelers?.[0]?.email || "❌ MISSING");
+    console.log("=".repeat(80));
 
     // ✅ FINAL VERIFICATION: Check phone numbers before sending
     if (transformedData.travelers && transformedData.travelers.length > 0) {

@@ -63,6 +63,15 @@ export interface ChangeEmailResponse {
   message: string
 }
 
+export interface DeleteAccountDto {
+  password: string
+}
+
+export interface DeleteAccountResponse {
+  status: boolean
+  message: string
+}
+
 /**
  * Login Response
  */
@@ -85,11 +94,11 @@ export interface RegisterResponse {
  */
 export const useAuthApi = () => {
   const api = useApi()
-  
+
   // Reactive state for current user
   // Initialize as null, we'll sync from cookie on client side
   const currentUser = useState<Admin | null>('currentUser', () => null)
-  
+
   // Sync currentUser from cookie on client side
   // This runs every time the composable is used on the client
   if (process.client) {
@@ -140,13 +149,13 @@ export const useAuthApi = () => {
   const register = async (data: RegisterDto): Promise<ApiResponse<RegisterResponse>> => {
     console.log('🔵 useAuthApi.register called')
     console.log('📦 Data to send:', data)
-    
+
     try {
-      
+
       const response = await api.post('/auth/customer/register', data)
 
       console.log('✅ Response received:', response)
-      
+
       return {
         data: response.data,
         message: response.data.message || 'Registration successful',
@@ -170,11 +179,11 @@ export const useAuthApi = () => {
   const login = async (data: LoginDto): Promise<ApiResponse<LoginResponse>> => {
     console.log('🔵 useAuthApi.login called')
     console.log('📦 Data to send:', data)
-    
-    try {
-      const response = await api.post('/auth/customer/login', data) 
 
-      
+    try {
+      const response = await api.post('/auth/customer/login', data)
+
+
       if (!response.data.token) {
         throw new Error('No token received from server')
       }
@@ -187,7 +196,7 @@ export const useAuthApi = () => {
         path: '/'
       })
       tokenCookie.value = response.data.token
-      
+
       // Store admin info
       // Note: Nuxt's useCookie may auto-serialize, so we handle both string and object when reading
       const adminCookie = useCookie('admin_info', {
@@ -198,10 +207,10 @@ export const useAuthApi = () => {
       })
       // Always stringify to ensure it's stored as a string
       adminCookie.value = JSON.stringify(response.data.admin)
-      
+
       // Update reactive state
       currentUser.value = response.data.admin
-      
+
       return {
         data: response.data,
         message: response.data.message || 'Login successful',
@@ -225,11 +234,11 @@ export const useAuthApi = () => {
   const logout = async () => {
     const tokenCookie = useCookie('auth_token')
     const adminCookie = useCookie('admin_info')
-    
+
     tokenCookie.value = null
     adminCookie.value = null
     currentUser.value = null
-    
+
     await navigateTo('/login')
   }
 
@@ -238,14 +247,14 @@ export const useAuthApi = () => {
    */
   const refreshUser = () => {
     if (process.server) return
-    
+
     console.log('🔄 Refreshing user data...')
     const adminCookie = useCookie('admin_info')
     const tokenCookie = useCookie('auth_token')
-    
+
     console.log('🔑 Token exists:', !!tokenCookie.value)
     console.log('👤 Admin cookie exists:', !!adminCookie.value)
-    
+
     if (adminCookie.value) {
       try {
         // Handle both string and object cases (Nuxt might auto-deserialize)
@@ -287,11 +296,11 @@ export const useAuthApi = () => {
   const changePassword = async (data: ChangePasswordDto): Promise<ApiResponse<ChangePasswordResponse>> => {
     console.log('🔵 useAuthApi.changePassword called')
     console.log('📦 Data to send:', { ...data, currentPassword: '***', newPassword: '***' })
-    
+
     try {
       // Refresh user data first to ensure it's up to date
       refreshUser()
-      
+
       // Get customerId from currentUser
       if (!currentUser.value || !currentUser.value.id) {
         console.error('❌ User not authenticated - currentUser:', currentUser.value)
@@ -300,7 +309,7 @@ export const useAuthApi = () => {
 
       const customerId = currentUser.value.id
       console.log('👤 Changing password for customer:', customerId)
-      
+
       // Verify token exists
       const token = getToken()
       if (!token) {
@@ -330,10 +339,10 @@ export const useAuthApi = () => {
         status: error?.response?.status,
         statusText: error?.response?.statusText
       })
-      
+
       // Extract more detailed error message
       let errorMessage = 'Failed to change password'
-      
+
       // Check for backend error message first (even for 401, as it might be password validation)
       if (error?.response?._data?.message) {
         errorMessage = error.response._data.message
@@ -347,7 +356,7 @@ export const useAuthApi = () => {
       } else {
         errorMessage = handleApiError(error)
       }
-      
+
       return {
         data: null as any,
         message: errorMessage,
@@ -363,11 +372,11 @@ export const useAuthApi = () => {
   const changeEmail = async (data: ChangeEmailDto): Promise<ApiResponse<ChangeEmailResponse>> => {
     console.log('🔵 useAuthApi.changeEmail called')
     console.log('📦 Data to send:', { ...data, password: '***' })
-    
+
     try {
       // Refresh user data first to ensure it's up to date
       refreshUser()
-      
+
       // Get customerId from currentUser
       if (!currentUser.value || !currentUser.value.id) {
         console.error('❌ User not authenticated - currentUser:', currentUser.value)
@@ -376,7 +385,7 @@ export const useAuthApi = () => {
 
       const customerId = currentUser.value.id
       console.log('👤 Changing email for customer:', customerId)
-      
+
       // Verify token exists
       const token = getToken()
       if (!token) {
@@ -395,7 +404,7 @@ export const useAuthApi = () => {
       // Update the current user's email in state and cookie
       if (currentUser.value) {
         currentUser.value.email = data.newEmail.toLowerCase()
-        
+
         // Update cookie
         const adminCookie = useCookie('admin_info', {
           maxAge: 60 * 60 * 24 * 7,
@@ -420,10 +429,10 @@ export const useAuthApi = () => {
         status: error?.response?.status,
         statusText: error?.response?.statusText
       })
-      
+
       // Extract more detailed error message
       let errorMessage = 'Failed to change email'
-      
+
       // Check for backend error message first (even for 401, as it might be password validation)
       if (error?.response?._data?.message) {
         errorMessage = error.response._data.message
@@ -437,7 +446,85 @@ export const useAuthApi = () => {
       } else {
         errorMessage = handleApiError(error)
       }
-      
+
+      return {
+        data: null as any,
+        message: errorMessage,
+        success: false,
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
+   * Delete account
+   */
+  const deleteAccount = async (data: DeleteAccountDto): Promise<ApiResponse<DeleteAccountResponse>> => {
+    console.log('🔴 useAuthApi.deleteAccount called')
+    console.log('📦 Data to send:', { password: '***' })
+
+    try {
+      // Refresh user data first to ensure it's up to date
+      refreshUser()
+
+      // Get customerId from currentUser
+      if (!currentUser.value || !currentUser.value.id) {
+        console.error('❌ User not authenticated - currentUser:', currentUser.value)
+        throw new Error('User not authenticated. Please refresh the page and try again.')
+      }
+
+      const customerId = currentUser.value.id
+      console.log('👤 Deleting account for customer:', customerId)
+
+      // Verify token exists
+      const token = getToken()
+      if (!token) {
+        console.error('❌ No auth token found')
+        throw new Error('Authentication token not found. Please log in again.')
+      }
+      console.log('🔑 Token verified, making API call...')
+
+      const response = await api.delete<DeleteAccountResponse>(
+        `/auth/customer/${customerId}/delete-account`,
+        { data }
+      )
+
+      console.log('✅ Account deleted successfully:', response)
+
+      // Logout user after successful deletion
+      logout()
+
+      return {
+        data: response.data,
+        message: response.data.message || 'Account deleted successfully',
+        success: true,
+      }
+    } catch (error: any) {
+      console.error('❌ Delete account error:', error)
+      console.error('❌ Error details:', {
+        message: error?.message,
+        response: error?.response,
+        data: error?.data,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText
+      })
+
+      // Extract more detailed error message
+      let errorMessage = 'Failed to delete account'
+
+      // Check for backend error message first
+      if (error?.response?._data?.message) {
+        errorMessage = error.response._data.message
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please log in again.'
+      } else if (error?.message) {
+        errorMessage = error.message
+      } else {
+        errorMessage = handleApiError(error)
+      }
+
       return {
         data: null as any,
         message: errorMessage,
@@ -455,6 +542,7 @@ export const useAuthApi = () => {
     getToken,
     changePassword,
     changeEmail,
+    deleteAccount,
     currentUser,
     isAuthenticated,
   }

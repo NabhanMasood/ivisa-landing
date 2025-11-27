@@ -1,4 +1,5 @@
 import { useApi, handleApiError, type ApiResponse } from './useApi'
+import { getCachedData, setCachedData, CACHE_KEYS } from './useCache'
 
 /**
  * Nationality interface
@@ -67,10 +68,10 @@ export const useNationalitiesApi = () => {
   const createNationality = async (data: CreateNationalityDto): Promise<ApiResponse<Nationality>> => {
     try {
       const response = await api.post<Nationality | { status: boolean; message: string; data: Nationality }>('/nationalities', data)
-      
+
       // Handle different response structures
       let nationalityData: Nationality
-      
+
       if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
         // Response has wrapper structure { status, message, data }
         const wrappedResponse = response.data as { status: boolean; message: string; data: Nationality }
@@ -83,7 +84,7 @@ export const useNationalitiesApi = () => {
         // Direct nationality object
         nationalityData = response.data as Nationality
       }
-      
+
       return {
         data: nationalityData,
         message: 'Nationality created successfully',
@@ -101,7 +102,7 @@ export const useNationalitiesApi = () => {
   const getNationalities = async (): Promise<ApiResponse<Nationality[]>> => {
     try {
       const response = await api.get<NationalitiesListResponse | Nationality[]>('/nationalities')
-      
+
       // Handle different response structures
       if (Array.isArray(response.data)) {
         // Direct array response
@@ -125,7 +126,7 @@ export const useNationalitiesApi = () => {
           success: false,
         }
       }
-      
+
       return {
         data: [],
         message: 'No nationalities found',
@@ -143,10 +144,10 @@ export const useNationalitiesApi = () => {
   const getNationalityById = async (id: number | string): Promise<ApiResponse<Nationality>> => {
     try {
       const response = await api.get<Nationality | { status: boolean; message: string; data: Nationality }>(`/nationalities/${id}`)
-      
+
       // Handle different response structures
       let nationalityData: Nationality
-      
+
       if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
         // Response has wrapper structure { status, message, data }
         const wrappedResponse = response.data as { status: boolean; message: string; data: Nationality }
@@ -159,7 +160,7 @@ export const useNationalitiesApi = () => {
         // Direct nationality object
         nationalityData = response.data as Nationality
       }
-      
+
       return {
         data: nationalityData,
         success: true,
@@ -179,10 +180,10 @@ export const useNationalitiesApi = () => {
   ): Promise<ApiResponse<Nationality>> => {
     try {
       const response = await api.patch<Nationality | { status: boolean; message: string; data: Nationality }>(`/nationalities/${id}`, data)
-      
+
       // Handle different response structures
       let nationalityData: Nationality
-      
+
       if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
         // Response has wrapper structure { status, message, data }
         const wrappedResponse = response.data as { status: boolean; message: string; data: Nationality }
@@ -195,7 +196,7 @@ export const useNationalitiesApi = () => {
         // Direct nationality object
         nationalityData = response.data as Nationality
       }
-      
+
       return {
         data: nationalityData,
         message: 'Nationality updated successfully',
@@ -212,7 +213,7 @@ export const useNationalitiesApi = () => {
   const deleteNationality = async (id: number | string): Promise<ApiResponse<void>> => {
     try {
       await api.delete(`/nationalities/${id}`)
-      
+
       return {
         data: undefined,
         message: 'Nationality deleted successfully',
@@ -232,7 +233,7 @@ export const useNationalitiesApi = () => {
     try {
       const url = searchQuery ? `/nationalities/list?q=${encodeURIComponent(searchQuery)}` : '/nationalities/list'
       const response = await api.get<{ status: boolean; message: string; data: Array<{ nationality: string; destinations: number }> }>(url)
-      
+
       // Handle the response structure
       if (response.data.status && response.data.data) {
         return {
@@ -241,7 +242,7 @@ export const useNationalitiesApi = () => {
           success: true,
         }
       }
-      
+
       return {
         data: [],
         message: response.data.message || 'No nationalities found',
@@ -260,7 +261,7 @@ export const useNationalitiesApi = () => {
     try {
       const url = `/nationalities/destinations?nationality=${encodeURIComponent(nationality)}`
       const response = await api.get<{ status: boolean; message: string; data: Array<{ destination: string; products: number }> }>(url)
-      
+
       // Handle the response structure
       if (response.data.status && response.data.data) {
         return {
@@ -269,7 +270,7 @@ export const useNationalitiesApi = () => {
           success: true,
         }
       }
-      
+
       return {
         data: [],
         message: response.data.message || 'No destinations found',
@@ -283,8 +284,13 @@ export const useNationalitiesApi = () => {
   /**
    * Get products for a nationality-destination
    * GET http://localhost:5000/nationalities/Pakistan/germany/products
+   * Uses caching to improve performance
    */
-  const getNationalityDestinationProducts = async (nationality: string, destination: string): Promise<ApiResponse<Array<{
+  const getNationalityDestinationProducts = async (
+    nationality: string,
+    destination: string,
+    forceRefresh: boolean = false
+  ): Promise<ApiResponse<Array<{
     id?: number | string;
     productName: string;
     duration: number;
@@ -294,24 +300,55 @@ export const useNationalitiesApi = () => {
     serviceFee?: number | string;
   }>>> => {
     try {
+      // Create cache key based on nationality and destination
+      const cacheKey = `${CACHE_KEYS.VISA_PRODUCTS}_${nationality}_${destination}`.toLowerCase()
+
+      // Try to get from cache first (unless forcing refresh)
+      if (!forceRefresh) {
+        const cached = getCachedData<Array<any>>(cacheKey)
+        if (cached) {
+          console.log(`✅ Using cached products for ${nationality} -> ${destination}`)
+          return {
+            data: cached,
+            message: 'Products loaded from cache',
+            success: true,
+          }
+        }
+      }
+
+      // Fetch from API
       const url = `/nationalities/${encodeURIComponent(nationality)}/${encodeURIComponent(destination)}/products`
       const response = await api.get<{ status: boolean; message: string; data: Array<any> }>(url)
-      
+
       // Handle the response structure
       if (response.data.status && response.data.data) {
+        // Cache the data for 5 minutes
+        setCachedData(cacheKey, response.data.data, 5 * 60 * 1000)
+
         return {
           data: response.data.data,
           message: response.data.message,
           success: true,
         }
       }
-      
+
       return {
         data: [],
         message: response.data.message || 'No products found',
         success: false,
       }
     } catch (error) {
+      // If API fails, try to return cached data as fallback
+      const cacheKey = `${CACHE_KEYS.VISA_PRODUCTS}_${nationality}_${destination}`.toLowerCase()
+      const cached = getCachedData<Array<any>>(cacheKey)
+      if (cached) {
+        console.warn(`⚠️ API failed, using cached products for ${nationality} -> ${destination}`)
+        return {
+          data: cached,
+          message: 'Products loaded from cache (API unavailable)',
+          success: true,
+        }
+      }
       throw new Error(handleApiError(error))
     }
   }

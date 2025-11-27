@@ -167,7 +167,7 @@
   
   <!-- Image: width: 148, height: 145, border-radius: 16px -->
   <div class="w-24 h-24 sm:w-[120px] sm:h-[120px] md:w-[148px] md:h-[145px] flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden">
-    <img src="/images/us-flag.png" alt="UAE office" class="w-full h-full object-cover" />
+    <img src="/images/uae-flag.jpg" alt="UAE office" class="w-full h-full object-cover" />
   </div>
 
   <!-- Details: width: 978, height: 145, gap: 5px -->

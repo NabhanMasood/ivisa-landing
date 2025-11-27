@@ -5,6 +5,7 @@
       <slot />
     </main>
     <Footer v-if="!hideFooter" />
+    <WhatsAppButton />
   </div>
 </template>
 

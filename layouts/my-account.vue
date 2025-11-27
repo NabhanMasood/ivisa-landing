@@ -1,5 +1,6 @@
 <template>
     <NuxtPage />
+    <WhatsAppButton />
   </template>
   
   <script setup>
