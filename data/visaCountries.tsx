@@ -27,7 +27,7 @@ export interface VisaType {
     Schengen: {
       name: 'Schengen',
       flag: '🇪🇺',
-      heroImage: '/images/turkey-article.jpg',
+      heroImage: '/images/germany-bg.jpg',
       title: 'Discover Europe with One Visa',
       introduction: "Dreaming of your next European adventure? Whether it's gliding through Venice's canals, attending a conference in Paris, or reuniting with loved ones in Spain — the Schengen Visa (Type C) is your single ticket to 29 European countries.",
       sections: {
@@ -69,7 +69,7 @@ export interface VisaType {
     UK: {
       name: 'UK ETA',
       flag: '🇬🇧',
-      heroImage: '/images/uk-article.jpg',
+      heroImage: '/images/uk-bg.jpg',
       title: 'Travel to the UK with ETA',
       introduction: "Planning a trip to the United Kingdom? The UK ETA (Electronic Travel Authorisation) is your digital gateway to exploring England, Scotland, Wales, and Northern Ireland. Whether you're visiting for tourism, business, short-term study, or transit, this online authorization simplifies your entry process.",
       sections: {
@@ -106,7 +106,7 @@ export interface VisaType {
     USA: {
       name: 'US ESTA',
       flag: '🇺🇸',
-      heroImage: '/images/usa-article.jpg',
+      heroImage: '/images/usa-bg.jpg',
       title: 'Travel to the USA with ESTA',
       introduction: "Ready to explore the United States? The US ESTA (Electronic System for Travel Authorization) is your digital travel authorization for visiting America. Whether you're planning a vacation, business trip, or transit through the US, ESTA allows eligible travelers from Visa Waiver Program countries to visit for up to 90 days without a traditional visa.",
       sections: {
@@ -178,7 +178,7 @@ export interface VisaType {
     Morocco: {
       name: 'Morocco eVisa',
       flag: '🇲🇦',
-      heroImage: '/images/morocco-article.jpg',
+      heroImage: '/images/morocco-bg.jpg',
       title: 'Travel to Morocco with eVisa',
       introduction: "Ready to explore the vibrant culture and stunning landscapes of Morocco? The Morocco eVisa is your fully online electronic visa that's digitally linked to your passport. With approval in as fast as 24 to 72 hours and no embassy visits required, getting your Morocco eVisa is quick, easy, and convenient.",
       sections: {
