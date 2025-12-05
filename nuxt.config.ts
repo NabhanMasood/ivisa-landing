@@ -38,7 +38,7 @@ export default defineNuxtConfig({
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
         },
-        // 👇 Preload payment strip SVG
+        // 👇 Preload payment strip SVGg
         {
           rel: "preload",
           href: "/svg/payment-strip.svg",
