@@ -1420,7 +1420,8 @@ const handleSubmit = async () => {
   try {
     // First, upload files for negative field IDs (admin-created custom fields)
     // These need to be uploaded during submission since the upload endpoint doesn't support negative IDs
-    const negativeFieldUploads = fields.value
+    // Use sortedFields to maintain the same order as displayed in the form
+    const negativeFieldUploads = sortedFields.value
       .filter((field): field is VisaProductFieldWithResponse & { id: number } => 
         field.id !== undefined && field.fieldType === "upload" && field.id < 0
       )
@@ -1503,8 +1504,9 @@ const handleSubmit = async () => {
     }
 
     // Now build responses with uploaded file paths
+    // Use sortedFields to maintain the same order as displayed in the form
     // Filter out fields without IDs
-    const responses = fields.value
+    const responses = sortedFields.value
       .filter((field): field is VisaProductFieldWithResponse & { id: number } => field.id !== undefined)
       .map((field) => {
         const response: any = {
