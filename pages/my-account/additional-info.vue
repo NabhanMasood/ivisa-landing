@@ -647,7 +647,7 @@ const yearOptions = Array.from({ length: 100 }, (_, i) => ({
 const sortedFields = computed(() => {
   // Filter out fields without IDs, deduplicate by ID, and sort by displayOrder
   const seenIds = new Set<number>();
-  return [...fields.value]
+  const sorted = [...fields.value]
     .filter((field): field is VisaProductFieldWithResponse & { id: number } => {
       if (field.id === undefined) return false;
       // Deduplicate: only include first occurrence of each ID
@@ -659,6 +659,18 @@ const sortedFields = computed(() => {
       return true;
     })
     .sort((a, b) => a.displayOrder - b.displayOrder);
+  
+  // Debug: Log field order to help diagnose issues
+  if (sorted.length > 0) {
+    console.log('📋 Sorted fields order:', sorted.map(f => ({
+      id: f.id,
+      displayOrder: f.displayOrder,
+      question: f.question,
+      fieldType: f.fieldType
+    })));
+  }
+  
+  return sorted;
 });
 
 // All travelers (removed application-level tab as it's duplicate of first traveler)
@@ -1132,8 +1144,19 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
 
   if (!file) return;
 
-  const field = fields.value.find((f) => f.id === fieldId);
-  if (!field) return;
+  // Use sortedFields to find the field to ensure we get the correct field
+  // This matches the order displayed in the form
+  const field = sortedFields.value.find((f) => f.id === fieldId);
+  if (!field) {
+    console.error(`Field not found for fieldId: ${fieldId}`);
+    return;
+  }
+
+  // Validate that this is actually an upload field
+  if (field.fieldType !== "upload") {
+    console.error(`Field ${fieldId} (${field.question}) is not an upload field. Field type: ${field.fieldType}`);
+    return;
+  }
 
   // Initialize formResponses entry if it doesn't exist (for negative IDs)
   if (!formResponses[fieldId]) {
@@ -1266,10 +1289,28 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
     const baseUrl = (config.public.apiBase as string).replace(/\/+$/, "");
     const token = getAuthToken();
 
+    // Debug: Log upload details
+    console.log('📤 Uploading file:', {
+      fieldId,
+      fieldQuestion: field.question,
+      fieldType: field.fieldType,
+      displayOrder: field.displayOrder,
+      fileName: file.name,
+      fileSize: file.size
+    });
+
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadEndpoint = `/visa-product-fields/upload?fieldId=${fieldId}`;
+    // Include applicationId and travelerId to help backend identify the correct field
+    // This ensures the backend can verify the field in the correct context
+    let uploadEndpoint = `/visa-product-fields/upload?fieldId=${fieldId}`;
+    if (applicationId.value) {
+      uploadEndpoint += `&applicationId=${applicationId.value}`;
+    }
+    if (selectedTravelerId.value) {
+      uploadEndpoint += `&travelerId=${selectedTravelerId.value}`;
+    }
 
     const response = await fetch(`${baseUrl}${uploadEndpoint}`, {
       method: "POST",
@@ -1281,12 +1322,25 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
 
     if (!response.ok) {
       let errorMessage = `Upload failed with status ${response.status}`;
+      let errorDetails: any = null;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        errorDetails = await response.json();
+        errorMessage = errorDetails.message || errorDetails.error || errorMessage;
       } catch {
         errorMessage = response.statusText || errorMessage;
       }
+      
+      // Log detailed error for debugging
+      console.error('❌ Upload failed:', {
+        fieldId,
+        fieldQuestion: field.question,
+        fieldType: field.fieldType,
+        displayOrder: field.displayOrder,
+        status: response.status,
+        errorMessage,
+        errorDetails
+      });
+      
       throw new Error(errorMessage);
     }
 
