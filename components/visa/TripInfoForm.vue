@@ -378,16 +378,7 @@ const filteredNationalityOptions = computed(() => {
   );
 });
 
-// ✅ Filtered nationality options based on search query
-const filteredNationalityOptions = computed(() => {
-  if (!nationalitySearchQuery.value.trim()) {
-    return nationalityOptions.value;
-  }
-  const query = nationalitySearchQuery.value.toLowerCase().trim();
-  return nationalityOptions.value.filter((country) =>
-    country.countryName.toLowerCase().includes(query)
-  );
-});
+
 
 // ✅ Handle flag loading errors
 const handleFlagError = (event: Event) => {
