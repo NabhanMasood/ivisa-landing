@@ -29,7 +29,7 @@
 
       <!-- Empty State -->
       <div
-        v-else-if="!fields || fields.length === 0"
+        v-else-if="!loading && (!fields || fields.length === 0 || sortedFields.length === 0)"
         class="bg-white rounded-xl shadow-sm p-6 sm:p-12 text-center border"
       >
         <div class="max-w-md mx-auto">
@@ -56,6 +56,10 @@
           <p class="text-sm sm:text-base text-gray-600 mb-6">
             There are no additional fields to fill for this application.
           </p>
+          <!-- Debug info -->
+          <div v-if="fields && fields.length > 0" class="text-xs text-gray-500 mt-4">
+            Debug: {{ fields.length }} fields loaded, but {{ sortedFields.length }} visible for selected traveler
+          </div>
         </div>
       </div>
 
@@ -120,7 +124,7 @@
           >
             <button
               v-for="(traveler, index) in allTravelers"
-              :key="traveler.id || `traveler-${index}`"
+              :key="`traveler-${traveler.id || 'no-id'}-${index}-${traveler.firstName || ''}-${traveler.lastName || ''}`"
               @click="selectTraveler(traveler.id || null, index)"
               class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors relative"
               :class="[
@@ -170,7 +174,7 @@
                   :class="shouldHighlightField(field) ? 'text-red-600' : ''"
                   style="font-family: Inter; letter-spacing: -0.006em"
                 >
-                  {{ field.question }}
+                  {{ getFieldLabel(field) }}
                   <span v-if="field.isRequired" class="text-red-500">*</span>
                   <span
                     v-if="shouldHighlightField(field)"
@@ -184,7 +188,7 @@
                   v-if="field.fieldType === 'text'"
                   :model-value="formResponses[field.id]?.value ?? ''"
                   @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
-                  :placeholder="field.question"
+                  :placeholder="getFieldLabel(field)"
                   class="w-full h-9 border"
                   :class="
                     shouldHighlightField(field)
@@ -203,7 +207,7 @@
                   :model-value="formResponses[field.id]?.value ?? ''"
                   @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
                   type="number"
-                  :placeholder="field.question"
+                  :placeholder="getFieldLabel(field)"
                   class="w-full h-9 border"
                   :class="
                     shouldHighlightField(field)
@@ -221,7 +225,7 @@
                   v-else-if="field.fieldType === 'textarea'"
                   :value="formResponses[field.id]?.value ?? ''"
                   @input="(e: Event) => { const resp = formResponses[field.id!]; if (resp) resp.value = (e.target as HTMLTextAreaElement).value }"
-                  :placeholder="field.question"
+                  :placeholder="getFieldLabel(field)"
                   class="w-full min-h-[100px] px-3 py-2 border rounded-md"
                   :class="
                     shouldHighlightField(field)
@@ -326,7 +330,7 @@
                   "
                 >
                   <SelectTrigger variant="form">
-                    <SelectValue :placeholder="field.question" />
+                    <SelectValue :placeholder="getFieldPlaceholder(field)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem
@@ -525,12 +529,12 @@
                 <Button
                   @click="handleSubmit"
                   class="h-9 px-4 sm:px-6 rounded-md text-white font-medium text-xs sm:text-sm w-full sm:w-auto"
-                  style="
-                    background-color: #1ece84;
-                    font-family: Geist;
-                    min-width: 100px;
+                  :style="
+                    (isCurrentFormValid || isResubmissionActive)
+                      ? 'background-color: #1ece84; font-family: Geist; min-width: 100px;'
+                      : 'background-color: #9ca3af; font-family: Geist; min-width: 100px; cursor: not-allowed;'
                   "
-                  :disabled="isSubmitting || loading"
+                  :disabled="isSubmitting || loading || (!isCurrentFormValid && !isResubmissionActive)"
                 >
                   {{ isSubmitting ? "Submitting..." : "Submit" }}
                 </Button>
@@ -581,6 +585,8 @@ const applicationId = computed(() => {
 const loading = ref(false);
 const error = ref("");
 const isSubmitting = ref(false);
+const isSaving = ref(false);
+const isSubmittingAll = ref(false);
 const fields = ref<VisaProductFieldWithResponse[]>([]);
 const application = ref<any>(null);
 const travelers = ref<Traveler[]>([]);
@@ -593,10 +599,10 @@ const selectedTravelerIndex = ref(0);
 // File input refs
 const fileInputRefs = ref<Record<number, HTMLInputElement | null>>({});
 
-// Form responses state - keyed by travelerId or 'application' for app-level
+// Form responses state - keyed by field ID (can be number or string for passport fields)
 const formResponses = reactive<
   Record<
-    number,
+    number | string,
     {
       value: string | null;
       filePath: string | null;
@@ -615,6 +621,184 @@ const formResponses = reactive<
 const submissionStatus = reactive<
   Record<string, "submitted" | "pending" | "not_started">
 >({});
+
+// Track saved responses for each traveler (before final submission)
+const savedTravelerResponses = reactive<
+  Record<string, Record<number | string, any>>
+>({});
+
+// Track which travelers have completed their forms
+const completedTravelers = reactive<Set<string>>(new Set());
+
+// ✅ Local Storage Functions for Form Persistence
+const getStorageKey = () => {
+  if (!applicationId.value) return null;
+  return `additional_info_form_${applicationId.value}`;
+};
+
+// Save form data to localStorage
+const saveFormDataToStorage = () => {
+  if (!process.client) return;
+  const key = getStorageKey();
+  if (!key) return;
+  
+  try {
+    // Convert reactive objects to plain objects for storage
+    const formResponsesData: Record<string, any> = {};
+    Object.keys(formResponses).forEach((fieldId) => {
+      const response = formResponses[fieldId as keyof typeof formResponses];
+      if (response) {
+        // Don't store File objects (can't be serialized)
+        formResponsesData[fieldId] = {
+          value: response.value,
+          filePath: response.filePath,
+          fileName: response.fileName,
+          fileSize: response.fileSize,
+          date: response.date ? { ...response.date } : undefined,
+          isUploading: response.isUploading || false,
+          isUploaded: response.isUploaded || false,
+          uploadError: response.uploadError,
+          // Note: file property is not saved (File objects can't be serialized)
+        };
+      }
+    });
+    
+    const savedTravelerResponsesData: Record<string, Record<string, any>> = {};
+    Object.keys(savedTravelerResponses).forEach((travelerKey) => {
+      const travelerResponses = savedTravelerResponses[travelerKey];
+      if (!travelerResponses) return;
+      savedTravelerResponsesData[travelerKey] = {};
+      Object.keys(travelerResponses).forEach((fieldId) => {
+        const response = travelerResponses[fieldId];
+        if (!response) return;
+        if (!savedTravelerResponsesData[travelerKey]) {
+          savedTravelerResponsesData[travelerKey] = {};
+        }
+        savedTravelerResponsesData[travelerKey][fieldId] = {
+          value: response.value,
+          filePath: response.filePath,
+          fileName: response.fileName,
+          fileSize: response.fileSize,
+          date: response.date ? { ...response.date } : undefined,
+          isUploading: response.isUploading || false,
+          isUploaded: response.isUploaded || false,
+          uploadError: response.uploadError,
+        };
+      });
+    });
+    
+    const dataToSave = {
+      formResponses: formResponsesData,
+      savedTravelerResponses: savedTravelerResponsesData,
+      selectedTravelerId: selectedTravelerId.value,
+      selectedTravelerIndex: selectedTravelerIndex.value,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem(key, JSON.stringify(dataToSave));
+    console.log('💾 Form data saved to localStorage:', key);
+  } catch (error) {
+    console.error('❌ Failed to save form data to localStorage:', error);
+  }
+};
+
+// Load form data from localStorage
+const loadFormDataFromStorage = () => {
+  if (!process.client) return false;
+  const key = getStorageKey();
+  if (!key) return false;
+  
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) {
+      console.log('ℹ️ No saved form data found in localStorage');
+      return false;
+    }
+    
+    const data = JSON.parse(saved);
+    
+    // Check if data is too old (24 hours)
+    const MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
+    if (data.timestamp && Date.now() - data.timestamp > MAX_AGE) {
+      console.log('⚠️ Saved form data expired, clearing...');
+      clearFormDataFromStorage();
+      return false;
+    }
+    
+    // Restore formResponses
+    if (data.formResponses) {
+      Object.keys(data.formResponses).forEach((fieldId) => {
+        const savedResponse = data.formResponses[fieldId];
+        formResponses[fieldId as keyof typeof formResponses] = {
+          value: savedResponse.value,
+          filePath: savedResponse.filePath,
+          fileName: savedResponse.fileName,
+          fileSize: savedResponse.fileSize,
+          date: savedResponse.date ? { ...savedResponse.date } : undefined,
+          isUploading: savedResponse.isUploading || false,
+          isUploaded: savedResponse.isUploaded || false,
+          uploadError: savedResponse.uploadError,
+        };
+      });
+    }
+    
+    // Restore savedTravelerResponses
+    if (data.savedTravelerResponses) {
+      Object.keys(data.savedTravelerResponses).forEach((travelerKey) => {
+        if (!savedTravelerResponses[travelerKey]) {
+          savedTravelerResponses[travelerKey] = {};
+        }
+        const travelerData = data.savedTravelerResponses[travelerKey];
+        if (!travelerData) return;
+        Object.keys(travelerData).forEach((fieldId) => {
+          const savedResponse = travelerData[fieldId];
+          if (!savedResponse) return;
+          if (!savedTravelerResponses[travelerKey]) {
+            savedTravelerResponses[travelerKey] = {};
+          }
+          savedTravelerResponses[travelerKey][fieldId] = {
+            value: savedResponse.value,
+            filePath: savedResponse.filePath,
+            fileName: savedResponse.fileName,
+            fileSize: savedResponse.fileSize,
+            date: savedResponse.date ? { ...savedResponse.date } : undefined,
+            isUploading: savedResponse.isUploading || false,
+            isUploaded: savedResponse.isUploaded || false,
+            uploadError: savedResponse.uploadError,
+          };
+        });
+      });
+    }
+    
+    // Restore selected traveler
+    if (data.selectedTravelerId !== undefined) {
+      selectedTravelerId.value = data.selectedTravelerId;
+    }
+    if (data.selectedTravelerIndex !== undefined) {
+      selectedTravelerIndex.value = data.selectedTravelerIndex;
+    }
+    
+    console.log('✅ Form data restored from localStorage:', key);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to load form data from localStorage:', error);
+    return false;
+  }
+};
+
+// Clear form data from localStorage
+const clearFormDataFromStorage = () => {
+  if (!process.client) return;
+  const key = getStorageKey();
+  if (!key) return;
+  
+  try {
+    localStorage.removeItem(key);
+    console.log('🗑️ Form data cleared from localStorage:', key);
+  } catch (error) {
+    console.error('❌ Failed to clear form data from localStorage:', error);
+  }
+};
 
 // Options arrays
 const dayOptions = Array.from({ length: 31 }, (_, i) => ({
@@ -645,29 +829,250 @@ const yearOptions = Array.from({ length: 100 }, (_, i) => ({
 
 // Computed properties
 const sortedFields = computed(() => {
-  // Filter out fields without IDs, deduplicate by ID, and sort by displayOrder
-  const seenIds = new Set<number>();
+  // ✅ CRITICAL: Get current application's traveler IDs to filter fields
+  const currentApplicationTravelerIds = new Set(
+    travelers.value
+      .map((t: any) => t.id)
+      .filter((id: any) => id !== undefined && id !== null)
+  );
+  currentApplicationTravelerIds.add(null);
+  currentApplicationTravelerIds.add(undefined);
+  
+  // ✅ CRITICAL: Get field IDs from active resubmission requests
+  // These fields MUST be shown even if they don't match normal filtering rules
+  const app = application.value?.data || application.value;
+  const resubmissionFieldIds = new Set<number | string>();
+  const resubmissionNewFields = new Map<string, any>(); // Key: question+fieldType
+  
+  if (app?.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
+    app.resubmissionRequests.forEach((req: any) => {
+      // Skip fulfilled requests
+      if (req.fulfilledAt) return;
+      
+      // Check if this request is for the current context
+      const isFirstTraveler = selectedTravelerIndex.value === 0;
+      const isForCurrentTraveler = req.target === "traveler" && req.travelerId === selectedTravelerId.value;
+      const isApplicationLevel = req.target === "application" && isFirstTraveler;
+      
+      if (isForCurrentTraveler || isApplicationLevel) {
+        // Add field IDs from this request
+        if (Array.isArray(req.fieldIds)) {
+          req.fieldIds.forEach((id: any) => resubmissionFieldIds.add(Number(id)));
+        }
+        
+        // Add new fields from this request
+        if (Array.isArray(req.newFields)) {
+          req.newFields.forEach((newField: any) => {
+            const key = `${newField.question}-${newField.fieldType}`;
+            resubmissionNewFields.set(key, newField);
+          });
+        }
+      }
+    });
+  }
+  
+  console.log('🔄 Resubmission fields to show:', {
+    fieldIds: Array.from(resubmissionFieldIds),
+    newFieldsCount: resubmissionNewFields.size,
+    selectedTravelerId: selectedTravelerId.value,
+    selectedTravelerIndex: selectedTravelerIndex.value
+  });
+  
+  // Filter out fields without IDs, deduplicate by ID, filter by selected traveler, and sort by displayOrder
+  // Note: Negative IDs are allowed (for admin-created custom fields)
+  const seenIds = new Set<number | string>();
   const sorted = [...fields.value]
-    .filter((field): field is VisaProductFieldWithResponse & { id: number } => {
-      if (field.id === undefined) return false;
+    .filter((field): field is VisaProductFieldWithResponse & { id: number | string } => {
+      // Filter out fields without IDs
+      if (field.id === undefined || field.id === null) {
+        console.warn('⚠️ Field without ID found:', field.question);
+        return false;
+      }
+      
+      const fieldIdNum = Number(field.id);
+      
+      // ✅ CRITICAL: Always show fields that are in active resubmission requests
+      if (resubmissionFieldIds.has(fieldIdNum)) {
+        console.log('✅ Including field in resubmission request:', field.id, field.question);
+        // Still check for duplicates
+        if (seenIds.has(field.id)) {
+          return false;
+        }
+        seenIds.add(field.id);
+        return true;
+      }
+      
+      // ✅ CRITICAL: Filter fields to only show those for the selected traveler
+      // Type assertion to access travelerId (it exists on the field object from API)
+      const fieldWithTravelerId = field as any;
+      const fieldTravelerId = fieldWithTravelerId.travelerId;
+      const isPassport = isPassportField(field);
+      
+      // ✅ CRITICAL: Handle negative field IDs (dynamic passport fields)
+      // These are created for travelers who skipped passport details
+      // They should always be shown to the traveler they were created for
+      if (typeof field.id === 'number' && field.id < 0) {
+        // Dynamic passport field - check if it was created for this traveler
+        // Dynamic fields use baseId = -1000 - travelerId, so field.id should be in range
+        // For now, allow all negative IDs if they're passport fields and we're on a traveler tab
+        if (isPassport && selectedTravelerId.value !== null) {
+          // This is a dynamic passport field - show it to the selected traveler
+          // The field was created in fetchFields for this specific traveler
+          return true;
+        }
+        // If not a passport field or not on a traveler tab, continue with normal filtering
+      }
+      
+      // ✅ CRITICAL: Application-level fields (travelerId is null/undefined) handling:
+      // - Regular additional info fields (non-passport): Show to ALL travelers (they're shared)
+      // - Passport fields: Show to ALL travelers if they're in fields.value (they were included in fetchFields)
+      //   This handles cases where passport fields are returned by API for travelers who skipped them
+      if (fieldTravelerId === null || fieldTravelerId === undefined) {
+        // Application-level field
+        if (isPassport) {
+          // Application-level passport field - show to ALL travelers
+          // These are passport fields returned by API for travelers who skipped passport details
+          // They're already in fields.value, so they should be shown
+        } else {
+          // Application-level regular field - show to ALL travelers
+          // This is correct - regular additional info fields are shared across all travelers
+        }
+      } else if (fieldTravelerId === selectedTravelerId.value) {
+        // Traveler-specific field for selected traveler - show it
+      } else {
+        // Field for different traveler - filter it out
+        return false;
+      }
+      
+      // ✅ CRITICAL: Ensure field belongs to this application
+      if (fieldTravelerId !== null && fieldTravelerId !== undefined) {
+        if (!currentApplicationTravelerIds.has(fieldTravelerId)) {
+          // Field from different application - filter it out
+          return false;
+        }
+      }
+      
       // Deduplicate: only include first occurrence of each ID
       if (seenIds.has(field.id)) {
-        console.warn(`Duplicate field detected with ID ${field.id}: "${field.question}"`);
+        // Silently skip duplicates - should already be filtered in fetchFields
         return false;
       }
       seenIds.add(field.id);
       return true;
     })
-    .sort((a, b) => a.displayOrder - b.displayOrder);
+    .sort((a, b) => {
+      // ✅ CRITICAL: Passport fields always come FIRST, then regular fields
+      // Within each group, sort by displayOrder
+      const aIsPassport = isPassportField(a);
+      const bIsPassport = isPassportField(b);
+      
+      // If one is passport and other is not, passport comes first
+      if (aIsPassport && !bIsPassport) {
+        return -1; // a (passport) comes before b (regular)
+      }
+      if (!aIsPassport && bIsPassport) {
+        return 1; // b (passport) comes before a (regular)
+      }
+      
+      // Both are same type (both passport or both regular), sort by displayOrder
+      const orderA = a.displayOrder ?? 0;
+      const orderB = b.displayOrder ?? 0;
+      return orderA - orderB;
+    });
+  
+  // ✅ CRITICAL: Add newFields from resubmission requests if they're not already in fields
+  // These are fields created by admin during resubmission that might not be in the API response yet
+  // ⚠️ IMPORTANT: Use the actual field IDs from resubmissionRequests.fieldIds, not generated ones
+  const existingFieldIds = new Set(sorted.map(f => Number(f.id)));
+  const existingFieldKeys = new Set(sorted.map(f => `${f.question}-${f.fieldType}`));
+  
+  // ✅ CRITICAL: Map newFields to their corresponding fieldIds from the resubmission request
+  // This ensures we use the correct negative IDs that match the stored responses
+  if (app?.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
+    app.resubmissionRequests.forEach((req: any) => {
+      // Skip fulfilled requests
+      if (req.fulfilledAt) return;
+      
+      // Check if this request is for the current context
+      const isFirstTraveler = selectedTravelerIndex.value === 0;
+      const isForCurrentTraveler = req.target === "traveler" && req.travelerId === selectedTravelerId.value;
+      const isApplicationLevel = req.target === "application" && isFirstTraveler;
+      
+      if ((isForCurrentTraveler || isApplicationLevel) && req.newFields && req.fieldIds) {
+        // Match newFields with their corresponding fieldIds
+        req.newFields.forEach((newField: any, index: number) => {
+          const key = `${newField.question}-${newField.fieldType}`;
+          
+          // Only add if not already present in fields
+          if (!existingFieldKeys.has(key) && !existingFieldIds.has(Number(req.fieldIds[index]))) {
+            // ✅ CRITICAL: Use the actual field ID from req.fieldIds, not a generated one
+            // This ensures the field ID matches the stored response in the database
+            const actualFieldId = req.fieldIds[index];
+            
+            if (actualFieldId !== undefined && actualFieldId !== null) {
+              console.log('✅ Adding newField from resubmission request with actual field ID:', {
+                fieldId: actualFieldId,
+                question: newField.question,
+                fieldType: newField.fieldType
+              });
+              
+              // Create a field object for the newField using the actual field ID
+              const newFieldObj: VisaProductFieldWithResponse & { id: number | string } = {
+                id: Number(actualFieldId), // Use the actual negative ID from the request
+                visaProductId: (app as any)?.visaProductId || 0,
+                fieldType: newField.fieldType,
+                question: newField.question,
+                isRequired: newField.isRequired || false,
+                displayOrder: sorted.length + 1000, // Put new fields at the end
+                isActive: true,
+                editable: true,
+                response: null,
+                options: newField.options,
+                allowedFileTypes: Array.isArray(newField.allowedFileTypes) 
+                  ? newField.allowedFileTypes 
+                  : typeof newField.allowedFileTypes === 'string' 
+                    ? newField.allowedFileTypes.split(',').map((s: string) => s.trim())
+                    : undefined,
+                minLength: newField.minLength,
+                maxLength: newField.maxLength,
+                maxFileSize: newField.maxFileSize
+              };
+              
+              sorted.push(newFieldObj);
+            } else {
+              console.warn('⚠️ newField has no corresponding fieldId in resubmission request:', newField.question);
+            }
+          }
+        });
+      }
+    });
+  }
   
   // Debug: Log field order to help diagnose issues
   if (sorted.length > 0) {
-    console.log('📋 Sorted fields order:', sorted.map(f => ({
+    console.log('📋 Sorted fields for selected traveler:', {
+      selectedTravelerId: selectedTravelerId.value,
+      selectedTravelerIndex: selectedTravelerIndex.value,
+      totalFields: sorted.length,
+      resubmissionFields: resubmissionFieldIds.size + resubmissionNewFields.size,
+      fields: sorted.map(f => ({
       id: f.id,
       displayOrder: f.displayOrder,
       question: f.question,
-      fieldType: f.fieldType
-    })));
+        fieldType: f.fieldType,
+        travelerId: (f as any).travelerId,
+        isPassportField: isPassportField(f),
+        isResubmissionField: resubmissionFieldIds.has(Number(f.id)) || resubmissionNewFields.has(`${f.question}-${f.fieldType}`)
+      }))
+    });
+  } else {
+    console.warn('⚠️ No fields found to display for selected traveler:', {
+      selectedTravelerId: selectedTravelerId.value,
+      selectedTravelerIndex: selectedTravelerIndex.value,
+      totalFieldsInFieldsValue: fields.value.length,
+      resubmissionFieldIds: Array.from(resubmissionFieldIds),
+      resubmissionNewFieldsCount: resubmissionNewFields.size
+    });
   }
   
   return sorted;
@@ -675,7 +1080,34 @@ const sortedFields = computed(() => {
 
 // All travelers (removed application-level tab as it's duplicate of first traveler)
 const allTravelers = computed(() => {
-  return [...travelers.value];
+  // ✅ CRITICAL: Show ALL travelers, even if they don't have IDs
+  // Travelers without IDs are still valid travelers (they just haven't been assigned IDs yet)
+  // We'll use the index to identify them and fetch application-level fields
+  
+  // Deduplication: prefer travelers with IDs, but keep those without if no duplicate exists
+  const seen = new Map<string, boolean>();
+  const unique = travelers.value.filter((t: any, index: number) => {
+    // Create a unique key from ID if available, otherwise use index + name
+    const key = t.id !== undefined && t.id !== null 
+      ? `id-${t.id}` 
+      : `index-${index}-${t.firstName || ''}-${t.lastName || ''}-${t.email || ''}`;
+    
+    if (seen.has(key)) {
+      console.warn('⚠️ Duplicate traveler in allTravelers computed:', t.id || `index-${index}`, t.firstName, t.lastName);
+      return false;
+    }
+    seen.set(key, true);
+    return true;
+  });
+  
+  console.log('👥 allTravelers computed:', unique.map((t: any, idx: number) => ({
+    id: t.id !== undefined && t.id !== null ? t.id : `index-${idx}`,
+    name: `${t.firstName || ''} ${t.lastName || ''}`.trim() || `Traveler ${idx + 1}`,
+    email: t.email,
+    hasId: t.id !== undefined && t.id !== null
+  })));
+  
+  return unique;
 });
 
 const currentTraveler = computed(() => {
@@ -690,11 +1122,287 @@ const currentTraveler = computed(() => {
   );
 });
 
+// Get the key for a traveler (for tracking completion)
+const getTravelerKey = (travelerId: number | null, index: number): string => {
+  return travelerId !== null ? `traveler-${travelerId}` : `traveler-index-${index}`;
+};
+
+// Check if there's a next traveler
+const hasNextTraveler = computed(() => {
+  return selectedTravelerIndex.value < allTravelers.value.length - 1;
+});
+
+// Check if current form has all required fields filled
+// ✅ CRITICAL: Use sortedFields (visible/active fields) instead of fields.value
+const isCurrentFormValid = computed(() => {
+  // Use sortedFields which contains only the visible/active fields for the current traveler
+  const activeFields = sortedFields.value;
+  if (!activeFields || activeFields.length === 0) {
+    console.log('⚠️ isCurrentFormValid: No active fields available');
+    return false;
+  }
+  
+  const requiredFields = activeFields.filter(f => f.isRequired);
+  if (requiredFields.length === 0) {
+    console.log('✅ isCurrentFormValid: No required fields, form is valid');
+    return true; // No required fields means form is valid
+  }
+  
+  const allValid = requiredFields.every((field) => {
+    const fieldId = field.id;
+    if (fieldId === undefined) {
+      console.warn('⚠️ Field without ID found:', field.question);
+      return false;
+    }
+    
+    // ✅ CRITICAL: Check formResponses first (user's current input), then fallback to field.response (pre-filled data)
+    const response = formResponses[fieldId];
+    const preFilledResponse = field.response;
+    
+    // Use formResponses if available (user's input), otherwise use pre-filled data
+    const currentValue = response?.value ?? preFilledResponse?.value ?? null;
+    const currentFilePath = response?.filePath ?? preFilledResponse?.filePath ?? null;
+    const currentDate = response?.date ?? (preFilledResponse?.value ? (() => {
+      // Try to parse date from pre-filled value
+      try {
+        const date = new Date(preFilledResponse.value);
+        if (!isNaN(date.getTime())) {
+          return {
+            day: String(date.getDate()),
+            month: String(date.getMonth() + 1),
+            year: String(date.getFullYear())
+          };
+        }
+      } catch (e) {
+        // Invalid date
+      }
+      return null;
+    })() : null);
+    
+    // Check if value is filled (for text/number/textarea/dropdown/date)
+    const hasValue = currentValue !== null && 
+                    currentValue !== "" && 
+                    currentValue !== undefined;
+    
+    // Check if file is uploaded (for upload fields)
+    const hasFile = currentFilePath !== null && 
+                   currentFilePath !== "" && 
+                   currentFilePath !== undefined;
+    
+    // For date fields, check if all parts are filled
+    if (field.fieldType === 'date') {
+      if (currentDate) {
+        const hasDate = currentDate.day && currentDate.month && currentDate.year;
+        if (!hasDate) {
+          console.log('⚠️ isCurrentFormValid: Date field incomplete:', field.question, 'Date:', currentDate);
+        }
+        return hasDate;
+      } else {
+        // Date field but no date object - check if value is set
+        return hasValue;
+      }
+    }
+    
+    const isValid = hasValue || hasFile;
+    if (!isValid) {
+      console.log('⚠️ isCurrentFormValid: Required field not filled:', field.question, 'ID:', fieldId, 'Value:', currentValue, 'FilePath:', currentFilePath);
+    }
+    return isValid;
+  });
+  
+  console.log('🔍 isCurrentFormValid check:', {
+    totalFields: activeFields.length,
+    requiredFields: requiredFields.length,
+    allValid,
+    selectedTravelerIndex: selectedTravelerIndex.value
+  });
+  
+  return allValid;
+});
+
+// Check if all travelers have all required fields filled
+const allTravelersFormsValid = computed(() => {
+  if (allTravelers.value.length === 0) return false;
+  
+  // Check each traveler's saved responses
+  for (let i = 0; i < allTravelers.value.length; i++) {
+    const traveler = allTravelers.value[i];
+    if (!traveler) continue;
+    const travelerKey = getTravelerKey(traveler.id || null, i);
+    const savedResponses = savedTravelerResponses[travelerKey];
+    
+    // If no saved responses for this traveler, check if they have any fields
+    if (!savedResponses || Object.keys(savedResponses).length === 0) {
+      // Need to check if this traveler has any required fields
+      // For now, if they're in the list, they should have fields
+      return false;
+    }
+    
+    // Get fields for this traveler to check required fields
+    // We'll need to check this when we switch to each traveler
+    // For now, we'll use a simpler check: if all travelers have saved responses
+  }
+  
+  // If we have saved responses for all travelers, check if current form is also valid
+  return isCurrentFormValid.value && completedTravelers.size === allTravelers.value.length;
+});
+
+// Check if all travelers have completed their forms
+// This checks if all travelers have valid saved responses with all required fields filled
+const allTravelersCompleted = computed(() => {
+  if (allTravelers.value.length === 0) {
+    return false;
+  }
+  
+  // If there's only one traveler, just check if current form is valid
+  if (allTravelers.value.length === 1) {
+    return isCurrentFormValid.value;
+  }
+  
+  // For multiple travelers:
+  // 1. Current traveler must have valid form
+  if (!isCurrentFormValid.value) {
+    return false;
+  }
+  
+  // 2. Check all other travelers have saved responses with values
+  // Note: Saved responses are created when switching travelers, so if a traveler hasn't been visited,
+  // they won't have saved responses. In that case, we can't validate them, so we'll require
+  // that all travelers have been visited (have saved responses) OR we're on the last traveler
+  // and all previous travelers have saved responses
+  
+  // Count how many travelers have saved responses
+  let travelersWithSavedResponses = 0;
+  for (let i = 0; i < allTravelers.value.length; i++) {
+    if (i === selectedTravelerIndex.value) {
+      // Current traveler - count as having responses if form is valid
+      if (isCurrentFormValid.value) {
+        travelersWithSavedResponses++;
+      }
+      continue;
+    }
+    
+    const traveler = allTravelers.value[i];
+    if (!traveler) continue;
+    
+    const travelerKey = getTravelerKey(traveler.id || null, i);
+    const savedResponses = savedTravelerResponses[travelerKey];
+    
+    // Check if this traveler has saved responses with values
+    if (savedResponses && Object.keys(savedResponses).length > 0) {
+      const hasAnyValue = Object.values(savedResponses).some((response: any) => {
+        const hasValue = response.value !== null && response.value !== "" && response.value !== undefined;
+        const hasFile = response.filePath !== null && response.filePath !== "" && response.filePath !== undefined;
+        const hasDate = response.date && response.date.day && response.date.month && response.date.year;
+        return hasValue || hasFile || hasDate;
+      });
+      
+      if (hasAnyValue) {
+        travelersWithSavedResponses++;
+      }
+    }
+  }
+  
+  // All travelers must have valid responses (current form valid + all others have saved responses)
+  return travelersWithSavedResponses === allTravelers.value.length;
+});
+
+// Helper to check if a field is a passport field
+const isPassportField = (field: any): boolean => {
+  if (!field.question) return false;
+  const question = field.question.toLowerCase();
+  // Check for exact key matches or variations
+  return (
+    question === '_passport_number' ||
+    question.includes('_passport_number') ||
+    question === 'passport number' ||
+    question.includes('passport number') ||
+    question === '_passport_expiry_date' ||
+    question.includes('_passport_expiry_date') ||
+    question === 'passport expiry date' ||
+    question === 'passport expiry' ||
+    question === 'passport expiration' ||
+    question.includes('passport expiry') ||
+    question.includes('passport expiration') ||
+    question === '_residence_country' ||
+    question.includes('_residence_country') ||
+    question === 'residence country' ||
+    question.includes('residence country') ||
+    question === '_has_schengen_visa' ||
+    question.includes('_has_schengen_visa') ||
+    question === 'schengen visa' ||
+    question.includes('schengen visa') ||
+    question.includes('do you have a valid visa') ||
+    question.includes('valid visa or residence permit')
+  );
+};
+
+// Helper to get passport field type (for proper display)
+const getPassportFieldType = (field: any): string | null => {
+  if (!field.question) return null;
+  const question = field.question.toLowerCase();
+  
+  if (question.includes('_passport_expiry_date') || question.includes('passport expiry') || question.includes('passport expiration')) {
+    return 'date';
+  }
+  if (question.includes('_has_schengen_visa') || question.includes('schengen visa')) {
+    return 'dropdown';
+  }
+  // ✅ Changed: Residence Country should be text field, not dropdown
+  if (question.includes('_residence_country') || question.includes('residence country')) {
+    return 'text';
+  }
+  return null;
+};
+
+// Helper to normalize field question text to display proper labels
+const getFieldLabel = (field: any): string => {
+  if (!field.question) return '';
+  const question = field.question.trim();
+  
+  // Map technical IDs to human-readable labels
+  if (question === '_passport_number' || question.toLowerCase() === '_passport_number') {
+    return 'Passport Number';
+  }
+  if (question === '_passport_expiry_date' || question.toLowerCase() === '_passport_expiry_date') {
+    return 'Passport Expiration Date';
+  }
+  if (question === '_residence_country' || question.toLowerCase() === '_residence_country') {
+    return 'Residence Country';
+  }
+  if (question === '_has_schengen_visa' || question.toLowerCase() === '_has_schengen_visa') {
+    return 'Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?';
+  }
+  
+  // Return original question if not a technical ID
+  return question;
+};
+
+// Get placeholder text for fields (simpler than label for dropdowns)
+const getFieldPlaceholder = (field: any): string => {
+  if (!field.question) return '';
+  const question = field.question.toLowerCase();
+
+  // For Schengen visa question, use simple "yes" or "no" placeholder
+  if (question === '_has_schengen_visa' || 
+      question.includes('_has_schengen_visa') ||
+      question.includes('schengen visa') ||
+      question.includes('do you have a valid visa')) {
+    return 'yes or no';
+  }
+
+  // For other fields, use the label
+  return getFieldLabel(field);
+};
+
 // Helper to check if a field should be disabled
 const isFieldDisabled = (field: any) => {
-  // If no active resubmission requests, check field's editable property
+  // ✅ CRITICAL: If no active resubmission requests, ALL fields should be enabled
+  // The editable property is used by the backend to mark submitted fields,
+  // but for non-resubmission forms, users should be able to edit all fields
   if (!isResubmissionActive.value) {
-    return field.editable === false;
+    // Always enable fields when it's not a resubmission form
+    return false; // Not disabled
   }
 
   // During resubmission, check if this field is requested
@@ -702,23 +1410,35 @@ const isFieldDisabled = (field: any) => {
 
   // If field is requested for resubmission, it should be editable
   if (isRequested) {
-    return false;
+    return false; // Not disabled
   }
 
-  // Otherwise, disable it
-  return true;
+  // During resubmission, if field is not requested, disable it
+  console.log('🔒 Field disabled (not in resubmission request):', field.question, 'ID:', field.id);
+  return true; // Disabled
 };
 
 // Resubmission active helper
 const isResubmissionActive = computed(() => {
   const app = application.value as any;
-  if (!app) return false;
+  if (!app) {
+    console.log('🔍 isResubmissionActive: No application data');
+    return false;
+  }
 
   // Check if there are any active (unfulfilled) resubmission requests
   if (app.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
-    return app.resubmissionRequests.some((req: any) => !req.fulfilledAt);
+    const hasActive = app.resubmissionRequests.some((req: any) => !req.fulfilledAt);
+    console.log('🔍 isResubmissionActive:', {
+      hasResubmissionRequests: true,
+      totalRequests: app.resubmissionRequests.length,
+      activeRequests: app.resubmissionRequests.filter((req: any) => !req.fulfilledAt).length,
+      isActive: hasActive
+    });
+    return hasActive;
   }
 
+  console.log('🔍 isResubmissionActive: No resubmissionRequests array, returning false');
   return false;
 });
 
@@ -893,9 +1613,103 @@ const fetchApplication = async () => {
       const appData = response.data.data || response.data;
       application.value = appData;
 
-      // Extract travelers from application
+      // Extract travelers from application and deduplicate
       if (appData.travelers && Array.isArray(appData.travelers)) {
-        travelers.value = appData.travelers;
+        // Deduplicate travelers by ID, and also by name+email if no ID
+        // BACKEND ISSUE: Some travelers have id: undefined - filter them out and use the one with ID
+        const seenTravelerIds = new Set<number>();
+        const seenTravelerKeys = new Set<string>();
+        
+        // First, separate travelers with IDs from those without
+        const travelersWithIds = appData.travelers.filter((t: any) => t.id !== undefined && t.id !== null);
+        const travelersWithoutIds = appData.travelers.filter((t: any) => t.id === undefined || t.id === null);
+        
+        if (travelersWithoutIds.length > 0) {
+          console.warn('⚠️ Backend returned', travelersWithoutIds.length, 'travelers without IDs. These will be filtered out.');
+        }
+        
+        travelers.value = appData.travelers.filter((t: any) => {
+          // Skip travelers without IDs - they're likely duplicates or invalid
+          if (t.id === undefined || t.id === null) {
+            // Only keep travelers without IDs if there's no traveler with the same name+email that has an ID
+            const nameKey = `${t.firstName || ''}-${t.lastName || ''}-${t.email || ''}`;
+            const hasMatchingTravelerWithId = travelersWithIds.some((tw: any) => {
+              const twKey = `${tw.firstName || ''}-${tw.lastName || ''}-${tw.email || ''}`;
+              return twKey === nameKey;
+            });
+            
+            if (hasMatchingTravelerWithId) {
+              console.warn('⚠️ Filtering out traveler without ID (duplicate of traveler with ID):', t.firstName, t.lastName);
+              return false;
+            }
+            
+            // If no matching traveler with ID, check for duplicate name+email
+            if (seenTravelerKeys.has(nameKey)) {
+              console.warn('⚠️ Duplicate traveler detected (no ID, same name/email):', t.firstName, t.lastName, t.email);
+              return false;
+            }
+            seenTravelerKeys.add(nameKey);
+            return true;
+          }
+          
+          // Traveler has ID - check for duplicate ID
+          if (seenTravelerIds.has(t.id)) {
+            console.warn('⚠️ Duplicate traveler detected with ID:', t.id, t.firstName, t.lastName);
+            return false;
+          }
+          seenTravelerIds.add(t.id);
+          return true;
+        });
+        // ✅ CRITICAL: Sort travelers to maintain original order
+        // Try to match with draft data order first, then fall back to ID order
+        const draftTravelers = (appData as any).draftData?.step2?.travelers || [];
+        const draftTravelersMap = new Map<string, number>();
+        
+        // Create a map of draft travelers by name+email to their index
+        draftTravelers.forEach((dt: any, idx: number) => {
+          const key = `${dt.firstName || ''}-${dt.lastName || ''}-${dt.email || ''}`;
+          draftTravelersMap.set(key, idx);
+        });
+        
+        // Sort travelers: first by draft order, then by ID (for those not in draft)
+        travelers.value.sort((a: any, b: any) => {
+          const aKey = `${a.firstName || ''}-${a.lastName || ''}-${a.email || ''}`;
+          const bKey = `${b.firstName || ''}-${b.lastName || ''}-${b.email || ''}`;
+          
+          const aDraftIndex = draftTravelersMap.get(aKey);
+          const bDraftIndex = draftTravelersMap.get(bKey);
+          
+          // If both are in draft, sort by draft index
+          if (aDraftIndex !== undefined && bDraftIndex !== undefined) {
+            return aDraftIndex - bDraftIndex;
+          }
+          
+          // If only one is in draft, prioritize it
+          if (aDraftIndex !== undefined) return -1;
+          if (bDraftIndex !== undefined) return 1;
+          
+          // If neither is in draft, sort by ID (lower ID = earlier)
+          if (a.id !== undefined && a.id !== null && b.id !== undefined && b.id !== null) {
+            return a.id - b.id;
+          }
+          
+          // If one has ID and other doesn't, prioritize the one with ID
+          if (a.id !== undefined && a.id !== null) return -1;
+          if (b.id !== undefined && b.id !== null) return 1;
+          
+          // Otherwise maintain original order
+          return 0;
+        });
+        
+        console.log('👥 Loaded', travelers.value.length, 'unique travelers (filtered from', appData.travelers.length, 'total)');
+        console.log('👥 Unique travelers details (sorted):', travelers.value.map((t: any, idx: number) => ({
+          index: idx,
+          id: t.id,
+          name: `${t.firstName || ''} ${t.lastName || ''}`.trim() || `Traveler ${idx + 1}`,
+          email: t.email,
+          passportNumber: t.passportNumber || 'missing',
+          addPassportDetailsLater: t.addPassportDetailsLater
+        })));
       }
     }
   } catch (err) {
@@ -961,12 +1775,68 @@ const checkSubmissionStatus = async (travelerId: number | null) => {
       // Note: Since we removed application tab, travelerId should always be set for travelers
       const key = travelerId ? `traveler-${travelerId}` : `traveler-null`;
 
+      // ✅ CRITICAL: Check if traveler has skipped passport details
+      // If passport fields are required but not filled, show "To Fill" instead of "In Progress"
+      const traveler = travelers.value.find((t: any) => 
+        travelerId ? t.id === travelerId : false
+      ) as any;
+      
+      // Check if traveler has skipped passport details (either via flag or missing passport data)
+      const hasSkippedPassportDetails = traveler?.addPassportDetailsLater === true ||
+        (!traveler?.passportNumber || traveler.passportNumber === 'missing' || traveler.passportNumber === '');
+      
+      // Check if there are passport fields that are required but not filled
+      const passportFields = fields.filter((field) => isPassportField(field));
+      const hasUnfilledPassportFields = passportFields.some((field) => {
+        if (!field.isRequired) return false;
+        if (field.response === null || field.response === undefined) return true;
+        const hasValue = field.response.value !== null && 
+                        field.response.value !== "" && 
+                        field.response.value !== undefined;
+        const hasFile = field.response.filePath !== null && 
+                       field.response.filePath !== "" && 
+                       field.response.filePath !== undefined;
+        return !hasValue && !hasFile;
+      });
+
+      // ✅ CRITICAL: Check if responses were actually submitted by the user (not pre-filled from application)
+      // If passport fields have responses but the traveler already has passport data, these are pre-filled, not submitted
+      // Also check if regular fields have responses - if only passport fields have responses and traveler has passport data,
+      // it means the form wasn't actually submitted
+      const hasPreFilledPassportData = passportFields.length > 0 && 
+        passportFields.some((field) => field.response && field.response.value) &&
+        !hasSkippedPassportDetails; // If traveler has passport data, responses are pre-filled
+      
+      const regularFields = fields.filter((field) => !isPassportField(field));
+      const hasRegularFieldResponses = regularFields.some((field) => {
+        if (field.response === null || field.response === undefined) return false;
+        const hasValue = field.response.value !== null && 
+                        field.response.value !== "" && 
+                        field.response.value !== undefined;
+        const hasFile = field.response.filePath !== null && 
+                       field.response.filePath !== "" && 
+                       field.response.filePath !== undefined;
+        return hasValue || hasFile;
+      });
+
       // Only mark as 'submitted' if ALL required fields are filled AND there are responses
-      // This is more conservative - we assume if all required fields are filled, it was submitted
-      // But we're being more strict about what counts as "filled"
+      // AND either: (1) traveler has regular field responses (actually submitted), OR
+      //            (2) traveler has passport responses AND skipped passport details (needs to fill them)
+      // Don't mark as submitted if only passport fields have pre-filled data
       if (allRequiredFilled && hasResponses && fields.length > 0) {
+        // Check if this is a real submission or just pre-filled passport data
+        if (hasPreFilledPassportData && !hasRegularFieldResponses) {
+          // Only pre-filled passport data, no regular field responses - not actually submitted
+          submissionStatus[key] = "not_started";
+        } else {
+          // Has regular field responses or traveler needs to fill passport fields - actually submitted
         submissionStatus[key] = "submitted";
-      } else if (hasResponses) {
+        }
+      } else if (hasSkippedPassportDetails && hasUnfilledPassportFields) {
+        // ✅ CRITICAL: If traveler skipped passport details and passport fields are still unfilled,
+        // show "To Fill" instead of "In Progress"
+        submissionStatus[key] = "not_started";
+      } else if (hasResponses && !hasPreFilledPassportData) {
         submissionStatus[key] = "pending";
       } else {
         submissionStatus[key] = "not_started";
@@ -994,19 +1864,500 @@ const fetchFields = async (travelerId: number | null = null) => {
     );
 
     if (response.success && response.data) {
-      // Deduplicate fields by ID before setting (in case API returns duplicates)
-      const seenIds = new Set<number>();
-      const uniqueFields = response.data.filter((field: VisaProductFieldWithResponse) => {
-        if (field.id === undefined) return false;
-        if (seenIds.has(field.id)) {
-          console.warn(`Duplicate field detected in API response with ID ${field.id}: "${field.question}"`);
+      // CRITICAL: Filter fields to ensure they belong to THIS application only
+      // The backend should already filter by applicationId, but we add an extra safety check
+      // Filter out any fields that don't match the current application's travelers
+      const currentApplicationTravelerIds = new Set(
+        travelers.value
+          .map((t: any) => t.id)
+          .filter((id: any) => id !== undefined && id !== null)
+      );
+      
+      // Also include null/undefined for application-level fields
+      currentApplicationTravelerIds.add(null);
+      currentApplicationTravelerIds.add(undefined);
+      
+      // ✅ CRITICAL: Filter fields to only include those for THIS application's travelers
+      // The backend should filter by applicationId, but we add extra validation
+      // ⚠️ IMPORTANT: If travelers array is empty, don't filter - show all fields from API
+      // This can happen if travelers haven't been loaded yet
+      const fieldsForThisApplication = travelers.value.length > 0 
+        ? response.data.filter((f: any) => {
+            // Application-level fields (travelerId is null/undefined) are valid for this application
+            if (!f.travelerId || f.travelerId === null || f.travelerId === undefined) {
+              return true;
+            }
+            // Traveler-specific fields MUST belong to a traveler in THIS application
+            // If travelerId doesn't match, it's from a different application - filter it out
+            const belongsToThisApplication = currentApplicationTravelerIds.has(f.travelerId);
+            if (!belongsToThisApplication) {
+              console.warn('⚠️ Filtering out field from different application:', {
+                fieldId: f.id,
+                fieldQuestion: f.question,
+                fieldTravelerId: f.travelerId,
+                currentApplicationTravelerIds: Array.from(currentApplicationTravelerIds),
+                applicationId: applicationId.value
+              });
+            }
+            return belongsToThisApplication;
+          })
+        : response.data; // If no travelers loaded yet, show all fields (backend should filter by applicationId)
+      
+      console.log('📋 Fields filtered for application:', {
+        totalFieldsFromAPI: response.data.length,
+        fieldsForThisApplication: fieldsForThisApplication.length,
+        travelersCount: travelers.value.length,
+        currentApplicationTravelerIds: Array.from(currentApplicationTravelerIds),
+        applicationId: applicationId.value,
+        travelerId: travelerId
+      });
+      
+      // Log all fields received from API for debugging
+      console.log('📋 All fields received from API for travelerId:', travelerId, fieldsForThisApplication.map((f: any) => ({
+        id: f.id,
+        question: f.question,
+        fieldType: f.fieldType,
+        displayOrder: f.displayOrder,
+        travelerId: f.travelerId,
+        isPassportField: isPassportField(f)
+      })));
+      
+      // Separate passport fields from regular fields (using filtered data)
+      const passportFieldsInResponse = fieldsForThisApplication.filter((f: any) => isPassportField(f));
+      const regularFieldsInResponse = fieldsForThisApplication.filter((f: any) => !isPassportField(f));
+      
+      console.log('🛂 Passport fields in response:', passportFieldsInResponse.length, passportFieldsInResponse.map((f: any) => ({
+        id: f.id,
+        question: f.question,
+        travelerId: f.travelerId
+      })));
+      console.log('📝 Regular fields in response:', regularFieldsInResponse.length);
+      
+      // Strategy: For each traveler, show ONLY their specific fields
+      // If travelerId is provided, only show fields for that traveler
+      // Application-level fields (travelerId = null) should only appear for first traveler (index 0)
+      // ✅ CRITICAL: Use filtered fields (fieldsForThisApplication) instead of raw response.data
+      // This ensures we only process fields that belong to THIS application
+      let fieldsToProcess = fieldsForThisApplication;
+      
+      if (travelerId !== null && travelerId !== undefined) {
+        // For specific traveler (not first one), exclude application-level passport fields
+        // Only show traveler-specific passport fields
+        // ✅ CRITICAL: passportFieldsInResponse and regularFieldsInResponse are already filtered
+        // from fieldsForThisApplication, so they only contain fields for this application
+        const travelerSpecificPassportFields = passportFieldsInResponse.filter((f: any) => 
+          f.travelerId === travelerId
+        );
+        const applicationLevelPassportFields = passportFieldsInResponse.filter((f: any) => 
+          !f.travelerId || f.travelerId === null
+        );
+        
+        // For first traveler (index 0), show both application-level and traveler-specific passport fields
+        // For other travelers, show traveler-specific passport fields AND regular fields
+        if (selectedTravelerIndex.value === 0) {
+          // First traveler: show application-level + traveler-specific passport fields
+          // ✅ CRITICAL: Passport fields FIRST, then regular fields
+          const allPassportFields = [...new Set([...applicationLevelPassportFields, ...travelerSpecificPassportFields])];
+          fieldsToProcess = [
+            ...allPassportFields,
+            ...regularFieldsInResponse
+          ];
+          console.log('✅ First traveler: showing passport fields FIRST, then regular fields', {
+            applicationLevelPassportFields: applicationLevelPassportFields.length,
+            travelerSpecificPassportFields: travelerSpecificPassportFields.length,
+            totalPassportFields: allPassportFields.length,
+            regularFields: regularFieldsInResponse.length
+          });
+        } else {
+          // Other travelers: show traveler-specific passport fields AND regular fields
+          // ✅ CRITICAL: Only show passport fields if the traveler actually needs them
+          // Check if this traveler skipped passport details or is missing passport data
+          const traveler = travelers.value.find((t: any) => t.id === travelerId) as any;
+          const hasSkippedPassportDetails = traveler?.addPassportDetailsLater === true ||
+            (!traveler?.passportNumber || traveler.passportNumber === 'missing' || traveler.passportNumber === '');
+          
+          const travelerRegularFields = regularFieldsInResponse.filter((f: any) => {
+            // Show application-level fields (travelerId is null/undefined) OR fields for this traveler
+            return !f.travelerId || f.travelerId === null || f.travelerId === undefined || f.travelerId === travelerId;
+          });
+          
+          // ✅ CRITICAL: Only include passport fields if the traveler needs them (skipped or missing)
+          // Don't show passport fields to travelers who already have passport data filled
+          let allPassportFieldsForTraveler: any[] = [];
+          if (hasSkippedPassportDetails) {
+            // Traveler skipped passport details - show passport fields
+            allPassportFieldsForTraveler = [
+              ...travelerSpecificPassportFields,
+              ...applicationLevelPassportFields
+            ];
+          } else {
+            // Traveler already has passport data - don't show passport fields
+            allPassportFieldsForTraveler = [...travelerSpecificPassportFields];
+          }
+          
+          // ✅ CRITICAL: Passport fields FIRST, then regular fields
+          fieldsToProcess = [
+            ...allPassportFieldsForTraveler,
+            ...travelerRegularFields
+          ];
+          
+          console.log('✅ Traveler', travelerId, ': showing passport fields FIRST (including application-level), then regular fields', {
+            travelerSpecificPassportFields: travelerSpecificPassportFields.length,
+            applicationLevelPassportFields: applicationLevelPassportFields.length,
+            totalPassportFields: allPassportFieldsForTraveler.length,
+            regularFields: travelerRegularFields.length,
+            totalFields: fieldsToProcess.length,
+            hasSkippedPassportDetails,
+            travelerPassportNumber: traveler?.passportNumber || 'missing'
+          });
+        }
+      } else {
+        // No travelerId provided (application-level) - show application-level fields
+        // ✅ CRITICAL: This is typically for the first traveler (index 0) who might not have an ID yet
+        // Only show passport fields if the first traveler skipped passport details
+        const firstTraveler = travelers.value[0] as any;
+        
+        // ✅ CRITICAL: Check draft data for addPassportDetailsLater flag
+        // The backend may not include this flag in the traveler object, so check draftData
+        const app = application.value?.data || application.value;
+        const firstPassportDetailFromDraft = app?.draftData?.step3?.passportDetails?.[0];
+        const firstTravelerSkippedFromDraft = firstPassportDetailFromDraft?.addPassportDetailsLater === true;
+        
+        // ✅ CRITICAL: Prioritize draftData over traveler object
+        // The traveler object might have incorrect passport data (e.g., 'sasa' from backend)
+        // If draftData says addPassportDetailsLater is true, trust that over the traveler object
+        let firstTravelerSkippedPassport = firstTravelerSkippedFromDraft;
+        
+        // If not found in draftData, check traveler object
+        if (!firstTravelerSkippedPassport) {
+          firstTravelerSkippedPassport = firstTraveler?.addPassportDetailsLater === true;
+        }
+        
+        // Also check if passport data is missing (but only if draftData doesn't say otherwise)
+        if (!firstTravelerSkippedPassport && !firstTravelerSkippedFromDraft) {
+          firstTravelerSkippedPassport = !firstTraveler?.passportNumber || 
+            firstTraveler.passportNumber === 'missing' || 
+            firstTraveler.passportNumber === '';
+        }
+        
+        const applicationLevelPassportFields = passportFieldsInResponse.filter((f: any) => 
+          !f.travelerId || f.travelerId === null
+        );
+        
+        // ✅ CRITICAL: Only show passport fields if the first traveler skipped them
+        // Use draftData flag if available, otherwise fall back to traveler object check
+        let allPassportFields: any[] = [];
+        if (firstTravelerSkippedPassport && selectedTravelerIndex.value === 0) {
+          // First traveler skipped passport details - show application-level passport fields
+          allPassportFields = [...applicationLevelPassportFields];
+          
+          // Also include traveler-specific passport fields if available
+          if (selectedTravelerId.value) {
+            const travelerSpecificPassportFields = passportFieldsInResponse.filter((f: any) => 
+              f.travelerId === selectedTravelerId.value
+            );
+            allPassportFields = [...new Set([...applicationLevelPassportFields, ...travelerSpecificPassportFields])];
+          }
+          
+          console.log('✅ First traveler skipped passport (from draftData or traveler object), showing passport fields', {
+            fromDraftData: firstTravelerSkippedFromDraft,
+            fromTravelerObject: firstTravelerSkippedPassport,
+            passportFieldsCount: allPassportFields.length
+          });
+        }
+        
+        // ✅ CRITICAL: Passport fields FIRST, then regular fields
+        fieldsToProcess = [
+          ...allPassportFields,
+          ...regularFieldsInResponse
+        ];
+        console.log('✅ Application-level: showing passport fields FIRST, then regular fields', {
+          applicationLevelPassportFields: applicationLevelPassportFields.length,
+          totalPassportFields: allPassportFields.length,
+          regularFields: regularFieldsInResponse.length,
+          firstTravelerSkippedPassport,
+          firstTravelerPassportNumber: firstTraveler?.passportNumber || 'missing',
+          checkedDraftData: !!app?.draftData?.step3?.passportDetails
+        });
+      }
+      
+      // CRITICAL: Final filter to ensure fields belong to this application
+      // Double-check that all fields are for travelers in this application
+      const finalApplicationTravelerIds = new Set(
+        travelers.value
+          .map((t: any) => t.id)
+          .filter((id: any) => id !== undefined && id !== null)
+      );
+      finalApplicationTravelerIds.add(null);
+      finalApplicationTravelerIds.add(undefined);
+      
+      // Deduplicate fields by ID and ensure they belong to this application
+      const seenIds = new Set<number | string>();
+      const uniqueFields = fieldsToProcess.filter((field: any) => {
+        // Filter out fields without IDs
+        if (field.id === undefined && typeof field.id !== 'string') {
+          console.warn('⚠️ Field without ID found:', field.question);
           return false;
         }
-        seenIds.add(field.id);
+        
+        // CRITICAL: Ensure field belongs to this application
+        // For traveler-specific fields, verify travelerId matches a traveler in this application
+        if (field.travelerId !== null && field.travelerId !== undefined) {
+          if (!finalApplicationTravelerIds.has(field.travelerId)) {
+            console.warn('⚠️ Filtering out field from different application:', {
+              fieldId: field.id,
+              fieldQuestion: field.question,
+              fieldTravelerId: field.travelerId,
+              currentApplicationTravelerIds: Array.from(finalApplicationTravelerIds),
+              applicationId: applicationId.value
+            });
+            return false;
+          }
+        }
+        
+        // Deduplicate by ID
+        const fieldId = field.id;
+        if (seenIds.has(fieldId)) {
+          // Silently skip duplicates - backend may return same field for application and traveler level
+          console.warn('⚠️ Duplicate field ID detected:', fieldId, field.question);
+          return false;
+        }
+        seenIds.add(fieldId);
         return true;
       });
       
-      fields.value = uniqueFields;
+      console.log('✅ Final filtered fields for application:', {
+        uniqueFieldsCount: uniqueFields.length,
+        applicationId: applicationId.value,
+        travelerId: travelerId,
+        applicationTravelerIds: Array.from(finalApplicationTravelerIds),
+        filteredOutCount: fieldsToProcess.length - uniqueFields.length
+      });
+      
+      // ✅ FINAL VALIDATION: Log any fields that might be from other applications
+      const fieldsFromOtherApps = uniqueFields.filter((f: any) => {
+        if (f.travelerId && f.travelerId !== null && f.travelerId !== undefined) {
+          return !finalApplicationTravelerIds.has(f.travelerId);
+        }
+        return false;
+      });
+      
+      if (fieldsFromOtherApps.length > 0) {
+        console.error('❌ CRITICAL: Found fields from other applications:', fieldsFromOtherApps.map((f: any) => ({
+          id: f.id,
+          question: f.question,
+          travelerId: f.travelerId
+        })));
+      }
+      
+      // Separate passport fields from regular additional info fields
+      const passportFields = uniqueFields.filter((f: any) => isPassportField(f));
+      const regularAdditionalInfoFields = uniqueFields.filter((f: any) => !isPassportField(f));
+      
+      console.log('📊 Field breakdown:', {
+        total: uniqueFields.length,
+        passportFields: passportFields.length,
+        regularFields: regularAdditionalInfoFields.length
+      });
+      
+      if (passportFields.length > 0) {
+        console.log('🛂 Passport fields detected:', passportFields.map((f: any) => ({
+          id: f.id,
+          question: f.question,
+          fieldType: f.fieldType
+        })));
+        // If passport fields already exist from backend, don't create dynamic ones
+        console.log('✅ Using backend passport fields, skipping dynamic field creation');
+      } else {
+        console.log('⚠️ No passport fields found in response. Expected fields with keys: _passport_number, _passport_expiry_date, _residence_country, _has_schengen_visa');
+        
+        // ✅ CRITICAL: Create dynamic passport fields if backend didn't create them
+        // Check draftData for first traveler who skipped passport details
+        const app = application.value?.data || application.value;
+        const firstPassportDetail = app?.draftData?.step3?.passportDetails?.[0];
+        const firstTravelerSkippedFromDraft = firstPassportDetail?.addPassportDetailsLater === true;
+        
+        let shouldCreateDynamicFields = false;
+        let needsPassportFields = false;
+        
+        if (travelerId === null && selectedTravelerIndex.value === 0 && firstTravelerSkippedFromDraft) {
+          // First traveler without ID who skipped passport details - create all passport fields
+          shouldCreateDynamicFields = true;
+          needsPassportFields = true;
+          console.log('✅ First traveler skipped passport details (from draftData), creating dynamic fields');
+        } else if (travelerId !== null && application.value && currentTraveler.value) {
+          // For travelers with IDs, check if they have missing passport fields
+          const traveler = currentTraveler.value as any;
+          const hasPassportNumber = traveler?.passportNumber && String(traveler.passportNumber).trim() !== '';
+          const hasPassportExpiry = traveler?.passportExpiryDate && traveler.passportExpiryDate !== null;
+          const hasResidenceCountry = traveler?.residenceCountry && String(traveler.residenceCountry).trim() !== '';
+          const hasSchengenVisa = traveler?.hasSchengenVisa !== null && traveler?.hasSchengenVisa !== undefined;
+          
+          needsPassportFields = !hasPassportNumber || !hasPassportExpiry || !hasResidenceCountry || hasSchengenVisa === null || hasSchengenVisa === undefined;
+          shouldCreateDynamicFields = needsPassportFields;
+        }
+        
+        if (shouldCreateDynamicFields && needsPassportFields) {
+          console.log('🛂 Traveler needs passport fields. Creating dynamic fields for traveler:', travelerId || 'first traveler (no ID)');
+          
+          // Check which specific passport fields are missing
+          const dynamicPassportFields: VisaProductFieldWithResponse[] = [];
+          // For first traveler without ID, use a special base ID
+          let baseId = travelerId !== null ? -1000 - travelerId : -2000; // Use -2000 for first traveler without ID
+          
+          // For first traveler without ID, create all passport fields
+          if (travelerId === null && selectedTravelerIndex.value === 0) {
+              // Create all 4 passport fields for first traveler who skipped
+              dynamicPassportFields.push({
+                id: baseId--,
+                visaProductId: app.visaProductId || 0,
+                fieldType: 'text',
+                question: 'Passport Number',
+                isRequired: true,
+                displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                isActive: true,
+                editable: true,
+                response: null
+              });
+              
+              dynamicPassportFields.push({
+                id: baseId--,
+                visaProductId: app.visaProductId || 0,
+                fieldType: 'date',
+                question: 'Passport Expiration Date',
+                isRequired: true,
+                displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                isActive: true,
+                editable: true,
+                response: null
+              });
+              
+              dynamicPassportFields.push({
+                id: baseId--,
+                visaProductId: app.visaProductId || 0,
+                fieldType: 'text',
+                question: 'Residence Country',
+                isRequired: true,
+                displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                isActive: true,
+                editable: true,
+                response: null
+              });
+              
+              dynamicPassportFields.push({
+                id: baseId--,
+                visaProductId: app.visaProductId || 0,
+                fieldType: 'dropdown',
+                question: 'Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?',
+                isRequired: true,
+                displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                isActive: true,
+                editable: true,
+                options: ['yes', 'no'],
+                response: null
+              });
+            } else if (travelerId !== null) {
+              // For travelers with IDs, check which specific fields are missing
+              const traveler = currentTraveler.value as any;
+              const hasPassportNumber = traveler?.passportNumber && String(traveler.passportNumber).trim() !== '';
+              const hasPassportExpiry = traveler?.passportExpiryDate && traveler.passportExpiryDate !== null;
+              const hasResidenceCountry = traveler?.residenceCountry && String(traveler.residenceCountry).trim() !== '';
+              const hasSchengenVisa = traveler?.hasSchengenVisa !== null && traveler?.hasSchengenVisa !== undefined;
+              
+              if (!hasPassportNumber) {
+                dynamicPassportFields.push({
+                  id: baseId--,
+                  visaProductId: app.visaProductId || 0,
+                  fieldType: 'text',
+                  question: 'Passport Number',
+                  isRequired: true,
+                  displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                  isActive: true,
+                  editable: true,
+                  response: null
+                });
+              }
+              
+              if (!hasPassportExpiry) {
+                dynamicPassportFields.push({
+                  id: baseId--,
+                  visaProductId: app.visaProductId || 0,
+                  fieldType: 'date',
+                  question: 'Passport Expiration Date',
+                  isRequired: true,
+                  displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                  isActive: true,
+                  editable: true,
+                  response: null
+                });
+              }
+              
+              if (!hasResidenceCountry) {
+                dynamicPassportFields.push({
+                  id: baseId--,
+                  visaProductId: app.visaProductId || 0,
+                  fieldType: 'dropdown',
+                  question: 'Residence Country',
+                  isRequired: true,
+                  displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                  isActive: true,
+                  editable: true,
+                  options: [], // Will be populated from countries list if available
+                  response: null
+                });
+              }
+              
+              if (hasSchengenVisa === null || hasSchengenVisa === undefined) {
+                dynamicPassportFields.push({
+                  id: baseId--,
+                  visaProductId: app.visaProductId || 0,
+                  fieldType: 'dropdown',
+                  question: 'Do you have a valid visa or residence permit from the Schengen Area, USA, Australia, Canada, UK, Japan, Norway, New Zealand, Ireland, or Switzerland?',
+                  isRequired: true,
+                  displayOrder: uniqueFields.length + dynamicPassportFields.length,
+                  isActive: true,
+                  editable: true,
+                  options: ['yes', 'no'],
+                  response: null
+                });
+              }
+            }
+            
+            if (dynamicPassportFields.length > 0) {
+              console.log('✅ Created', dynamicPassportFields.length, 'dynamic passport fields for traveler:', travelerId);
+              // ✅ CRITICAL: Add dynamic passport fields at the BEGINNING to ensure they appear first
+              uniqueFields.unshift(...dynamicPassportFields);
+            }
+          }
+        }
+      
+      // ✅ CRITICAL: Override fieldType for Residence Country to always be 'text'
+      // This ensures consistency across all travelers, even if backend returns it as dropdown
+      uniqueFields.forEach((field: any) => {
+        if (isPassportField(field) && 
+            (field.question?.toLowerCase().includes('residence country') || 
+             field.question?.toLowerCase().includes('_residence_country'))) {
+          field.fieldType = 'text';
+          // Remove options if it was a dropdown
+          if (field.options) {
+            delete field.options;
+          }
+        }
+      });
+      
+      // ✅ CRITICAL: Ensure passport fields are always first, even after adding dynamic fields
+      // Re-sort to put passport fields first
+      const finalPassportFields = uniqueFields.filter((f: any) => isPassportField(f));
+      const finalRegularFields = uniqueFields.filter((f: any) => !isPassportField(f));
+      
+      // Sort each group by displayOrder
+      finalPassportFields.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+      finalRegularFields.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+      
+      // Combine: passport fields first, then regular fields
+      fields.value = [...finalPassportFields, ...finalRegularFields];
+      
+      console.log('✅ Final field order - Passport fields:', finalPassportFields.length, 'Regular fields:', finalRegularFields.length);
 
       // Initialize form responses with existing data or empty values
       fields.value.forEach((field) => {
@@ -1078,7 +2429,14 @@ const fetchFields = async (travelerId: number | null = null) => {
         }
       });
     } else {
+      console.error('❌ Failed to load fields:', {
+        success: response.success,
+        message: response.message,
+        data: response.data
+      });
       error.value = response.message || "Failed to load fields";
+      // Clear fields if API call failed
+      fields.value = [];
     }
   } catch (err: any) {
     console.error("Error fetching fields:", err);
@@ -1090,13 +2448,83 @@ const fetchFields = async (travelerId: number | null = null) => {
 
 // Select traveler
 const selectTraveler = async (travelerId: number | null, index: number) => {
+  // ✅ CRITICAL: Save current form responses before switching
+  // Get the key for the currently selected traveler
+  const currentTravelerKey = getTravelerKey(selectedTravelerId.value, selectedTravelerIndex.value);
+  
+  // Save current form responses if we have any
+  if (Object.keys(formResponses).length > 0) {
+    // Deep copy current form responses to save them
+    const currentResponses: Record<number | string, any> = {};
+    Object.keys(formResponses).forEach((key) => {
+      // Handle both string and number keys
+      const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+      const response = formResponses[fieldId];
+      if (response) {
+        // Deep copy the response object
+        currentResponses[fieldId] = {
+          value: response.value,
+          filePath: response.filePath,
+          fileName: response.fileName,
+          fileSize: response.fileSize,
+          date: response.date ? { ...response.date } : undefined,
+          isUploading: response.isUploading,
+          isUploaded: response.isUploaded,
+          uploadError: response.uploadError,
+          file: response.file // Keep file reference for negative IDs
+        };
+      }
+    });
+    
+    // Save to savedTravelerResponses
+    if (!savedTravelerResponses[currentTravelerKey]) {
+      savedTravelerResponses[currentTravelerKey] = {};
+    }
+    Object.assign(savedTravelerResponses[currentTravelerKey], currentResponses);
+    console.log('💾 Saved current form responses for traveler:', currentTravelerKey, 'Fields:', Object.keys(currentResponses).length);
+  }
+
+  // Now switch to the new traveler
   selectedTravelerId.value = travelerId;
   selectedTravelerIndex.value = index;
 
+  // Check if we have saved responses for this traveler
+  const travelerKey = getTravelerKey(travelerId, index);
+  if (savedTravelerResponses[travelerKey]) {
+    // Restore saved responses
+    const savedResponses = savedTravelerResponses[travelerKey];
+    
+    // Clear current form responses first
+    Object.keys(formResponses).forEach((key) => {
+      delete formResponses[key as keyof typeof formResponses];
+    });
+    
+    // Restore saved responses
+    Object.keys(savedResponses).forEach((key) => {
+      // Handle both string and number keys
+      const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+      const savedResponse = savedResponses[fieldId];
+      // Deep copy the saved response
+      formResponses[fieldId] = {
+        value: savedResponse.value,
+        filePath: savedResponse.filePath,
+        fileName: savedResponse.fileName,
+        fileSize: savedResponse.fileSize,
+        date: savedResponse.date ? { ...savedResponse.date } : undefined,
+        isUploading: savedResponse.isUploading || false,
+        isUploaded: savedResponse.isUploaded || false,
+        uploadError: savedResponse.uploadError,
+        file: savedResponse.file // Restore file reference for negative IDs
+      };
+    });
+    console.log('✅ Restored saved responses for traveler:', travelerKey, 'Fields:', Object.keys(savedResponses).length);
+  } else {
   // Clear form responses to load new ones
   Object.keys(formResponses).forEach((key) => {
-    delete formResponses[parseInt(key)];
+      const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+      delete formResponses[fieldId];
   });
+  }
 
   // Fetch fields for selected traveler
   await fetchFields(travelerId);
@@ -1457,12 +2885,14 @@ const validateForm = (): boolean => {
 };
 
 // Handle form submission
+// ✅ CRITICAL: This function now submits responses for ALL travelers, not just the current one
 const handleSubmit = async () => {
   if (!applicationId.value) {
     error.value = "Application ID is required";
     return;
   }
 
+  // Validate current form
   if (!validateForm()) {
     error.value = "Please fill all required fields";
     return;
@@ -1470,6 +2900,46 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true;
   error.value = "";
+
+  // ✅ CRITICAL: Save ALL travelers' current form responses before submitting
+  // This ensures that even if a traveler's form was never "switched away from", their responses are saved
+  for (let i = 0; i < allTravelers.value.length; i++) {
+    const traveler = allTravelers.value[i];
+    if (!traveler) continue;
+    
+    const travelerKey = getTravelerKey(traveler.id || null, i);
+    
+    // If this is the currently selected traveler, save from formResponses
+    if (i === selectedTravelerIndex.value && 
+        (traveler.id === selectedTravelerId.value || (traveler.id === null && selectedTravelerId.value === null))) {
+      // Current traveler - save from formResponses
+      if (Object.keys(formResponses).length > 0) {
+        if (!savedTravelerResponses[travelerKey]) {
+          savedTravelerResponses[travelerKey] = {};
+        }
+        // Deep copy current form responses
+        Object.keys(formResponses).forEach((key) => {
+          const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+          const response = formResponses[fieldId];
+          if (response && savedTravelerResponses[travelerKey]) {
+            savedTravelerResponses[travelerKey][fieldId] = {
+              value: response.value,
+              filePath: response.filePath,
+              fileName: response.fileName,
+              fileSize: response.fileSize,
+              date: response.date ? { ...response.date } : undefined,
+              isUploading: response.isUploading || false,
+              isUploaded: response.isUploaded || false,
+              uploadError: response.uploadError,
+              file: response.file
+            };
+          }
+        });
+        console.log('💾 Saved current traveler responses before submission:', travelerKey, 'Fields:', Object.keys(savedTravelerResponses[travelerKey]).length, 'Keys:', Object.keys(savedTravelerResponses[travelerKey]));
+      }
+    }
+    // Other travelers should already have their responses in savedTravelerResponses (saved when switching)
+  }
 
   try {
     // First, upload files for negative field IDs (admin-created custom fields)
@@ -1557,15 +3027,84 @@ const handleSubmit = async () => {
       await Promise.all(negativeFieldUploads);
     }
 
+    // ✅ CRITICAL: Get field IDs from active resubmission requests
+    // Negative field IDs are admin-requested fields that MUST be submitted
+    const app = application.value?.data || application.value;
+    const resubmissionFieldIds = new Set<number | string>();
+    
+    if (app?.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
+      app.resubmissionRequests.forEach((req: any) => {
+        // Skip fulfilled requests
+        if (req.fulfilledAt) return;
+        
+        // Check if this request is for the current context
+        const isFirstTraveler = selectedTravelerIndex.value === 0;
+        const isForCurrentTraveler = req.target === "traveler" && req.travelerId === selectedTravelerId.value;
+        const isApplicationLevel = req.target === "application" && isFirstTraveler;
+        
+        if (isForCurrentTraveler || isApplicationLevel) {
+          // Add field IDs from this request (including negative IDs for admin-created fields)
+          if (Array.isArray(req.fieldIds)) {
+            req.fieldIds.forEach((id: any) => resubmissionFieldIds.add(Number(id)));
+          }
+        }
+      });
+    }
+    
+    console.log('🔄 Resubmission field IDs to submit:', Array.from(resubmissionFieldIds));
+
     // Now build responses with uploaded file paths
     // Use sortedFields to maintain the same order as displayed in the form
-    // Filter out fields without IDs
+    // Handle both numeric IDs (regular fields) and string IDs (passport fields like '_passport_number')
     const responses = sortedFields.value
-      .filter((field): field is VisaProductFieldWithResponse & { id: number } => field.id !== undefined)
+      .filter((field) => {
+        // Filter out undefined/null IDs
+        if (field.id === undefined || field.id === null) {
+          return false;
+        }
+        
+        // Allow string IDs (passport fields like '_passport_number', '_passport_expiry_date', etc.)
+        const fieldId: string | number = field.id as string | number;
+        if (typeof fieldId === 'string') {
+          // Only allow passport field string IDs
+          const isPassportStringId = fieldId.startsWith('_passport_') || 
+                                     fieldId === '_residence_country' || 
+                                     fieldId === '_has_schengen_visa';
+          if (!isPassportStringId) {
+            console.warn('⚠️ Skipping field with unexpected string ID:', fieldId, field.question);
+            return false;
+          }
+          return true;
+        }
+        
+        // ✅ CRITICAL: Allow negative numeric IDs if they're in active resubmission requests
+        // These are admin-requested fields that the backend now supports
+        if (typeof fieldId === 'number' && fieldId < 0) {
+          if (resubmissionFieldIds.has(fieldId)) {
+            console.log('✅ Including negative field ID in resubmission request:', fieldId, field.question);
+            return true;
+          } else {
+            // Negative ID not in resubmission request - might be dynamically created passport field
+            // Skip it as backend should create these fields
+            console.warn('⚠️ Skipping negative field ID not in resubmission request:', fieldId, field.question);
+            return false;
+          }
+        }
+        
+        // Allow positive numeric IDs (regular fields)
+        return true;
+      })
       .map((field) => {
         const response: any = {
-          fieldId: field.id,
+          fieldId: field.id, // Can be string or number
         };
+
+        // ✅ CRITICAL: For negative field IDs (admin-requested fields), include the question text
+        // This ensures the backend can properly store and display the field label in the admin app
+        if (typeof field.id === 'number' && field.id < 0) {
+          response.question = field.question;
+          console.log('✅ Including question text for negative field ID:', field.id, field.question);
+        }
 
         if (field.fieldType === "upload") {
           const fileData = formResponses[field.id];
@@ -1593,29 +3132,453 @@ const handleSubmit = async () => {
         return response;
       });
 
+    // Log passport fields being submitted
+    const passportResponses = responses.filter((r: any) => typeof r.fieldId === 'string');
+    if (passportResponses.length > 0) {
+      console.log('🛂 Submitting passport fields with string IDs:', passportResponses.map((r: any) => ({
+        fieldId: r.fieldId,
+        value: r.value,
+        filePath: r.filePath,
+        fileName: r.fileName
+      })));
+      
+      // Log the full response structure for debugging
+      console.log('📤 Full passport responses payload:', JSON.stringify(passportResponses, null, 2));
+    }
+    
+    // Log all responses being submitted for debugging
+    console.log('📋 All responses being submitted for current traveler:', responses.length, 'total responses');
+    console.log('📋 Response breakdown:', {
+      passportFields: passportResponses.length,
+      regularFields: responses.length - passportResponses.length,
+      allResponses: responses.map((r: any) => ({
+        fieldId: r.fieldId,
+        hasValue: !!r.value,
+        hasFile: !!r.filePath
+      }))
+      });
+
+    // ✅ CRITICAL: Submit responses for ALL travelers, not just the current one
     // Get all travelers for status check
     const allTravelersList = travelers.value.map((t) => ({ id: t.id }));
 
-    const submitResponse = await submitFieldResponses(
-      {
+    // Collect all responses from all travelers
+    const allResponsesToSubmit: Array<{ travelerId: number | null | undefined; responses: any[] }> = [];
+    
+    // Submit responses for each traveler
+    for (let i = 0; i < allTravelers.value.length; i++) {
+      const traveler = allTravelers.value[i];
+      if (!traveler) continue;
+      
+      const travelerKey = getTravelerKey(traveler.id || null, i);
+      const savedResponses = savedTravelerResponses[travelerKey];
+      
+      // Skip if no saved responses
+      if (!savedResponses || Object.keys(savedResponses).length === 0) {
+        console.warn('⚠️ No saved responses for traveler:', travelerKey, 'Skipping submission');
+        continue;
+      }
+      
+      // Fetch fields for this traveler to build proper response structure
+      const fieldsResponse = await getFieldsByApplication(applicationId.value, traveler.id || undefined);
+      if (!fieldsResponse.success || !fieldsResponse.data) {
+        console.error('❌ Failed to fetch fields for traveler:', travelerKey);
+        continue;
+      }
+      
+      const travelerFields = fieldsResponse.data;
+      
+      // ✅ CRITICAL: For travelers without IDs (especially traveler 1), also check savedResponses
+      // for passport fields with string IDs that might not be in the API response
+      const passportFieldIds = ['_passport_number', '_passport_expiry_date', '_residence_country', '_has_schengen_visa'];
+      const passportFieldsInSavedResponses: any[] = [];
+      const negativePassportFields: any[] = [];
+      
+      // Map negative IDs to passport field string IDs (for traveler 1 without ID, baseId = -2000)
+      const negativeIdToPassportFieldMap: Record<number, string> = {
+        [-2000]: '_passport_number',
+        [-2001]: '_passport_expiry_date',
+        [-2002]: '_residence_country',
+        [-2003]: '_has_schengen_visa'
+      };
+      
+      // Debug: Log all saved response keys for this traveler
+      const savedKeys = Object.keys(savedResponses);
+      const savedKeysWithTypes = savedKeys.map(key => ({
+        key: key,
+        keyType: typeof key,
+        isNumeric: !isNaN(Number(key)),
+        isNegative: !isNaN(Number(key)) && Number(key) < 0,
+        isPassportString: typeof key === 'string' && passportFieldIds.includes(key),
+        value: savedResponses[key]?.value || savedResponses[key]?.filePath || 'no value',
+        hasValue: savedResponses[key]?.value !== undefined && savedResponses[key]?.value !== null,
+        hasFilePath: savedResponses[key]?.filePath !== undefined && savedResponses[key]?.filePath !== null
+      }));
+      console.log(`🔍 Checking savedResponses for traveler ${travelerKey}:`, {
+        travelerId: traveler.id,
+        travelerIndex: i,
+        savedResponseKeys: savedKeys,
+        savedResponseKeysWithDetails: savedKeysWithTypes,
+        hasPassportFields: passportFieldIds.some(id => savedResponses[id] !== undefined),
+        passportFieldChecks: passportFieldIds.map(id => ({
+          fieldId: id,
+          exists: savedResponses[id] !== undefined,
+          value: savedResponses[id]?.value || savedResponses[id]?.filePath || null
+        }))
+      });
+      
+      // If traveler has no ID (traveler 1), check for passport fields in savedResponses
+      if (traveler.id === null || traveler.id === undefined) {
+        console.log(`🔍 Traveler ${travelerKey} has no ID, checking for passport fields in savedResponses...`);
+        passportFieldIds.forEach((passportFieldId) => {
+          if (savedResponses[passportFieldId] !== undefined) {
+            const savedResponse = savedResponses[passportFieldId];
+            console.log(`✅ Found passport field ${passportFieldId} in savedResponses:`, savedResponse);
+            
+            // Create a response object for this passport field
+            const response: any = {
+              fieldId: passportFieldId,
+            };
+            
+            // Determine field type based on field ID
+            if (passportFieldId === '_passport_expiry_date') {
+              // Date field
+              const date = savedResponse.date;
+              if (date && date.day && date.month && date.year) {
+                const year = date.year;
+                const month = String(date.month).padStart(2, "0");
+                const day = String(date.day).padStart(2, "0");
+                response.value = `${year}-${month}-${day}`;
+              } else if (savedResponse.value) {
+                response.value = savedResponse.value;
+              }
+            } else {
+              // Text/dropdown field
+              response.value = savedResponse.value;
+            }
+            
+            passportFieldsInSavedResponses.push(response);
+            console.log(`✅ Added passport field ${passportFieldId} to submission for traveler ${travelerKey}:`, response);
+          } else {
+            console.log(`⚠️ Passport field ${passportFieldId} NOT found in savedResponses for traveler ${travelerKey}`);
+          }
+        });
+        
+        // ✅ CRITICAL: Also check for passport fields stored with negative IDs (from dynamic field creation)
+        // These might be stored as negative numbers instead of string IDs
+        // For traveler 1 without ID, baseId = -2000, and fields are created in order:
+        // -2000 = _passport_number
+        // -2001 = _passport_expiry_date
+        // -2002 = _residence_country
+        // -2003 = _has_schengen_visa
+        const negativeIdToPassportFieldMap: Record<number, string> = {
+          [-2000]: '_passport_number',
+          [-2001]: '_passport_expiry_date',
+          [-2002]: '_residence_country',
+          [-2003]: '_has_schengen_visa'
+        };
+        
+        savedKeys.forEach((key) => {
+          const numKey = Number(key);
+          // Check if this is a negative ID that maps to a passport field
+          if (!isNaN(numKey) && numKey < 0 && numKey >= -2010) {
+            const passportFieldId = negativeIdToPassportFieldMap[numKey];
+            if (passportFieldId) {
+              const savedResponse = savedResponses[key];
+              const response: any = {
+                fieldId: passportFieldId, // Use string ID instead of negative ID
+              };
+              
+              if (passportFieldId === '_passport_expiry_date') {
+                // Date field
+                const date = savedResponse.date;
+                if (date && date.day && date.month && date.year) {
+                  const year = date.year;
+                  const month = String(date.month).padStart(2, "0");
+                  const day = String(date.day).padStart(2, "0");
+                  response.value = `${year}-${month}-${day}`;
+                } else if (savedResponse.value) {
+                  response.value = savedResponse.value;
+                }
+              } else {
+                // Text/dropdown field
+                response.value = savedResponse.value;
+              }
+              
+              passportFieldsInSavedResponses.push(response);
+              negativePassportFields.push(response);
+              console.log(`✅ Found passport field with negative ID ${numKey}, converted to ${passportFieldId} for traveler ${travelerKey}`);
+            }
+          }
+        });
+        
+        // Add negative passport fields found above (they were already pushed to passportFieldsInSavedResponses)
+        console.log(`📋 Total passport fields found for traveler ${travelerKey}:`, passportFieldsInSavedResponses.length);
+      } else {
+        // For travelers with IDs, ALWAYS check savedResponses for passport fields
+        // Even if API returns them, we want to use the values from savedResponses (user's actual input)
+        passportFieldIds.forEach((passportFieldId) => {
+          if (savedResponses[passportFieldId] !== undefined) {
+            const savedResponse = savedResponses[passportFieldId];
+            // ✅ CRITICAL: Always include passport fields from savedResponses
+            // The API might return them, but we filter them out from travelerResponses
+            // So we need to include them here to ensure they're submitted
+            const response: any = {
+              fieldId: passportFieldId,
+            };
+            
+            if (passportFieldId === '_passport_expiry_date') {
+              const date = savedResponse.date;
+              if (date && date.day && date.month && date.year) {
+                const year = date.year;
+                const month = String(date.month).padStart(2, "0");
+                const day = String(date.day).padStart(2, "0");
+                response.value = `${year}-${month}-${day}`;
+              } else if (savedResponse.value) {
+                response.value = savedResponse.value;
+              }
+            } else {
+              response.value = savedResponse.value;
+            }
+            
+            passportFieldsInSavedResponses.push(response);
+            console.log(`✅ Found passport field ${passportFieldId} in savedResponses for traveler ${travelerKey}`);
+          }
+        });
+      }
+      
+      // Build responses from API fields
+      const travelerResponses = travelerFields
+        .filter((field: any) => {
+          // Only include fields that have saved responses
+          const fieldId = field.id;
+          if (fieldId === undefined || fieldId === null) return false;
+          
+          // ✅ CRITICAL: Skip passport fields with string IDs - they're already handled above
+          if (typeof fieldId === 'string' && passportFieldIds.includes(fieldId)) {
+            return false; // Skip, already handled in passportFieldsInSavedResponses
+          }
+          
+          // ✅ CRITICAL: Skip negative IDs that are passport fields (-2000 to -2003) - they're already converted and added above
+          if (typeof fieldId === 'number' && fieldId < 0 && fieldId >= -2003 && fieldId <= -2000) {
+            return false; // Skip, already converted and added to passportFieldsInSavedResponses
+          }
+          
+          return savedResponses[fieldId] !== undefined;
+        })
+        .map((field: any) => {
+          const savedResponse = savedResponses[field.id];
+          const response: any = {
+            fieldId: field.id,
+          };
+          
+          // Include question text for negative field IDs
+          if (typeof field.id === 'number' && field.id < 0) {
+            response.question = field.question;
+          }
+          
+          if (field.fieldType === "upload") {
+            response.filePath = savedResponse.filePath;
+            response.fileName = savedResponse.fileName;
+            response.fileSize = savedResponse.fileSize;
+          } else if (field.fieldType === "date") {
+            const date = savedResponse.date;
+            if (date && date.day && date.month && date.year) {
+              const year = date.year;
+              const month = String(date.month).padStart(2, "0");
+              const day = String(date.day).padStart(2, "0");
+              response.value = `${year}-${month}-${day}`;
+            }
+          } else {
+            response.value = savedResponse.value;
+          }
+          
+          return response;
+        });
+      
+      // ✅ CRITICAL: Combine passport fields (from savedResponses) with regular fields (from API)
+      // Passport fields should come first
+      // Note: negativePassportFields are already included in passportFieldsInSavedResponses (they were pushed there)
+      const allResponses = [...passportFieldsInSavedResponses, ...travelerResponses];
+      
+      if (allResponses.length > 0) {
+        const payload = {
+          travelerId: traveler.id || null,
+          responses: allResponses
+        };
+        allResponsesToSubmit.push(payload);
+        const travelerName = traveler.firstName && traveler.lastName 
+          ? `${traveler.firstName} ${traveler.lastName}` 
+          : 'Unknown';
+        console.log(`✅ Prepared ${allResponses.length} responses for traveler ${travelerKey} (${travelerName}) (${passportFieldsInSavedResponses.length} passport + ${travelerResponses.length} regular)`);
+        
+        // ✅ LOG: Detailed payload for this traveler
+        console.log(`📤 PAYLOAD for traveler ${travelerKey} (${travelerName}):`, {
+          travelerId: payload.travelerId,
+          travelerName: travelerName,
         applicationId: applicationId.value,
-        travelerId: selectedTravelerId.value || undefined,
-        responses,
-      },
+          responsesCount: payload.responses.length,
+          responses: payload.responses.map((r: any) => ({
+            fieldId: r.fieldId,
+            fieldIdType: typeof r.fieldId,
+            value: r.value || null,
+            filePath: r.filePath || null,
+            fileName: r.fileName || null,
+            fileSize: r.fileSize || null,
+            question: r.question || null
+          }))
+        });
+        console.log(`📤 FULL PAYLOAD JSON for traveler ${travelerKey}:`, JSON.stringify({
+          applicationId: applicationId.value,
+          travelerId: payload.travelerId || undefined,
+          responses: payload.responses
+        }, null, 2));
+      }
+    }
+    
+    // Submit responses for each traveler
+    let allSubmissionsSuccessful = true;
+    for (const submission of allResponsesToSubmit) {
+      const payloadToSend = {
+        applicationId: applicationId.value,
+        travelerId: submission.travelerId || undefined,
+        responses: submission.responses,
+      };
+      
+      try {
+        // ✅ LOG: Payload being sent to backend API
+        console.log(`🚀 SENDING TO BACKEND - POST /visa-product-fields/responses`);
+        console.log(`🚀 Payload for traveler ID ${submission.travelerId || 'null (application-level)'}:`, payloadToSend);
+        console.log(`🚀 Payload JSON:`, JSON.stringify(payloadToSend, null, 2));
+        
+        const submitResponse = await submitFieldResponses(
+          payloadToSend,
       allTravelersList
     );
+        
+        if (!submitResponse.success) {
+          console.error('❌ Failed to submit responses for traveler:', submission.travelerId, submitResponse.message);
+          console.error('❌ Failed payload was:', JSON.stringify(payloadToSend, null, 2));
+          allSubmissionsSuccessful = false;
+        } else {
+          console.log(`✅ Successfully submitted ${submission.responses.length} responses for traveler:`, submission.travelerId);
+          console.log(`✅ Backend response:`, submitResponse);
+        }
+      } catch (err: any) {
+        console.error('❌ Error submitting responses for traveler:', submission.travelerId, err);
+        console.error('❌ Error payload was:', JSON.stringify(payloadToSend, null, 2));
+        console.error('❌ Error details:', err.message || err);
+        allSubmissionsSuccessful = false;
+      }
+    }
+    
+    // Use the last submission response for status updates (they should all be similar)
+    const submitResponse = allSubmissionsSuccessful 
+      ? { success: true, message: 'All responses submitted successfully' }
+      : { success: false, message: 'Some responses failed to submit' };
 
     if (submitResponse.success) {
-      // Update submission status
-      const key = selectedTravelerId.value
-        ? `traveler-${selectedTravelerId.value}`
-        : `traveler-${selectedTravelerIndex.value}`;
-      submissionStatus[key] = "submitted";
+      console.log('✅ Field responses submitted successfully for all travelers');
+      
+      // ✅ Clear form data from localStorage after successful submission
+      clearFormDataFromStorage();
+      console.log('🗑️ Cleared form data from localStorage after successful submission');
+      
+      // Update submission status for all travelers
+      for (let i = 0; i < allTravelers.value.length; i++) {
+        const traveler = allTravelers.value[i];
+        if (!traveler) continue;
+        
+        const travelerKey = getTravelerKey(traveler.id || null, i);
+        const savedResponses = savedTravelerResponses[travelerKey];
+        
+        // Only mark as submitted if they have saved responses
+        if (savedResponses && Object.keys(savedResponses).length > 0) {
+          const statusKey = traveler.id
+            ? `traveler-${traveler.id}`
+            : `traveler-index-${i}`;
+          submissionStatus[statusKey] = "submitted";
+          console.log(`✅ Marked traveler ${travelerKey} as submitted`);
+        }
+      }
 
       // Refresh fields to show updated responses
       await fetchFields(selectedTravelerId.value);
+      
+      // Verify that field responses were saved (check if responses are in the fetched fields)
+      const passportFieldsWithResponses = fields.value.filter((f: any) => {
+        const isPassport = isPassportField(f);
+        const hasResponse = f.response && (
+          (f.response.value !== null && f.response.value !== undefined && f.response.value !== '') ||
+          (f.response.filePath !== null && f.response.filePath !== undefined && f.response.filePath !== '')
+        );
+        return isPassport && hasResponse;
+      });
+      
+      console.log('📋 Passport field responses saved in database:', passportFieldsWithResponses.length, 'out of', passportResponses.length);
+      
+      // Debug: Check all passport fields and their responses
+      const allPassportFields = fields.value.filter((f: any) => isPassportField(f));
+      console.log('🔍 All passport fields after submission:', allPassportFields.map((f: any) => ({
+        fieldId: f.id,
+        question: f.question,
+        hasResponse: !!f.response,
+        responseValue: f.response?.value || null,
+        responseFilePath: f.response?.filePath || null,
+        responseId: f.response?.id || null
+      })));
+      
+      if (passportFieldsWithResponses.length > 0) {
+        console.log('✅ Field responses are saved:', passportFieldsWithResponses.map((f: any) => ({
+          fieldId: f.id,
+          question: f.question,
+          responseValue: f.response?.value,
+          responseFilePath: f.response?.filePath
+        })));
+      } else {
+        console.error('❌ CRITICAL: Field responses with string IDs were NOT saved to database');
+        console.error('❌ Backend is rejecting or ignoring field responses with string fieldIds');
+        console.error('❌ Submitted passport fieldIds:', passportResponses.map((r: any) => r.fieldId));
+        console.error('❌ Backend needs to accept string fieldIds for passport fields');
+      }
+      
       // Refresh application to reflect possible status change to "processing"
       await fetchApplication();
+      
+      // After refresh, check if passport data was updated in traveler record
+      if (currentTraveler.value && passportResponses.length > 0) {
+        const traveler = currentTraveler.value as any;
+        console.log('🔍 Verifying passport data in traveler record after submission:', {
+          passportNumber: traveler.passportNumber || 'NOT UPDATED',
+          passportExpiryDate: traveler.passportExpiryDate || 'NOT UPDATED',
+          residenceCountry: traveler.residenceCountry || 'NOT UPDATED',
+          hasSchengenVisa: traveler.hasSchengenVisa !== undefined ? traveler.hasSchengenVisa : 'NOT UPDATED'
+        });
+        
+        // Check if passport data is still missing
+        const passportStillMissing = !traveler.passportNumber || 
+                                     !traveler.passportExpiryDate || 
+                                     !traveler.residenceCountry || 
+                                     traveler.hasSchengenVisa === undefined || 
+                                     traveler.hasSchengenVisa === null;
+        
+        if (passportStillMissing) {
+          console.warn('⚠️ WARNING: Passport data was submitted but traveler record was NOT updated.');
+          console.warn('⚠️ Backend should extract passport data from field responses and update the traveler record.');
+          console.warn('⚠️ Field responses with string IDs (_passport_number, etc.) need to be processed by the backend.');
+          console.warn('⚠️ BACKEND FIX REQUIRED:');
+          console.warn('   When processing field responses with fieldId starting with "_passport_":');
+          console.warn('   - Extract the value from the response');
+          console.warn('   - Map it to the corresponding traveler field:');
+          console.warn('     * "_passport_number" → traveler.passportNumber');
+          console.warn('     * "_passport_expiry_date" → traveler.passportExpiryDate');
+          console.warn('     * "_residence_country" → traveler.residenceCountry');
+          console.warn('     * "_has_schengen_visa" → traveler.hasSchengenVisa (convert "yes"/"no" to boolean)');
+          console.warn('   - Update the traveler record in the database');
+        } else {
+          console.log('✅ Passport data successfully updated in traveler record');
+        }
+      }
 
       // Check if all additional info is now complete
       const allSubmitted = await checkAllAdditionalInfoSubmitted(
@@ -1623,16 +3586,23 @@ const handleSubmit = async () => {
         allTravelersList
       );
 
+      // ✅ CRITICAL: Only redirect if not submitting all travelers (handleSubmitAll will redirect)
+      if (!isSubmittingAll.value) {
       if (allSubmitted) {
+          // All travelers have submitted - show success message and redirect
         alert(
           "All additional information submitted successfully! Your application status has been updated."
         );
-        // Redirect after user clicks OK on alert
+          // Redirect to orders page
         router.push("/my-account/my-orders");
       } else {
+          // Some travelers still need to submit - show message and redirect anyway
         alert(
-          "Additional information submitted successfully! Please complete the remaining forms."
+            "Additional information submitted successfully! You can complete the remaining forms later."
         );
+          // ✅ Always redirect after submission, even if not all travelers are done
+          router.push("/my-account/my-orders");
+        }
       }
     } else {
       throw new Error(submitResponse.message || "Failed to submit responses");
@@ -1656,6 +3626,12 @@ const initializeData = async () => {
   loading.value = true;
 
   try {
+    // ✅ Load saved form data from localStorage before fetching application
+    const hasSavedData = loadFormDataFromStorage();
+    if (hasSavedData) {
+      console.log('✅ Restored form data from localStorage');
+    }
+    
     await fetchApplication();
 
     // Check if there are any active resubmission requests
@@ -1682,20 +3658,42 @@ const initializeData = async () => {
       }
     }
 
-    // Check status for all travelers
+    // Check status for all travelers (only those with valid IDs)
     for (const traveler of travelers.value) {
-      if (traveler.id) {
+      if (traveler.id !== undefined && traveler.id !== null) {
         await checkSubmissionStatus(traveler.id);
+      }
+    }
+    
+    // ✅ CRITICAL: Auto-select first traveler (with or without ID)
+    // If traveler has ID, use it; if not, use null to fetch application-level fields
+    const validTravelers = allTravelers.value;
+    let shouldFetchFields = true; // Flag to prevent duplicate fetchFields calls
+    
+    if (validTravelers.length > 0) {
+      const firstTraveler = validTravelers[0];
+      selectedTravelerIndex.value = 0;
+      
+      if (firstTraveler && firstTraveler.id !== undefined && firstTraveler.id !== null) {
+        // Traveler has ID - use it
+        selectedTravelerId.value = firstTraveler.id;
+        console.log('✅ Auto-selecting first traveler with ID:', firstTraveler.id, 'at index 0');
+        // Fetch fields for the first traveler - this will include passport fields
+        await fetchFields(firstTraveler.id);
+        shouldFetchFields = false; // Already fetched, don't fetch again
+      } else {
+        // Traveler doesn't have ID - fetch application-level fields
+        selectedTravelerId.value = null;
+        console.log('⚠️ First traveler has no ID, fetching application-level fields at index 0');
+        // Fetch application-level fields (travelerId = null)
+        await fetchFields(null);
+        shouldFetchFields = false; // Already fetched, don't fetch again
       }
     }
 
     // Auto-select first person with active resubmission requests
-    // Reuse the app variable declared above
-    if (
-      app &&
-      app.resubmissionRequests &&
-      Array.isArray(app.resubmissionRequests)
-    ) {
+    // Only run this if we haven't already fetched fields above
+    if (shouldFetchFields && app && app.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
       const activeRequests = app.resubmissionRequests.filter(
         (req: any) => !req.fulfilledAt
       );
@@ -1706,80 +3704,55 @@ const initializeData = async () => {
 
         if (firstRequest.target === "application") {
           // Application-level request - map to first traveler (since we removed application tab)
-          const firstTraveler = travelers.value[0];
-          if (travelers.value.length > 0 && firstTraveler?.id) {
-            selectedTravelerId.value = firstTraveler.id;
+          const validTravelers = allTravelers.value;
+          if (validTravelers.length > 0) {
+            const firstTraveler = validTravelers[0];
             selectedTravelerIndex.value = 0;
+            if (firstTraveler && firstTraveler.id !== undefined && firstTraveler.id !== null) {
+              selectedTravelerId.value = firstTraveler.id;
             await fetchFields(selectedTravelerId.value);
           } else {
-            // No travelers available - default to first traveler index
             selectedTravelerId.value = null;
-            selectedTravelerIndex.value = 0;
             await fetchFields(null);
           }
-        } else if (
-          firstRequest.target === "traveler" &&
-          firstRequest.travelerId
-        ) {
+            shouldFetchFields = false;
+          }
+        } else if (firstRequest.target === "traveler" && firstRequest.travelerId) {
           // Traveler-specific request - select that traveler
-          const idx = travelers.value.findIndex(
+          const validTravelers = allTravelers.value;
+          const idx = validTravelers.findIndex(
             (t) => t.id === firstRequest.travelerId
           );
           if (idx !== -1) {
             selectedTravelerId.value = firstRequest.travelerId;
             selectedTravelerIndex.value = idx;
             await fetchFields(selectedTravelerId.value);
-          } else {
-            // Fallback to first traveler if traveler not found
-            const firstTraveler = travelers.value[0];
-            if (travelers.value.length > 0 && firstTraveler?.id) {
-              selectedTravelerId.value = firstTraveler.id;
-              selectedTravelerIndex.value = 0;
-              await fetchFields(selectedTravelerId.value);
-            } else {
-              selectedTravelerId.value = null;
-              selectedTravelerIndex.value = 0;
-              await fetchFields(null);
-            }
+            shouldFetchFields = false;
           }
-        } else {
-          // Default to first traveler
-          const firstTraveler = travelers.value[0];
-          if (travelers.value.length > 0 && firstTraveler?.id) {
-            selectedTravelerId.value = firstTraveler.id;
-            selectedTravelerIndex.value = 0;
-            await fetchFields(selectedTravelerId.value);
-          } else {
-            selectedTravelerId.value = null;
-            selectedTravelerIndex.value = 0;
-            await fetchFields(null);
-          }
-        }
-      } else {
-        // No active requests - default to first traveler
-        const firstTraveler = travelers.value[0];
-        if (travelers.value.length > 0 && firstTraveler?.id) {
-          selectedTravelerId.value = firstTraveler.id;
-          selectedTravelerIndex.value = 0;
-          await fetchFields(selectedTravelerId.value);
-        } else {
-          selectedTravelerId.value = null;
-          selectedTravelerIndex.value = 0;
-          await fetchFields(null);
         }
       }
-    } else {
-      // No resubmission requests - default to first traveler
-      const firstTraveler = travelers.value[0];
-      if (travelers.value.length > 0 && firstTraveler?.id) {
+    }
+    
+    // ✅ CRITICAL: Final fallback - if we still haven't fetched fields, use first traveler
+    // If traveler has ID, use it; if not, fetch application-level fields
+    if (shouldFetchFields && validTravelers.length > 0) {
+      const firstTraveler = validTravelers[0];
+          selectedTravelerIndex.value = 0;
+      if (firstTraveler && firstTraveler.id !== undefined && firstTraveler.id !== null) {
         selectedTravelerId.value = firstTraveler.id;
-        selectedTravelerIndex.value = 0;
-        await fetchFields(selectedTravelerId.value);
-      } else {
+        console.log('✅ Final fallback: selecting first traveler with ID:', firstTraveler.id);
+        await fetchFields(firstTraveler.id);
+        } else {
+          selectedTravelerId.value = null;
+        console.log('⚠️ Final fallback: first traveler has no ID, fetching application-level fields');
+          await fetchFields(null);
+        }
+    } else if (shouldFetchFields && validTravelers.length === 0) {
+      // No travelers at all - fetch application-level fields
+      console.log('⚠️ No travelers found, fetching application-level fields');
         selectedTravelerId.value = null;
         selectedTravelerIndex.value = 0;
         await fetchFields(null);
-      }
     }
   } catch (err: any) {
     error.value = err.message || "Failed to initialize data";
@@ -1848,6 +3821,28 @@ const checkAndRedirectIfNeeded = async () => {
   }
   return false;
 };
+
+// ✅ Watch formResponses and savedTravelerResponses to auto-save to localStorage
+// Use debounce to avoid saving too frequently
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+const debouncedSave = () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveFormDataToStorage();
+  }, 1000); // Save 1 second after last change
+};
+
+watch(formResponses, () => {
+  debouncedSave();
+}, { deep: true });
+
+watch(savedTravelerResponses, () => {
+  debouncedSave();
+}, { deep: true });
+
+watch([selectedTravelerId, selectedTravelerIndex], () => {
+  debouncedSave();
+});
 
 // Fetch data on mount
 onMounted(async () => {

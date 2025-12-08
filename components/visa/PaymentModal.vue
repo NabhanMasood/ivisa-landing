@@ -1134,8 +1134,19 @@ const handlePayment = async () => {
     console.log("👥 numberOfTravelers in payload:", transformedData.numberOfTravelers);
     console.log("💰 totalAmount in payload:", transformedData.totalAmount);
     console.log("💰 payment.amount in payload:", transformedData.payment.amount);
+    console.log("💰 govtFee in payload:", transformedData.govtFee);
+    console.log("💰 serviceFee in payload:", transformedData.serviceFee);
+    console.log("💰 processingFee in payload:", transformedData.processingFee);
     console.log("💰 discountAmount in payload:", transformedData.discountAmount || 0);
     console.log("💰 couponCode in payload:", transformedData.couponCode || null);
+    
+    // ✅ CRITICAL: Verify amounts are being sent
+    if (!transformedData.totalAmount || transformedData.totalAmount === 0) {
+      console.error("❌ CRITICAL: totalAmount is missing or zero in payload!");
+    }
+    if (!transformedData.payment?.amount || transformedData.payment.amount === 0) {
+      console.error("❌ CRITICAL: payment.amount is missing or zero in payload!");
+    }
     console.log("📞 First traveler phone:", transformedData.travelers?.[0]?.phone || "❌ MISSING");
     console.log("📧 First traveler email:", transformedData.travelers?.[0]?.email || "❌ MISSING");
     console.log("=".repeat(80));

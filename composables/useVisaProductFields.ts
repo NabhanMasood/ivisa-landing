@@ -89,11 +89,12 @@ export interface VisaProductFieldWithResponse extends VisaProductField {
  * Submit Field Response DTO
  */
 export interface SubmitFieldResponseDto {
-  fieldId: number
+  fieldId: number | string // Can be number (positive or negative) or string (for passport fields)
   value?: string | null
   filePath?: string | null
   fileName?: string | null
   fileSize?: number | null
+  question?: string // Optional: question text for negative field IDs (admin-requested fields)
 }
 
 /**
@@ -683,17 +684,14 @@ export const useVisaProductFieldsApi = () => {
         }
       }
 
-      console.log('🔍 Travelers checked:', travelersWithIds.length, 'out of', travelers.length, 'total travelers:', totalTravelersCount)
 
       // If there are no fields at all, then there's nothing to submit, so return true
       if (!hasAnyFields) {
-        console.log('🔍 checkAllAdditionalInfoSubmitted: No fields found, returning true (nothing to submit)')
         return true
       }
 
       // IMPORTANT: If there are fields but NO responses at all, return false
       if (!hasAnyResponses) {
-        console.log('🔍 checkAllAdditionalInfoSubmitted: Fields exist but no responses found, returning false')
         return false
       }
 
