@@ -58,7 +58,7 @@
                 color: #0b3947;
               "
             >
-              Nationality on Passport
+              Nationality on Passport <span class="text-red-500">*</span>
             </Label>
             <div class="relative mt-2">
               <!-- Loading State -->
@@ -126,8 +126,46 @@
             </div>
           </div>
 
-          <!-- Passport Number -->
+          <!-- Add Passport Details Later Checkbox -->
           <div>
+            <div class="flex items-center gap-2">
+              <Checkbox
+                :checked="passportDetails[0].addPassportDetailsLater || false"
+                @update:checked="(val: boolean) => passportDetails[0].addPassportDetailsLater = val"
+              />
+              <Label
+                htmlFor="addPassportLater-0"
+                style="
+                  font-family: Manrope;
+                  font-weight: 500;
+                  font-size: 14px;
+                  line-height: 20px;
+                  color: #0b3947;
+                  cursor: pointer;
+                "
+                @click="passportDetails[0].addPassportDetailsLater = !passportDetails[0].addPassportDetailsLater"
+              >
+                Add passport details later
+              </Label>
+            </div>
+            <p
+              v-if="passportDetails[0].addPassportDetailsLater"
+              style="
+                font-family: Manrope;
+                font-weight: 400;
+                font-size: 12px;
+                line-height: 16px;
+                color: #6b7280;
+                margin-top: 4px;
+                margin-left: 24px;
+              "
+            >
+              You can provide passport details in the additional information form later.
+            </p>
+          </div>
+
+          <!-- Passport Number -->
+          <div v-if="!passportDetails[0].addPassportDetailsLater">
             <Label
               htmlFor="passportNumber-0"
               style="
@@ -149,7 +187,7 @@
           </div>
 
           <!-- Passport Expiration Date -->
-          <div>
+          <div v-if="!passportDetails[0].addPassportDetailsLater">
             <Label
               style="
                 font-family: Manrope;
@@ -233,7 +271,7 @@
           </div>
 
           <!-- Residence Country -->
-          <div>
+          <div v-if="!passportDetails[0].addPassportDetailsLater">
             <Label
               htmlFor="residenceCountry-0"
               style="
@@ -313,7 +351,7 @@
           </div>
 
           <!-- Schengen Visa Question -->
-          <div style="gap: 8px; display: flex; flex-direction: column">
+          <div v-if="!passportDetails[0].addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
             <Label
               style="
                 font-family: Manrope;
@@ -408,7 +446,7 @@
                     color: #0b3947;
                   "
                 >
-                  Nationality on Passport
+                  Nationality on Passport <span class="text-red-500">*</span>
                 </Label>
                 <div class="relative mt-2">
                   <!-- Loading State -->
@@ -476,8 +514,46 @@
                 </div>
               </div>
 
-              <!-- Passport Number -->
+              <!-- Add Passport Details Later Checkbox -->
               <div>
+                <div class="flex items-center gap-2">
+                  <Checkbox
+                    :checked="traveler.addPassportDetailsLater || false"
+                    @update:checked="(val: boolean) => traveler.addPassportDetailsLater = val"
+                  />
+                  <Label
+                    :htmlFor="`addPassportLater-${index}`"
+                    style="
+                      font-family: Manrope;
+                      font-weight: 500;
+                      font-size: 14px;
+                      line-height: 20px;
+                      color: #0b3947;
+                      cursor: pointer;
+                    "
+                    @click="traveler.addPassportDetailsLater = !traveler.addPassportDetailsLater"
+                  >
+                    Add passport details later
+                  </Label>
+                </div>
+                <p
+                  v-if="traveler.addPassportDetailsLater"
+                  style="
+                    font-family: Manrope;
+                    font-weight: 400;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: #6b7280;
+                    margin-top: 4px;
+                    margin-left: 24px;
+                  "
+                >
+                  You can provide passport details in the additional information form later.
+                </p>
+              </div>
+
+              <!-- Passport Number -->
+              <div v-if="!traveler.addPassportDetailsLater">
                 <Label
                   :htmlFor="`passportNumber-${index}`"
                   style="
@@ -499,7 +575,7 @@
               </div>
 
               <!-- Passport Expiration Date -->
-              <div>
+              <div v-if="!traveler.addPassportDetailsLater">
                 <Label
                   style="
                     font-family: Manrope;
@@ -583,7 +659,7 @@
               </div>
 
               <!-- Residence Country -->
-              <div>
+              <div v-if="!traveler.addPassportDetailsLater">
                 <Label
                   :htmlFor="`residenceCountry-${index}`"
                   style="
@@ -663,7 +739,7 @@
               </div>
 
               <!-- Schengen Visa Question -->
-              <div style="gap: 8px; display: flex; flex-direction: column">
+              <div v-if="!traveler.addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
                 <Label
                   style="
                     font-family: Manrope;
@@ -718,6 +794,7 @@ import SelectContent from "@/components/ui/select/SelectContent.vue";
 import SelectItem from "@/components/ui/select/SelectItem.vue";
 import SelectValue from "@/components/ui/select/SelectValue.vue";
 import PriceSummaryCard from "@/components/visa/price-card.vue";
+import Checkbox from "@/components/ui/Checkbox.vue";
 import { useCountriesApi, type Country } from "@/composables/useCountries";
 import { useRuntimeConfig } from "#app";
 
@@ -744,6 +821,7 @@ interface PassportDetail {
   expiryYear: string;
   residenceCountry: string;
   hasSchengenVisa: string;
+  addPassportDetailsLater?: boolean;
 }
 
 // API
@@ -833,6 +911,7 @@ const initializePassportDetails = () => {
           expiryYear: "",
           residenceCountry: "",
           hasSchengenVisa: "",
+          addPassportDetailsLater: false,
         });
         expandedTravelers.value[newIndex] = true; // Expand newly added
       }
@@ -860,6 +939,7 @@ const initializePassportDetails = () => {
     expiryYear: "",
     residenceCountry: "",
     hasSchengenVisa: "",
+    addPassportDetailsLater: false,
   }));
 
   expandedTravelers.value = { 0: true };
@@ -870,17 +950,30 @@ const toggleTraveler = (index: number) => {
 };
 
 const handleSaveAndContinue = () => {
-  // Validate all passport details
-  const isValid = passportDetails.value.every(
-    (p) =>
-      p.nationality &&
+  // Validate passport details
+  // Nationality is always required
+  // Other fields are only required if addPassportDetailsLater is false
+  const isValid = passportDetails.value.every((p) => {
+    // Nationality is always required
+    if (!p.nationality) {
+      return false;
+    }
+
+    // If addPassportDetailsLater is true, skip validation of other fields
+    if (p.addPassportDetailsLater) {
+      return true;
+    }
+
+    // Otherwise, all fields are required
+    return (
       p.passportNumber &&
       p.expiryDate &&
       p.expiryMonth &&
       p.expiryYear &&
       p.residenceCountry &&
       p.hasSchengenVisa
-  );
+    );
+  });
 
   if (!isValid) {
     alert("Please fill in all required passport details for all travelers");

@@ -264,6 +264,12 @@ export const useVisaApplications = () => {
       processingFee?: number
       processingFeeId?: number | string | null
       processingTime?: string
+      // ✅ CRITICAL: Include amount fields for payment
+      govtFee?: number
+      serviceFee?: number
+      totalAmount?: number
+      discountAmount?: number
+      couponCode?: string
       // ✅ NEW: Support for step-by-step saving
       draftData?: {
         step1?: any

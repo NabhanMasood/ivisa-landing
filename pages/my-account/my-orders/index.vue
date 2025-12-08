@@ -287,8 +287,43 @@ const fetchApplications = async () => {
         serviceFee: Number(app.serviceFee || 0)
       }))
       
-      console.log('✅ Applications loaded:', applications.value)
-      console.log('✅ Number of applications:', applications.value.length)
+      console.log('✅ Applications loaded:', applications.value.length, 'applications')
+      
+      // Debug: Log traveler names for each application to verify data
+      applications.value.forEach((app: any, index: number) => {
+        const firstTraveler = app.travelers && app.travelers.length > 0 ? app.travelers[0] : null
+        const travelerName = firstTraveler 
+          ? `${firstTraveler.firstName || ''} ${firstTraveler.lastName || ''}`.trim()
+          : 'No travelers'
+        
+        // Check draftData for original names
+        const draftTravelerName = app.draftData?.step2?.travelers?.[0]
+          ? `${app.draftData.step2.travelers[0].firstName || ''} ${app.draftData.step2.travelers[0].lastName || ''}`.trim()
+          : null
+        
+        const customerName = app.customer?.fullname || 'No customer name'
+        const willDisplay = getCustomerName(app)
+        
+        // ✅ CRITICAL: Log all travelers to check if they're mixed between applications
+        const allTravelerNames = app.travelers?.map((t: any, idx: number) => ({
+          index: idx,
+          id: t.id,
+          name: `${t.firstName || ''} ${t.lastName || ''}`.trim(),
+          email: t.email
+        })) || []
+        
+        console.log(`📋 App ${index + 1} (${app.applicationNumber || app.id}) - Application ID: ${app.id}:`, {
+          applicationId: app.id,
+          travelerName: travelerName || 'Empty',
+          draftTravelerName: draftTravelerName || 'Not in draftData',
+          customerName: customerName,
+          travelersCount: app.travelers?.length || 0,
+          allTravelerNames: allTravelerNames,
+          hasDraftData: !!app.draftData,
+          hasStep2Data: !!app.draftData?.step2,
+          willDisplay: willDisplay
+        })
+      })
       
       // Check additional info submission status for applications that require it
       await checkAdditionalInfoStatus()
@@ -305,23 +340,96 @@ const fetchApplications = async () => {
 }
 
 const getCustomerName = (order: any) => {
-  // First, try to get the customer name from the order's customer object
-  if (order.customer && order.customer.fullname) {
-    return order.customer.fullname
+  // ✅ CRITICAL: Always show the first traveler's name with an ID, never the customer account name
+  // This ensures each application shows the actual traveler name, not the account name
+  // NOTE: Some applications have travelers without IDs (duplicates) - skip those
+  
+  if (!order) {
+    console.error('❌ getCustomerName called with null/undefined order')
+    return 'N/A'
   }
   
-  // Fallback: use first traveler's name
-  if (order.travelers && order.travelers.length > 0) {
+  // PRIORITY 1: Use first traveler's name from travelers array
+  // ✅ CRITICAL: Always use the FIRST traveler (index 0) regardless of whether they have an ID
+  // The first traveler is the primary applicant and should always be displayed
+  if (order.travelers && Array.isArray(order.travelers) && order.travelers.length > 0) {
+    // Log all travelers for debugging
+    console.log(`🔍 getCustomerName for ${order.applicationNumber || order.id}:`, {
+      totalTravelers: order.travelers.length,
+      travelers: order.travelers.map((t: any, idx: number) => ({
+        index: idx,
+        id: t.id,
+        name: `${t.firstName || ''} ${t.lastName || ''}`.trim(),
+        hasId: t.id !== undefined && t.id !== null
+      }))
+    })
+    
+    // ✅ CRITICAL: Always use the FIRST traveler (index 0) as the primary applicant
     const firstTraveler = order.travelers[0]
-    return `${firstTraveler.firstName} ${firstTraveler.lastName}`
+    if (firstTraveler) {
+      const name = `${firstTraveler.firstName || ''} ${firstTraveler.lastName || ''}`.trim()
+      if (name && name.length > 0) {
+        console.log(`✅✅✅ Using first traveler name: "${name}" (index 0, ID: ${firstTraveler.id || 'none'}) for application:`, order.applicationNumber || order.id)
+        return name
+      }
+    }
+    
+    // Fallback: If first traveler has no name, try to find any traveler with a name
+    const travelerWithName = order.travelers.find((t: any) => {
+      const name = `${t.firstName || ''} ${t.lastName || ''}`.trim()
+      return name && name.length > 0
+    })
+    
+    if (travelerWithName) {
+      const name = `${travelerWithName.firstName || ''} ${travelerWithName.lastName || ''}`.trim()
+      console.warn(`⚠️ First traveler has no name, using fallback traveler: "${name}" for application:`, order.applicationNumber || order.id)
+      return name
+    }
+  } else {
+    console.warn(`⚠️ No travelers array or empty for application:`, order.applicationNumber || order.id)
   }
   
-  // Last resort: use current user's name
-  if (currentUser.value?.fullName) {
-    return currentUser.value.fullName
+  // PRIORITY 2: Check draftData for traveler names (FALLBACK)
+  // draftData contains the original names entered when creating the application
+  // Only use this if travelers array doesn't have valid names
+  if (order.draftData) {
+    // Check step2 (traveler information step)
+    if (order.draftData.step2 && order.draftData.step2.travelers) {
+      const draftTravelers = order.draftData.step2.travelers
+      if (Array.isArray(draftTravelers) && draftTravelers.length > 0) {
+        // ✅ First, try to find a traveler with an ID in draftData (if IDs are stored there)
+        const draftTravelerWithId = draftTravelers.find((t: any) => t.id !== undefined && t.id !== null)
+        
+        if (draftTravelerWithId && (draftTravelerWithId.firstName || draftTravelerWithId.lastName)) {
+          const name = `${draftTravelerWithId.firstName || ''} ${draftTravelerWithId.lastName || ''}`.trim()
+          if (name && name.length > 0) {
+            console.log(`✅ Using traveler with ID from draftData: ${name} for application:`, order.applicationNumber)
+            return name
+          }
+        }
+        
+        // Fallback: Get the FIRST traveler's name if no IDs in draftData
+        const firstDraftTraveler = draftTravelers[0]
+        if (firstDraftTraveler && (firstDraftTraveler.firstName || firstDraftTraveler.lastName)) {
+          const name = `${firstDraftTraveler.firstName || ''} ${firstDraftTraveler.lastName || ''}`.trim()
+          if (name && name.length > 0) {
+            const travelerCount = draftTravelers.length
+            if (travelerCount > 1) {
+              console.log(`✅ Using first traveler name from draftData (fallback): ${name} (${travelerCount} travelers) for application:`, order.applicationNumber)
+            } else {
+              console.log(`✅ Using traveler name from draftData (fallback): ${name} for application:`, order.applicationNumber)
+            }
+            return name
+          }
+        }
+      }
+    }
   }
   
-  return 'N/A'
+  // ✅ NEVER fall back to customer account name - always show traveler-specific info
+  // If no traveler name is found, show a generic placeholder
+  console.log('⚠️ No traveler name found for application:', order.applicationNumber)
+  return 'Traveler Name Not Available'
 }
 
 const goBack = () => {
@@ -399,7 +507,6 @@ const checkAdditionalInfoStatus = async () => {
       )
       additionalInfoSubmittedMap.value[app.id] = allSubmitted
     } catch (err) {
-      console.error(`Error checking additional info for application ${app.id}:`, err)
       additionalInfoSubmittedMap.value[app.id] = false
       hasAdditionalInfoFieldsMap.value[app.id] = false
     }
@@ -411,35 +518,25 @@ const getEffectiveStatus = (order: any): string => {
   const hasFields = hasAdditionalInfoFieldsMap.value[order.id] || false
   const allSubmitted = additionalInfoSubmittedMap.value[order.id] || false
   
-  // Debug logging
-  console.log(`🔍 getEffectiveStatus for app ${order.id}:`, {
-    backendStatus,
-    hasFields,
-    allSubmitted,
-    applicationNumber: order.applicationNumber
-  })
+
   
   // ✅ CRITICAL FIX: Always trust backend status for 'resubmission'
   // Don't override it even if all fields are submitted
   if (backendStatus === 'resubmission') {
-    console.log(`  ⚠️ Returning 'resubmission' (backend status)`)
     return 'resubmission'
   }
   
   // For legacy 'Additional Info required' status, apply the old logic
   if (allSubmitted && backendStatus === 'Additional Info required') {
-    console.log(`  ✅ Returning 'processing' (all submitted)`)
     return 'processing'
   }
   
   // Show 'Additional Info required' when needed
   if (backendStatus === 'Additional Info required' && hasFields && !allSubmitted) {
-    console.log(`  ⚠️ Returning 'Additional Info required' (needs info)`)
     return 'Additional Info required'
   }
   
   // Otherwise, show the backend status
-  console.log(`  ℹ️ Returning backend status: ${backendStatus}`)
   return backendStatus
 }
 

@@ -142,11 +142,21 @@ const { submitCompleteApplication, createDraftApplication, loading, error } = us
 const { currentUser, isAuthenticated } = useAuthApi()
 const { getApplicationById, updateDraftApplication } = useVisaApplications()
 
-// ✅ Get storage key based on route
+// Store application ID from draft creation (declare before getStorageKey)
+const applicationId = ref<number | null>(null)
+
+// ✅ Get storage key based on route AND applicationId to prevent collisions
 const getStorageKey = () => {
   const from = route.query.from || route.query.nationality || 'Pakistan'
   const to = route.query.to || route.query.destination || 'Morocco'
-  return `visa_application_${from}_${to}`
+  // Include applicationId in key if available to make each application unique
+  const appId = applicationId.value || (process.client ? localStorage.getItem('currentApplicationId') : null)
+  if (appId) {
+    return `visa_application_${from}_${to}_${appId}`
+  }
+  // For new applications, use a timestamp-based key to prevent collisions
+  const timestamp = Date.now()
+  return `visa_application_${from}_${to}_new_${timestamp}`
 }
 
 // ✅ Initialize form persistence
@@ -164,9 +174,6 @@ const tripData = ref<any>({
   email: '',
   productDetails: null
 })
-
-// Store application ID from draft creation
-const applicationId = ref<number | null>(null)
 const isCreatingDraft = ref(false)
 
 const travelersData = ref<any>({
@@ -311,15 +318,34 @@ const completeApplicationData = computed(() => {
     productDetails: product, // ✅ Include full product details for PaymentModal
     travelers: travelersData.value.travelers.map((traveler: any, index: number) => {
       const passport = passportData.value.passportDetails[index]
+      const addPassportDetailsLater = passport?.addPassportDetailsLater || false
+      
       const travelerData: any = {
         firstName: traveler.firstName,
         lastName: traveler.lastName,
         dateOfBirth: `${traveler.birthYear}-${traveler.birthMonth.padStart(2, '0')}-${traveler.birthDate.padStart(2, '0')}`,
-        passportNationality: passport.nationality,
-        passportNumber: passport.passportNumber,
-        passportExpiryDate: `${passport.expiryYear}-${passport.expiryMonth.padStart(2, '0')}-${passport.expiryDate.padStart(2, '0')}`,
-        residenceCountry: passport.residenceCountry,
-        hasSchengenVisa: passport.hasSchengenVisa === 'yes'
+        passportNationality: passport?.nationality || '',
+        addPassportDetailsLater: addPassportDetailsLater
+      }
+      
+      // Only include passport fields if addPassportDetailsLater is false
+      if (!addPassportDetailsLater) {
+        // Construct passport expiry date only if all date parts are present
+        let passportExpiryDate = null
+        if (passport?.expiryYear && passport?.expiryMonth && passport?.expiryDate) {
+          passportExpiryDate = `${passport.expiryYear}-${passport.expiryMonth.padStart(2, '0')}-${passport.expiryDate.padStart(2, '0')}`
+        }
+        
+        travelerData.passportNumber = passport?.passportNumber || null
+        travelerData.passportExpiryDate = passportExpiryDate
+        travelerData.residenceCountry = passport?.residenceCountry || null
+        travelerData.hasSchengenVisa = passport?.hasSchengenVisa === 'yes' ? true : (passport?.hasSchengenVisa === 'no' ? false : null)
+      } else {
+        // When addPassportDetailsLater is true, set passport fields to null or omit them
+        travelerData.passportNumber = null
+        travelerData.passportExpiryDate = null
+        travelerData.residenceCountry = null
+        travelerData.hasSchengenVisa = null
       }
       
       if (index === 0) {
@@ -348,8 +374,26 @@ const completeApplicationData = computed(() => {
 let cleanupAutoSave: (() => void) | null = null
 
 onMounted(async () => {
-  // Check if we're loading a draft application
+  // Clear old application data if starting a fresh application (no draftId in URL)
   const draftId = route.query.draftId as string | undefined
+  const urlApplicationId = route.query.applicationId || route.params.id
+  
+  // If no draftId and no applicationId in URL, this is a new application
+  // Clear any old application data to prevent collisions
+  if (!draftId && !urlApplicationId) {
+    const oldAppId = localStorage.getItem('currentApplicationId')
+    if (oldAppId) {
+      console.log('🆕 Starting new application, clearing old application data:', oldAppId)
+      // Clear old application-specific storage
+      const from = route.query.from || route.query.nationality || 'Pakistan'
+      const to = route.query.to || route.query.destination || 'Morocco'
+      localStorage.removeItem(`visa_application_${from}_${to}_${oldAppId}`)
+      localStorage.removeItem(`currentApplicationId_${oldAppId}`)
+      // Don't clear 'currentApplicationId' yet - it will be set when new draft is created
+    }
+    // Clear any old form state for this route combination
+    clearState()
+  }
   
   if (draftId) {
     // Load draft application from API
@@ -363,6 +407,16 @@ onMounted(async () => {
         
         // Set application ID
         applicationId.value = draft.id
+        // Store with unique key per application to prevent collisions
+        localStorage.setItem(`currentApplicationId_${draft.id}`, String(draft.id))
+        // Also store the latest for backward compatibility
+        const oldAppId = localStorage.getItem('currentApplicationId')
+        if (oldAppId && oldAppId !== String(draft.id)) {
+          // Clear old application's localStorage data if switching to a new application
+          const oldFrom = route.query.from || route.query.nationality || 'Pakistan'
+          const oldTo = route.query.to || route.query.destination || 'Morocco'
+          localStorage.removeItem(`visa_application_${oldFrom}_${oldTo}_${oldAppId}`)
+        }
         localStorage.setItem('currentApplicationId', String(draft.id))
         
         // ✅ Restore from draftData if available, otherwise fall back to main fields
@@ -557,10 +611,24 @@ const initializeForm = () => {
   }
   
   // Restore application ID from localStorage if available
-  const savedApplicationId = localStorage.getItem('currentApplicationId')
-  if (savedApplicationId) {
-    applicationId.value = parseInt(savedApplicationId)
-    console.log('✅ Restored application ID from localStorage:', applicationId.value)
+  // Check if we're continuing an existing application from URL params
+  const urlApplicationId = route.query.applicationId || route.params.id
+  if (urlApplicationId) {
+    applicationId.value = parseInt(String(urlApplicationId))
+    console.log('✅ Using application ID from URL:', applicationId.value)
+  } else {
+    // Only restore from localStorage if no URL param (for backward compatibility)
+    const savedApplicationId = localStorage.getItem('currentApplicationId')
+    if (savedApplicationId) {
+      applicationId.value = parseInt(savedApplicationId)
+      console.log('✅ Restored application ID from localStorage:', applicationId.value)
+    }
+  }
+  
+  // If we have an applicationId, update storage key to include it
+  if (applicationId.value) {
+    // Storage key will be updated on next save
+    console.log('🔑 Application ID set, storage will be application-specific')
   }
 }
 
@@ -667,8 +735,12 @@ const saveDraftBeforeLeaving = async () => {
       const result = await createDraftApplication(createData)
       if (result && result.id) {
         applicationId.value = result.id
+        // Store with unique key per application
+        localStorage.setItem(`currentApplicationId_${result.id}`, result.id.toString())
         localStorage.setItem('currentApplicationId', result.id.toString())
         console.log('✅ Draft created successfully with ID:', result.id)
+        // Clear old storage and use new application-specific key
+        clearState()
       }
     }
   } catch (err: any) {
@@ -805,8 +877,12 @@ const handleStepOneUpdate = async (data: any) => {
         const result = await createDraftApplication(draftData)
         if (result && result.id) {
           applicationId.value = result.id
+          // Store with unique key per application
+          localStorage.setItem(`currentApplicationId_${result.id}`, result.id.toString())
           localStorage.setItem('currentApplicationId', result.id.toString())
           console.log('✅ Auto-created draft with ID:', result.id)
+          // Update storage key to include applicationId
+          // Note: This will create a new storage key, old data will be preserved but not used
         }
       }
     } catch (err: any) {
@@ -948,7 +1024,8 @@ const handleStepOne = async (data: any) => {
         console.log('✅ Draft application created with ID:', result.id)
         console.log('📧 Email captured:', data.email)
         
-        // Store application ID in localStorage for persistence
+        // Store application ID in localStorage for persistence with unique key
+        localStorage.setItem(`currentApplicationId_${result.id}`, result.id.toString())
         localStorage.setItem('currentApplicationId', result.id.toString())
       } else {
         console.error('❌ Draft creation succeeded but no ID returned')
@@ -1127,8 +1204,17 @@ const handleStepSix = async (result: any) => {
   // ✅ Clear application ID from localStorage AFTER successful submission
   // This ensures the draft is finalized and won't be reused
   if (applicationId.value) {
-    console.log('🗑️ Clearing draft applicationId:', applicationId.value)
+    const appId = applicationId.value.toString()
+    console.log('🗑️ Clearing draft applicationId:', appId)
+    // Clear both the unique key and the global key
+    localStorage.removeItem(`currentApplicationId_${appId}`)
     localStorage.removeItem('currentApplicationId')
+    
+    // Also clear the application-specific storage
+    const from = route.query.from || route.query.nationality || 'Pakistan'
+    const to = route.query.to || route.query.destination || 'Morocco'
+    localStorage.removeItem(`visa_application_${from}_${to}_${appId}`)
+    
     applicationId.value = null
   }
 }

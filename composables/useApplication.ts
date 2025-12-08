@@ -25,6 +25,7 @@ export interface PaymentData {
   transactionId?: string
   paymentIntentId?: string
   paymentGateway?: string
+  amount?: number // ✅ CRITICAL: Include amount in payment data
 }
 
 export interface CompleteApplicationData {
@@ -33,11 +34,19 @@ export interface CompleteApplicationData {
   visaProductId: number
   nationality: string
   destinationCountry: string
-  visaType: '180-single' | '180-multiple' | '90-single'
+  visaType: '180-single' | '180-multiple' | '90-single' | string // Allow string for flexibility
   numberOfTravelers: number
   travelers: TravelerData[]
-  processingType: 'standard' | 'rush' | 'super-rush'
+  processingType: 'standard' | 'rush' | 'super-rush' | string
   processingFee: number
+  processingFeeId?: number | null
+  processingTime?: string
+  embassyId?: number | null
+  govtFee?: number // ✅ Government fee (total for all travelers)
+  serviceFee?: number // ✅ Service fee (total for all travelers)
+  totalAmount?: number // ✅ CRITICAL: Total amount paid (after discount)
+  discountAmount?: number // ✅ Discount amount if coupon applied
+  couponCode?: string // ✅ Coupon code if applied
   payment: PaymentData
   notes?: string
 }
@@ -121,15 +130,54 @@ export const useApplication = () => {
         throw new Error('Unable to create or find customer')
       }
 
+      // ✅ CRITICAL: Ensure amount is included in the payload
+      // Calculate total amount if not provided
+      const calculatedTotal = (data.govtFee || 0) + (data.serviceFee || 0) + (data.processingFee || 0);
+      const finalTotalAmount = data.totalAmount || data.payment?.amount || calculatedTotal;
+      
+      // Log the data being sent to verify amounts are included
+      console.log('💰 Payment amounts in payload:', {
+        totalAmount: data.totalAmount,
+        paymentAmount: data.payment?.amount,
+        calculatedTotal: calculatedTotal,
+        finalTotalAmount: finalTotalAmount,
+        govtFee: data.govtFee,
+        serviceFee: data.serviceFee,
+        processingFee: data.processingFee,
+        discountAmount: data.discountAmount,
+        couponCode: data.couponCode
+      });
+      
+      // ✅ CRITICAL: Ensure all amount fields are explicitly included
+      const payload = {
+        ...data,
+        customerId,
+        // ✅ Explicitly ensure all amount fields are included
+        totalAmount: finalTotalAmount,
+        govtFee: data.govtFee || 0,
+        serviceFee: data.serviceFee || 0,
+        processingFee: data.processingFee || 0,
+        // ✅ Ensure payment amount is set
+        payment: {
+          ...data.payment,
+          amount: data.payment?.amount || finalTotalAmount
+        }
+      };
+      
+      console.log('💰 Final payload with amounts:', {
+        totalAmount: payload.totalAmount,
+        govtFee: payload.govtFee,
+        serviceFee: payload.serviceFee,
+        processingFee: payload.processingFee,
+        paymentAmount: payload.payment?.amount
+      });
+      
       const response = await fetch(`${baseUrl}/visa-applications/submit-complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          customerId,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const result = await response.json()

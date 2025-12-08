@@ -114,7 +114,7 @@
               <TableBody>
                 <TableRow 
                   v-for="traveler in filteredTravelers" 
-                  :key="traveler.id" 
+                  :key="traveler.id || `traveler-${traveler.firstName}-${traveler.lastName}-${traveler.email}`" 
                   class="hover:bg-gray-50 border-b last:border-0"
                 >
                   <TableCell>
@@ -124,7 +124,7 @@
                     />
                   </TableCell>
                   <TableCell class="font-geist text-[#27272B]">
-                    {{ traveler.firstName }} {{ traveler.lastName }}
+                    {{ getTravelerDisplayName(traveler) }}
                   </TableCell>
                   <TableCell class="font-geist text-[#27272B]">{{ traveler.email }}</TableCell>
                   <TableCell class="font-geist text-[#27272B]">{{ traveler.passportNumber }}</TableCell>
@@ -267,7 +267,38 @@ const hasAdditionalInfoFields = ref(false) // Track if there are any additional 
 const applicationId = computed(() => parseInt(route.params.id as string))
 
 const travelers = computed(() => {
-  return application.value?.travelers || []
+  // ✅ CRITICAL: Show ALL travelers, even if they don't have IDs
+  // Travelers without IDs are still valid travelers (they just haven't been assigned IDs yet)
+  // Only filter out entries that look like customer data (have fullname but no firstName/lastName)
+  const allTravelers = application.value?.travelers || []
+  const validTravelers = allTravelers.filter((t: any) => {
+    // ✅ CRITICAL: Filter out entries that look like customer data
+    // Travelers should have firstName/lastName, not fullname (which is customer field)
+    // If it has fullname but no firstName/lastName, it might be customer data mixed in
+    if (t.fullname && (!t.firstName && !t.lastName)) {
+      console.warn('⚠️ Filtering out potential customer data in travelers array:', t.fullname, 'ID:', t.id)
+      return false
+    }
+    
+    // ✅ CRITICAL: Include travelers even if they don't have IDs
+    // They're still valid travelers, just may not have been assigned IDs yet
+    return true
+  })
+  
+  if (validTravelers.length !== allTravelers.length) {
+    console.log(`✅ Filtered ${allTravelers.length - validTravelers.length} invalid entries. Showing ${validTravelers.length} travelers.`)
+  }
+  
+  // ✅ CRITICAL: Log traveler names to verify they're correct
+  console.log('👥 All travelers in details page:', validTravelers.map((t: any) => ({
+    id: t.id || 'no ID',
+    name: getTravelerDisplayName(t),
+    firstName: t.firstName,
+    lastName: t.lastName,
+    email: t.email
+  })))
+  
+  return validTravelers
 })
 
 // Computed property to determine the effective status for display
@@ -323,11 +354,24 @@ const fetchApplicationDetails = async () => {
     
     if (response.success && response.data) {
       application.value = response.data.data
-      console.log('✅ Application details loaded:', application.value)
+      console.log('✅ Application details loaded:', {
+        applicationId: application.value.id,
+        applicationNumber: application.value.applicationNumber,
+        travelersCount: application.value.travelers?.length || 0
+      })
+      
+      // ✅ CRITICAL: Verify travelers belong to this application
+      const travelers = application.value.travelers || []
+      console.log('👥 Travelers for this application:', travelers.map((t: any, idx: number) => ({
+        index: idx,
+        id: t.id,
+        name: `${t.firstName || ''} ${t.lastName || ''}`.trim(),
+        email: t.email,
+        applicationId: t.applicationId // Check if traveler has applicationId field
+      })))
       
       // Always check if additional info has been submitted, regardless of current status
       // This ensures we show the correct status even if backend status is incorrect
-      const travelers = application.value.travelers || []
       
       // Check if there are any additional info fields
       const { getFieldsByApplication } = useVisaProductFieldsApi()
@@ -408,5 +452,22 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+// Helper function to get traveler display name
+// ✅ CRITICAL: Always use traveler's firstName/lastName, never customer name
+const getTravelerDisplayName = (traveler: any): string => {
+  // ✅ CRITICAL: Only use traveler's own name fields
+  // Never fall back to customer name - if traveler name is missing, show a placeholder
+  const firstName = traveler?.firstName || ''
+  const lastName = traveler?.lastName || ''
+  const fullName = `${firstName} ${lastName}`.trim()
+  
+  // If no name is available, show a placeholder instead of customer name
+  if (!fullName) {
+    return `Traveler ${traveler?.id || 'Unknown'}`
+  }
+  
+  return fullName
 }
 </script>

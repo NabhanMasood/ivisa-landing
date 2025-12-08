@@ -99,7 +99,6 @@ export const useApi = () => {
             ...options.headers as any,
             'Authorization': `Bearer ${token}`
           } as any
-          console.log('🔑 Adding Authorization header to request')
         } else {
           console.warn('⚠️ No token found, request will be unauthenticated')
         }
