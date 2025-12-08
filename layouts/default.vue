@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
     <Header v-if="!hideHeader" :showAuthButtons="showAuthButtons" />
-    <main class="overflow-x-hidden">
+    <main class="flex-1 overflow-x-clip">
       <slot />
     </main>
     <Footer v-if="!hideFooter" />

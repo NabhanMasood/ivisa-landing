@@ -10,7 +10,7 @@
       <div class="mb-12">
         <!-- CONTACT & LOCATION Badge -->
         <div
-          class="inline-flex items-center gap-2.5 mb-6 bg-[#F1F9FC] rounded-full px-[15px] py-[5px] h-[34px]"
+          class="inline-flex items-center gap-2.5 mb-4 bg-[#F1F9FC] rounded-full px-[15px] py-[5px] h-[34px]"
         >
           <span class="font-manrope text-sm font-medium text-gray-600"
             >CONTACT & LOCATION</span
@@ -18,17 +18,17 @@
         </div>
 
         <!-- Title and Subtitle in same row -->
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col lg:flex-row items-start justify-between mb-0 gap-4 lg:gap-0">
           <!-- Contact us title -->
           <h1
-            class="font-manrope font-bold text-[56px] leading-[56px] tracking-[-0.015em] max-w-[380px]"
+            class="font-manrope font-bold text-3xl leading-9 lg:text-[56px] lg:leading-[56px] tracking-[-0.015em] max-w-[380px] mb-0"
           >
             Contact us
           </h1>
 
           <!-- Contact our customer support text -->
           <p
-            class="font-manrope font-normal text-lg leading-8 w-[253px] text-[#71717B] text-center"
+            class="font-manrope font-normal text-sm leading-6 lg:text-lg lg:leading-8 w-full lg:w-[253px] text-[#71717B] text-left lg:text-center pt-2"
           >
             Contact our customer support
           </p>
@@ -36,7 +36,7 @@
       </div>
 
       <!-- Two Column Layout with bottom alignment -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <!-- Left Column - Contact Form Container -->
         <div>
           <!-- Quick Info -->
@@ -57,7 +57,7 @@
 
           <!-- Contact Form Container -->
           <Card
-            :class="'bg-[#F1F9FC] rounded-2xl border border-[#E5E7EB] w-full max-w-[590px] h-[656px]'"
+            :class="'bg-[#F1F9FC] rounded-2xl border border-[#E5E7EB] w-full max-w-[590px] min-h-[850px] h-auto'"
           >
             <CardContent :class="'p-[35px]'">
               <h3 class="font-manrope text-lg font-medium text-gray-900 mb-6">
@@ -258,12 +258,12 @@
 
                 <!-- Map iframe -->
                 <div
-                  class="w-full max-w-[542px] h-[246px] rounded-xl overflow-hidden"
+                  class="w-full max-w-[542px] h-[255px] rounded-xl overflow-hidden"
                 >
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3609.3967074085084!2d55.372853!3d25.223533!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sShams%20Business%20Centre%2C%20Sharjah%20Media%20City%20Free%20Zone!5e0!3m2!1sen!2sae!4v1234567890"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3609.3967074085084!2d55.6782898!3d25.2784456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ef5929a229f1c75%3A0xb28ae30eb6bb813a!2sSharjah%20Media%20City%20(Shams%20Free%20Zone)!5e0!3m2!1sen!2sae!4v1234567890"
                     width="100%"
-                    height="70%"
+                    height="100%"
                     style="border: 0"
                     allowfullscreen
                     loading="lazy"

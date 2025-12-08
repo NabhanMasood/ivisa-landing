@@ -18,7 +18,7 @@
           </div>
 
           <!-- Heading: font-size: 48px, line-height: 64px, letter-spacing: -1.8px -->
-          <h1 class="font-manrope font-bold text-[48px] leading-[64px] tracking-[-1.8px] text-[#0B3947]">
+          <h1 class="font-manrope font-bold text-3xl leading-9 lg:text-[48px] lg:leading-[64px] tracking-[-1.8px] text-[#0B3947]">
             Terms & Conditions
           </h1>
         </div>

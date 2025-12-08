@@ -233,9 +233,6 @@
             </div>
           </div>
 
-          <!-- Gap before separator - responsive -->
-          <div class="w-2 sm:w-4 lg:w-8"></div>
-
           <!-- Separator: responsive width -->
           <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
 
@@ -256,9 +253,6 @@
 
           <!-- Separator: responsive width -->
           <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
-
-          <!-- Gap after separator - responsive -->
-          <div class="w-2 sm:w-4 lg:w-8"></div>
 
           <!-- Step 3 Icon -->
           <div class="flex flex-col items-center">
@@ -550,7 +544,7 @@
 </section>
 
     <!-- Spacing before footer - responsive -->
-    <div class="h-16 sm:h-24 lg:h-[211px]"></div>
+    <div class="h-16 sm:h-24 lg:h-16"></div>
 
   </div>
 </template>

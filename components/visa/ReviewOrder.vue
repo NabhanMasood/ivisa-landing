@@ -1,14 +1,9 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
-    <!-- Left Side - Order Details -->
-    <div class="flex-1">
+<div class="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start overflow-visible">    <!-- Left Side - Order Details -->
+    <div class="flex-1 min-h-0">
+
       
-      <!-- Expected Delivery Date -->
-      <div class="border rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6" style="border-color: #1ECE84;">
-        <p class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Geist; font-weight: 600; color: #0B3947;">
-          Expected delivery date: {{ expectedDeliveryDate }}
-        </p>
-      </div>
+ 
 
       <!-- Visa Details Card -->
       <div class="border rounded-lg sm:rounded-xl p-4 sm:p-6" style="border-color: #E5E7EB;">
@@ -105,20 +100,22 @@
 
     </div>
 
-    <!-- Right Side - Summary Card with Payment Button -->
-    <PriceSummaryCard
-      :destination="destination"
-      :traveler-count="travelers.length"
-      :product-details="productDetails" 
-      :processing-fee="processingFee"
-      :processing-type="processingType"
-      :show-calculated-total="true"
-      :show-coupon-field="true"
-      button-text="Continue to payment"
-      @continue="handleContinueToPayment"
-      @coupon-applied="handleCouponApplied"
-      @coupon-removed="handleCouponRemoved"
-    />
+<!-- Right Side - Summary Card with Payment Button -->
+<div class="w-full lg:w-auto lg:flex-shrink-0 lg:sticky lg:top-24 h-fit">
+  <PriceSummaryCard
+    :destination="destination"
+    :traveler-count="travelers.length"
+    :product-details="productDetails" 
+    :processing-fee="processingFee"
+    :processing-type="processingType"
+    :show-calculated-total="true"
+    :show-coupon-field="true"
+    button-text="Continue to payment"
+    @continue="handleContinueToPayment"
+    @coupon-applied="handleCouponApplied"
+    @coupon-removed="handleCouponRemoved"
+  />
+</div>
   </div>
 
   <!-- Payment Modal -->

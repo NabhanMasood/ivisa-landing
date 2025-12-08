@@ -22,7 +22,7 @@
             </div>
             
             <!-- Title -->
-            <h1 class="font-manrope font-bold text-[48px] leading-[64px] tracking-[-0.015em] text-[#111827] max-w-[550px]">
+            <h1 class="font-manrope font-bold text-3xl leading-9 lg:text-[48px] lg:leading-[64px] tracking-[-0.015em] text-[#111827] max-w-[550px]">
               Find the Right Answer<br />Before You Pack.
             </h1>
           </div>
@@ -39,7 +39,7 @@
             </div>
             
             <!-- Paragraph -->
-            <p class="font-manrope font-normal text-base leading-7 tracking-[-0.006em] text-[#71717A]">
+            <p class="font-manrope font-normal text-sm leading-6 lg:text-base lg:leading-7 tracking-[-0.006em] text-[#71717A]">
               Have a question or need clarification? Don't hesitate to reach out. Our team is here to help and we're ready to provide all the answers you need.
             </p>
           </div>

@@ -1,6 +1,5 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px]">
-    <!-- Left Side - Form -->
+<div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px] items-start">    <!-- Left Side - Form -->
     <div
       class="flex-1 rounded-lg sm:rounded-xl"
       style="padding: 16px sm:20px md:24px"
@@ -83,8 +82,19 @@
                   class="max-h-[300px] overflow-y-auto"
                   position="popper"
                 >
+                  <!-- Search Input -->
+                  <div class="p-2 border-b sticky top-0 bg-white z-10">
+                    <input
+                      v-model="nationalitySearchQueries[0]"
+                      type="text"
+                      placeholder="Search countries..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                      @click.stop
+                      @keydown.stop
+                    />
+                  </div>
                   <SelectItem
-                    v-for="country in countries"
+                    v-for="country in getFilteredNationalityCountries(0)"
                     :key="country.id"
                     :value="country.countryName"
                   >
@@ -307,8 +317,19 @@
                   class="max-h-[300px] overflow-y-auto"
                   position="popper"
                 >
+                  <!-- Search Input -->
+                  <div class="p-2 border-b sticky top-0 bg-white z-10">
+                    <input
+                      v-model="residenceCountrySearchQueries[0]"
+                      type="text"
+                      placeholder="Search countries..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                      @click.stop
+                      @keydown.stop
+                    />
+                  </div>
                   <SelectItem
-                    v-for="country in countries"
+                    v-for="country in getFilteredResidenceCountries(0)"
                     :key="country.id"
                     :value="country.countryName"
                   >
@@ -471,8 +492,19 @@
                       class="max-h-[300px] overflow-y-auto"
                       position="popper"
                     >
+                      <!-- Search Input -->
+                      <div class="p-2 border-b sticky top-0 bg-white z-10">
+                        <input
+                          v-model="nationalitySearchQueries[index]"
+                          type="text"
+                          placeholder="Search countries..."
+                          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                          @click.stop
+                          @keydown.stop
+                        />
+                      </div>
                       <SelectItem
-                        v-for="country in countries"
+                        v-for="country in getFilteredNationalityCountries(index)"
                         :key="country.id"
                         :value="country.countryName"
                       >
@@ -695,8 +727,19 @@
                       class="max-h-[300px] overflow-y-auto"
                       position="popper"
                     >
+                      <!-- Search Input -->
+                      <div class="p-2 border-b sticky top-0 bg-white z-10">
+                        <input
+                          v-model="residenceCountrySearchQueries[index]"
+                          type="text"
+                          placeholder="Search countries..."
+                          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                          @click.stop
+                          @keydown.stop
+                        />
+                      </div>
                       <SelectItem
-                        v-for="country in countries"
+                        v-for="country in getFilteredResidenceCountries(index)"
                         :key="country.id"
                         :value="country.countryName"
                       >
@@ -772,14 +815,16 @@
       </div>
     </div>
 
-    <!-- Right Side - Summary Card -->
-    <PriceSummaryCard
-      :destination="destination"
-      :traveler-count="travelerCount"
-      :product-details="productDetails"
-      button-text="Save & Continue"
-      @continue="handleSaveAndContinue"
-    />
+<!-- Right Side - Summary Card -->
+<div class="w-full lg:w-auto lg:flex-shrink-0 lg:sticky lg:top-24 h-fit">
+  <PriceSummaryCard
+    :destination="destination"
+    :traveler-count="travelerCount"
+    :product-details="productDetails"
+    button-text="Save & Continue"
+    @continue="handleSaveAndContinue"
+  />
+</div>
   </div>
 </template>
 
@@ -833,6 +878,8 @@ const passportDetails = ref<PassportDetail[]>([]);
 const expandedTravelers = ref<Record<number, boolean>>({});
 const countries = ref<Country[]>([]);
 const isLoadingCountries = ref(false);
+const nationalitySearchQueries = ref<Record<number, string>>({});
+const residenceCountrySearchQueries = ref<Record<number, string>>({});
 
 // Generate future years for passport expiry (next 20 years)
 const currentYear = new Date().getFullYear();
@@ -862,6 +909,30 @@ const getFullLogoUrl = (logoUrl: string) => {
 
 const getSelectedCountry = (countryName: string) => {
   return countries.value.find((c) => c.countryName === countryName);
+};
+
+// ✅ Filtered countries based on search query for nationality
+const getFilteredNationalityCountries = (index: number) => {
+  const query = nationalitySearchQueries.value[index] || '';
+  if (!query.trim()) {
+    return countries.value;
+  }
+  const searchTerm = query.toLowerCase().trim();
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().includes(searchTerm)
+  );
+};
+
+// ✅ Filtered countries based on search query for residence country
+const getFilteredResidenceCountries = (index: number) => {
+  const query = residenceCountrySearchQueries.value[index] || '';
+  if (!query.trim()) {
+    return countries.value;
+  }
+  const searchTerm = query.toLowerCase().trim();
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().includes(searchTerm)
+  );
 };
 
 // Fetch countries from database
@@ -1040,6 +1111,32 @@ watch(
       }
     }
   }
+);
+
+// Watch for nationality changes to reset search queries
+watch(
+  () => passportDetails.value.map((p) => p.nationality),
+  () => {
+    passportDetails.value.forEach((passportDetail, index) => {
+      if (passportDetail && passportDetail.nationality) {
+        nationalitySearchQueries.value[index] = '';
+      }
+    });
+  },
+  { deep: true }
+);
+
+// Watch for residence country changes to reset search queries
+watch(
+  () => passportDetails.value.map((p) => p.residenceCountry),
+  () => {
+    passportDetails.value.forEach((passportDetail, index) => {
+      if (passportDetail && passportDetail.residenceCountry) {
+        residenceCountrySearchQueries.value[index] = '';
+      }
+    });
+  },
+  { deep: true }
 );
 
 // Auto-save passport details as user types

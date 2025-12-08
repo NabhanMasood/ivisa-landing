@@ -3,13 +3,13 @@
   <footer class="w-full bg-gray-50 border-t border-gray-200 mt-auto">
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Main Footer Content -->
-      <div class="py-6 sm:py-8">
+      <div class="py-8 sm:py-12">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
           <!-- Left Section - Navigation Links using shadcn Buttons -->
           <div class="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6">
             <Button 
               variant="link" 
-              class="!p-0 !h-auto !font-medium !text-gray-900 hover:!text-gray-700 !text-sm sm:!text-base"
+              :class="`!p-0 !h-auto !text-xs sm:!text-sm lg:!text-base ${isActive('/') ? '!font-bold !text-gray-900 underline hover:!text-gray-700' : '!font-normal !text-gray-700 hover:!text-gray-900'}`"
               @click="() => navigateTo('/')"
             >
               Home
@@ -17,28 +17,28 @@
           
             <Button 
               variant="link"
-              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              :class="`!p-0 !h-auto !text-xs sm:!text-sm lg:!text-base ${isActive('/about-us') ? '!font-bold !text-gray-900 underline hover:!text-gray-700' : '!font-normal !text-gray-700 hover:!text-gray-900'}`"
               @click="() => navigateTo('/about-us')"
             >
               About us
             </Button>
             <Button 
               variant="link"
-              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              :class="`!p-0 !h-auto !text-xs sm:!text-sm lg:!text-base ${isActive('/contact-us') ? '!font-bold !text-gray-900 underline hover:!text-gray-700' : '!font-normal !text-gray-700 hover:!text-gray-900'}`"
               @click="() => navigateTo('/contact-us')"
             >
               Contact us
             </Button>
             <Button 
               variant="link"
-              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              :class="`!p-0 !h-auto !text-xs sm:!text-sm lg:!text-base ${isActive('/faq') ? '!font-bold !text-gray-900 underline hover:!text-gray-700' : '!font-normal !text-gray-700 hover:!text-gray-900'}`"
               @click="() => navigateTo('/faq')"
             >
               FAQ
             </Button>
             <Button 
               variant="link"
-              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base"
+              :class="`!p-0 !h-auto !text-xs sm:!text-sm lg:!text-base ${isActive('/terms-and-conditions') ? '!font-bold !text-gray-900 underline hover:!text-gray-700' : '!font-normal !text-gray-700 hover:!text-gray-900'}`"
               @click="() => navigateTo('/terms-and-conditions')"
             >
               Our Policies
@@ -48,7 +48,7 @@
             <!-- Email button moved here for mobile to stay on same line -->
             <Button 
               variant="link"
-              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base whitespace-nowrap sm:hidden"
+              class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-xs sm:!text-sm lg:!text-base whitespace-nowrap sm:hidden"
               @click="handleEmailClick"
             >
               Email us
@@ -58,7 +58,7 @@
           <!-- Right Section - Email using shadcn Button (desktop only) -->
           <Button 
             variant="link"
-            class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-sm sm:!text-base whitespace-nowrap hidden sm:inline-flex"
+            class="!p-0 !h-auto !font-normal !text-gray-700 hover:!text-gray-900 !text-xs sm:!text-sm lg:!text-base whitespace-nowrap hidden sm:inline-flex"
             @click="handleEmailClick"
           >
             opportunity@visa123.co.uk
@@ -67,10 +67,10 @@
       </div>
 
       <!-- Bottom Bar -->
-      <div class="border-t border-gray-200 py-3 sm:py-4">
+      <div class="border-t border-gray-200 py-4 sm:py-6">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           <!-- Copyright -->
-          <div class="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+          <div class="text-xs sm:text-sm lg:text-base text-gray-600 text-center sm:text-left">
             © 2025 All rights Reserved.
           </div>
 
@@ -119,8 +119,18 @@ import DropdownMenuTrigger from '@/components/ui/dropdown-menu/DropdownMenuTrigg
 import DropdownMenuContent from '@/components/ui/dropdown-menu/DropdownMenuContent.vue'
 import DropdownMenuItem from '@/components/ui/dropdown-menu/DropdownMenuItem.vue'
 import { ChevronDown } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 
 // navigateTo is auto-imported in Nuxt, no need to declare it
+const route = useRoute()
+
+// Check if a route is active
+const isActive = (path: string): boolean => {
+  if (path === '/') {
+    return route.path === '/' || route.path === ''
+  }
+  return route.path.startsWith(path)
+}
 
 
 
