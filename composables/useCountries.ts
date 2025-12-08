@@ -70,8 +70,8 @@ export const useCountriesApi = () => {
 
       // Handle the API response structure with status, message, count, and data
       if (response.data.status && response.data.data) {
-        // Always cache the data for 10 minutes
-        setCachedData(CACHE_KEYS.COUNTRIES, response.data.data, 10 * 60 * 1000)
+        // Cache the data for 2 minutes (reduced from 10 to ensure fresh data)
+        setCachedData(CACHE_KEYS.COUNTRIES, response.data.data, 2 * 60 * 1000)
 
         return {
           data: response.data.data,

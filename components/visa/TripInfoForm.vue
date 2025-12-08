@@ -150,7 +150,7 @@
           </SelectTrigger>
           <SelectContent>
             <SelectItem
-              v-for="product in availableProducts"
+              v-for="product in (Array.isArray(availableProducts) ? availableProducts : [])"
               :key="`${product.productName}-${product.entryType}`"
               :value="`${product.productName}|${product.entryType}`"
             >
@@ -355,19 +355,26 @@ const emailError = ref<string>("");
 
 // ✅ Computed property to get selected country with flag
 const selectedCountry = computed(() => {
+  if (!Array.isArray(nationalityOptions.value)) {
+    return undefined;
+  }
   return nationalityOptions.value.find(
-    (c) => c.countryName === formData.value.nationality
+    (c) => c && c.countryName === formData.value.nationality
   );
 });
 
 // ✅ Filtered nationality options based on search query
 const filteredNationalityOptions = computed(() => {
-  if (!nationalitySearchQuery.value.trim()) {
+  // Ensure nationalityOptions is an array before filtering
+  if (!nationalityOptions.value || !Array.isArray(nationalityOptions.value)) {
+    return [];
+  }
+  if (!nationalitySearchQuery.value || !nationalitySearchQuery.value.trim()) {
     return nationalityOptions.value;
   }
   const query = nationalitySearchQuery.value.toLowerCase().trim();
   return nationalityOptions.value.filter((country) =>
-    country.countryName.toLowerCase().includes(query)
+    country && country.countryName && country.countryName.toLowerCase().includes(query)
   );
 });
 
@@ -392,9 +399,17 @@ watch(
 // Watch for nationality or destination changes to fetch products
 watch(
   () => [formData.value.nationality, props.destination],
-  async ([nationality, destination]) => {
+  async (newValues, oldValues) => {
+    // Handle undefined values when immediate: true is used
+    const [nationality, destination] = newValues || [undefined, undefined];
+    const [oldNationality, oldDestination] = oldValues || [undefined, undefined];
+    
     if (nationality && destination) {
-      await fetchVisaProducts(nationality as string, destination as string);
+      // Force refresh if nationality or destination changed to ensure fresh pricing
+      // Handle undefined old values (when immediate: true is used)
+      const shouldForceRefresh = oldNationality !== undefined && oldDestination !== undefined && 
+                                 (oldNationality !== nationality || oldDestination !== destination)
+      await fetchVisaProducts(nationality as string, destination as string, shouldForceRefresh);
     } else {
       availableProducts.value = [];
       formData.value.visaType = "";
@@ -435,13 +450,15 @@ const enrichProductWithProcessingFees = async (product: any) => {
           `✅ Found ${response.data.processingFees.length} processing fees for product ${productId}`
         );
         // Merge nationality product pricing with visa product details
+        // ✅ Priority: Use visa product pricing (from DB) over nationality product pricing (may be cached)
+        // This ensures we always use the latest prices from the visa product table
         return {
           ...product,
           processingFees: response.data.processingFees, // ✅ Add processing fees
-          // Keep nationality-specific pricing if it exists
-          govtFee: product.govtFee || response.data.govtFee,
-          serviceFee: product.serviceFee || response.data.serviceFee,
-          totalAmount: product.totalAmount || response.data.totalAmount,
+          // ✅ Use visa product pricing as primary source (most up-to-date)
+          govtFee: response.data.govtFee ?? product.govtFee,
+          serviceFee: response.data.serviceFee ?? product.serviceFee,
+          totalAmount: response.data.totalAmount ?? product.totalAmount,
         };
       }
     }
@@ -453,7 +470,7 @@ const enrichProductWithProcessingFees = async (product: any) => {
   }
 };
 
-const fetchVisaProducts = async (nationality: string, destination: string) => {
+const fetchVisaProducts = async (nationality: string, destination: string, forceRefresh: boolean = false) => {
   isLoadingProducts.value = true;
   productError.value = null;
   availableProducts.value = [];
@@ -463,10 +480,11 @@ const fetchVisaProducts = async (nationality: string, destination: string) => {
   formData.value.visaType = "";
 
   try {
-    console.log("🔍 Fetching products for:", { nationality, destination });
+    console.log("🔍 Fetching products for:", { nationality, destination, forceRefresh });
     const response = await getNationalityDestinationProducts(
       nationality,
-      destination
+      destination,
+      forceRefresh // Pass forceRefresh to bypass cache if needed
     );
 
     console.log("📦 Raw API Response:", response);
