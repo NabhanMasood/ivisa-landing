@@ -9,7 +9,7 @@
           color: #0b3947;
         "
       >
-        The {{ destination }} Visa is mandatory for {{ nationality }} passport
+        The {{ destination }} Visa is mandatory for {{ formData.nationality || nationality }} passport
         holders planning to enter {{ destination }}
       </p>
     </div>
@@ -68,8 +68,19 @@
             </SelectValue>
           </SelectTrigger>
           <SelectContent class="max-h-[300px] overflow-y-auto">
+            <!-- Search Input -->
+            <div class="p-2 border-b sticky top-0 bg-white z-10">
+              <input
+                v-model="nationalitySearchQuery"
+                type="text"
+                placeholder="Search countries..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                @click.stop
+                @keydown.stop
+              />
+            </div>
             <SelectItem
-              v-for="country in nationalityOptions"
+              v-for="country in filteredNationalityOptions"
               :key="country.id"
               :value="country.countryName"
             >
@@ -323,6 +334,7 @@ interface Country {
 
 const nationalityOptions = ref<Country[]>([]);
 const isLoadingCountries = ref(false);
+const nationalitySearchQuery = ref('');
 const availableProducts = ref<
   Array<{
     id?: number | string;
@@ -345,6 +357,17 @@ const emailError = ref<string>("");
 const selectedCountry = computed(() => {
   return nationalityOptions.value.find(
     (c) => c.countryName === formData.value.nationality
+  );
+});
+
+// ✅ Filtered nationality options based on search query
+const filteredNationalityOptions = computed(() => {
+  if (!nationalitySearchQuery.value.trim()) {
+    return nationalityOptions.value;
+  }
+  const query = nationalitySearchQuery.value.toLowerCase().trim();
+  return nationalityOptions.value.filter((country) =>
+    country.countryName.toLowerCase().includes(query)
   );
 });
 
@@ -630,6 +653,11 @@ const handleNext = () => {
     productDetails: selectedProduct.value,
   });
 };
+
+// Watch for nationality changes to reset search query
+watch(() => formData.value.nationality, () => {
+  nationalitySearchQuery.value = '';
+});
 
 onMounted(async () => {
   await initializeRates()

@@ -1,6 +1,5 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px]">
-    <!-- Left Side - Form -->
+<div class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[14px] items-start">    <!-- Left Side - Form -->
     <div class="flex-1 rounded-lg sm:rounded-xl" style="padding: 16px sm:20px md:24px">
       <!-- Header -->
       <div class="mb-4 sm:mb-6">
@@ -321,13 +320,18 @@
     </div>
 
     <!-- Right Side - Summary Card -->
-    <PriceSummaryCard
-      :destination="destination"
-      :traveler-count="travelers.length"
-      :product-details="props.productDetails"
-      button-text="Save & Continue"
-      @continue="handleSaveAndContinue"
-    />
+
+<div class="w-full lg:w-auto lg:flex-shrink-0 lg:sticky lg:top-24 h-fit">
+  <PriceSummaryCard
+    :destination="destination"
+    :traveler-count="travelers.length"
+    :product-details="props.productDetails"
+    button-text="Save & Continue"
+    @continue="handleSaveAndContinue"
+  />
+</div>
+ 
+
   </div>
 </template>
 

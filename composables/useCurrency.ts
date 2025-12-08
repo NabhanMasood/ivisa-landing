@@ -316,6 +316,111 @@ export const useCurrency = () => {
     return lastFetched.value < oneHourAgo
   }
 
+  // Country to Currency mapping (case-insensitive keys)
+  const COUNTRY_TO_CURRENCY: Record<string, string> = {
+    'PK': 'PKR', // Pakistan
+    'PAK': 'PKR', // Pakistan (alternative)
+    'PAKISTAN': 'PKR', // Pakistan (full name)
+    'SA': 'SAR', // Saudi Arabia
+    'SAU': 'SAR', // Saudi Arabia (ISO code)
+    'SAUDI ARABIA': 'SAR', // Saudi Arabia (full name)
+    // Add more mappings as needed
+  }
+
+  // Detect user's country and return currency code
+  const detectCountryCurrency = async (): Promise<string> => {
+    try {
+      // Try primary API: ipapi.co
+      let data: any = null
+      try {
+        const response = await fetch('https://ipapi.co/json/', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          data = await response.json()
+          console.log('🌍 Primary API (ipapi.co) response:', data)
+        } else {
+          throw new Error(`ipapi.co returned ${response.status}`)
+        }
+      } catch (primaryError) {
+        console.warn('⚠️ Primary API failed, trying fallback...', primaryError)
+        
+        // Fallback API: ip-api.com
+        try {
+          const fallbackResponse = await fetch('http://ip-api.com/json/', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            }
+          })
+          
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json()
+            // Map ip-api.com format to our expected format
+            data = {
+              country_code: fallbackData.countryCode,
+              country: fallbackData.countryCode,
+              country_name: fallbackData.country
+            }
+            console.log('🌍 Fallback API (ip-api.com) response:', data)
+          } else {
+            throw new Error(`ip-api.com returned ${fallbackResponse.status}`)
+          }
+        } catch (fallbackError) {
+          console.warn('⚠️ Fallback API also failed:', fallbackError)
+          throw new Error('All geolocation APIs failed')
+        }
+      }
+      
+      if (!data) {
+        throw new Error('No data received from geolocation APIs')
+      }
+      
+      const countryCode = (data.country_code || data.country || '').toUpperCase()
+      const countryName = (data.country_name || '').toUpperCase()
+      
+      console.log('🌍 Detected country:', {
+        countryCode,
+        countryName,
+        rawData: data
+      })
+      
+      // Map country to currency (check both code and name, case-insensitive)
+      let currencyCode = 'USD' // default
+      
+      if (countryCode && COUNTRY_TO_CURRENCY[countryCode]) {
+        currencyCode = COUNTRY_TO_CURRENCY[countryCode]
+        console.log('✅ Matched by country code:', countryCode, '→', currencyCode)
+      } else if (countryName && COUNTRY_TO_CURRENCY[countryName]) {
+        currencyCode = COUNTRY_TO_CURRENCY[countryName]
+        console.log('✅ Matched by country name:', countryName, '→', currencyCode)
+      } else {
+        // Try to find by partial match
+        const countryKey = Object.keys(COUNTRY_TO_CURRENCY).find(key => 
+          countryCode.includes(key) || countryName.includes(key) ||
+          key.includes(countryCode) || key.includes(countryName)
+        )
+        if (countryKey) {
+          currencyCode = COUNTRY_TO_CURRENCY[countryKey]
+          console.log('✅ Matched by partial key:', countryKey, '→', currencyCode)
+        } else {
+          console.log('⚠️ No currency mapping found for:', countryCode || countryName, '- defaulting to USD')
+        }
+      }
+      
+      console.log('💰 Final auto-detected currency:', currencyCode, 'for country:', countryCode || countryName)
+      
+      return currencyCode
+    } catch (error) {
+      console.warn('⚠️ Failed to detect country, defaulting to USD:', error)
+      return 'USD'
+    }
+  }
+
   // Initialize rates
   const initializeRates = async () => {
 
@@ -377,12 +482,45 @@ export const useCurrency = () => {
 
       // Load saved currency preference
       const savedCurrency = localStorage.getItem('selected-currency')
-      if (savedCurrency) {
+      const hasManualSelection = localStorage.getItem('currency-manually-selected') === 'true'
+      
+      if (savedCurrency && hasManualSelection) {
+        // User has manually selected a currency, respect their choice
         try {
           selectedCurrency.value = JSON.parse(savedCurrency)
-          console.log('💰 Restored currency preference:', selectedCurrency.value.code)
+          console.log('💰 Restored manual currency preference:', selectedCurrency.value.code)
         } catch (e) {
           console.error('❌ Error parsing saved currency:', e)
+          // If parsing fails, treat as no saved preference and auto-detect
+          const detectedCurrencyCode = await detectCountryCurrency()
+          const detectedCurrency = getCurrencyObject(detectedCurrencyCode)
+          
+          if (ALLOWED_CURRENCIES.includes(detectedCurrencyCode)) {
+            selectedCurrency.value = detectedCurrency
+            localStorage.setItem('selected-currency', JSON.stringify(detectedCurrency))
+            localStorage.setItem('currency-manually-selected', 'false')
+            console.log('✅ Auto-set currency after parse error:', detectedCurrencyCode)
+          }
+        }
+      } else {
+        // No saved preference, or saved but not manually selected - detect location and set currency
+        console.log('🌍 No saved currency preference or auto-detection needed, detecting location...')
+        const detectedCurrencyCode = await detectCountryCurrency()
+        const detectedCurrency = getCurrencyObject(detectedCurrencyCode)
+        
+        // Only set if the detected currency is in our allowed list
+        if (ALLOWED_CURRENCIES.includes(detectedCurrencyCode)) {
+          selectedCurrency.value = detectedCurrency
+          localStorage.setItem('selected-currency', JSON.stringify(detectedCurrency))
+          localStorage.setItem('currency-manually-selected', 'false') // Mark as auto-detected
+          console.log('✅ Auto-set currency based on location:', detectedCurrencyCode)
+        } else {
+          // Fallback to USD if detected currency is not in allowed list
+          const usdCurrency = getCurrencyObject('USD')
+          selectedCurrency.value = usdCurrency
+          localStorage.setItem('selected-currency', JSON.stringify(usdCurrency))
+          localStorage.setItem('currency-manually-selected', 'false')
+          console.log('✅ Detected currency not in allowed list, defaulting to USD')
         }
       }
     }
@@ -401,9 +539,10 @@ export const useCurrency = () => {
     console.log('💱 Currency changed to:', currency.code)
     console.log('💱 Current rate:', exchangeRates.value[currency.code])
 
-    // Save to localStorage
+    // Save to localStorage and mark as manually selected
     if (process.client) {
       localStorage.setItem('selected-currency', JSON.stringify(currency))
+      localStorage.setItem('currency-manually-selected', 'true') // Mark as manual selection
     }
   }
 
