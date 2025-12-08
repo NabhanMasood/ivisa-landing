@@ -303,8 +303,8 @@ export const useVisaProductsApi = () => {
 
       // Handle the response structure
       if (response.data.status && response.data.data) {
-        // Always cache the data for 5 minutes
-        setCachedData(CACHE_KEYS.DESTINATION_COUNTRIES, response.data.data, 5 * 60 * 1000)
+        // Cache the data for 2 minutes (reduced from 5 to ensure fresh data)
+        setCachedData(CACHE_KEYS.DESTINATION_COUNTRIES, response.data.data, 2 * 60 * 1000)
 
         return {
           data: response.data.data,

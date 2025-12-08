@@ -305,7 +305,8 @@ export const useNationalitiesApi = () => {
 
       // Try to get from cache first (unless forcing refresh)
       if (!forceRefresh) {
-        const cached = getCachedData<Array<any>>(cacheKey)
+        // Use shorter maxAge (2 minutes) to ensure fresh pricing data
+        const cached = getCachedData<Array<any>>(cacheKey, 2 * 60 * 1000)
         if (cached) {
           console.log(`✅ Using cached products for ${nationality} -> ${destination}`)
           return {
@@ -322,8 +323,8 @@ export const useNationalitiesApi = () => {
 
       // Handle the response structure
       if (response.data.status && response.data.data) {
-        // Cache the data for 5 minutes
-        setCachedData(cacheKey, response.data.data, 5 * 60 * 1000)
+        // Cache the data for 2 minutes (reduced to ensure fresh pricing data)
+        setCachedData(cacheKey, response.data.data, 2 * 60 * 1000)
 
         return {
           data: response.data.data,
