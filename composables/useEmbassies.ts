@@ -68,13 +68,13 @@ export const useEmbassiesApi = () => {
 
   /**
    * Get embassies filtered by destination country and origin country (nationality)
-   * GET /embassies/destination/:destinationCountry/origin/:originCountry
+   * GET /embassies/by-destination/:destinationCountry?originCountry=:originCountry
    * 
    * This shows embassies where:
    * - destinationCountry: The country they're applying for a visa to (e.g., Morocco)
    * - originCountry: The country the applicant is from (e.g., Pakistan)
    * 
-   * Matches the backend API endpoint format from the integration guide
+   * Supports both old and new API endpoint formats for backward compatibility
    */
   const getEmbassiesByCountries = async (
     nationality?: string,
@@ -89,13 +89,22 @@ export const useEmbassiesApi = () => {
         }
       }
       
-      // Use the path-based endpoint format from the integration guide
-      const url = `/embassies/destination/${encodeURIComponent(destination)}/origin/${encodeURIComponent(nationality)}`
+      // Try new API endpoint format first: /embassies/by-destination/:destinationCountry?originCountry=:originCountry
+      let url = `/embassies/by-destination/${encodeURIComponent(destination)}?originCountry=${encodeURIComponent(nationality)}`
       
       console.log('🔍 Fetching embassies with URL:', url)
-      console.log('🔍 Parameters:', { destination, origin: nationality })
+      console.log('🔍 Parameters:', { destination, originCountry: nationality })
       
-      const response = await api.get<EmbassiesListResponse>(url)
+      let response
+      try {
+        response = await api.get<EmbassiesListResponse>(url)
+      } catch (error: any) {
+        // Fallback to old endpoint format if new one fails
+        console.log('⚠️ New endpoint failed, trying old format:', error.message)
+        url = `/embassies/destination/${encodeURIComponent(destination)}/origin/${encodeURIComponent(nationality)}`
+        console.log('🔄 Trying old endpoint:', url)
+        response = await api.get<EmbassiesListResponse>(url)
+      }
       
       console.log('🔍 Raw API response:', response)
       console.log('🔍 Response.data:', response.data)
