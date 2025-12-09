@@ -112,7 +112,62 @@
           </div>
         </div>
 
-        <!-- Traveler Tabs -->
+        <!-- Main Tabs: Visa Questions and Embassy Selection -->
+        <div class="bg-white rounded-xl border overflow-hidden" style="border-color: #e4e4e8">
+          <!-- Main Tab Headers -->
+          <div class="border-b flex overflow-x-auto" style="border-color: #e4e4e8">
+            <button
+              @click="activeMainTab = 'fields'"
+              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors"
+              :class="
+                activeMainTab === 'fields'
+                  ? 'border-[#1ECE84] text-[#1ECE84]'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              "
+            >
+              <div class="flex items-center gap-2">
+                <span>Visa Questions</span>
+                <span
+                  v-if="fieldsComplete"
+                  class="w-4 h-4 rounded-full bg-[#1ECE84] flex items-center justify-center"
+                >
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </span>
+              </div>
+            </button>
+            <button
+              v-if="requiresEmbassy"
+              @click="activeMainTab = 'embassy'"
+              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors"
+              :class="
+                activeMainTab === 'embassy'
+                  ? 'border-[#1ECE84] text-[#1ECE84]'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              "
+            >
+              <div class="flex items-center gap-2">
+                <span>Embassy Selection</span>
+                <span
+                  v-if="embassyComplete"
+                  class="w-4 h-4 rounded-full bg-[#1ECE84] flex items-center justify-center"
+                >
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </span>
+                <span
+                  v-else-if="requiresEmbassy && !selectedEmbassyId"
+                  class="w-2 h-2 rounded-full bg-red-500"
+                ></span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Tab Content: Visa Questions -->
+          <div v-if="activeMainTab === 'fields'" class="p-0">
+            <!-- Traveler Tabs -->
         <div
           class="bg-white rounded-xl border overflow-hidden"
           style="border-color: #e4e4e8"
@@ -542,13 +597,102 @@
             </form>
           </div>
         </div>
+          </div>
+
+          <!-- Tab Content: Embassy Selection -->
+          <div v-if="activeMainTab === 'embassy' && requiresEmbassy" class="p-4 sm:p-6">
+            <div class="mb-4 sm:mb-6">
+              <h3 class="text-base sm:text-lg font-semibold" style="font-family: Geist; color: #020617">
+                Select Embassy
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                Please select the embassy where you will submit your visa application.
+              </p>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="isLoadingEmbassies" class="flex items-center justify-center py-8 sm:py-12">
+              <div class="flex flex-col items-center gap-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+                <p class="text-xs sm:text-sm text-gray-600">Loading embassies...</p>
+              </div>
+            </div>
+
+            <!-- Error State -->
+            <div v-else-if="embassyError" class="py-8 sm:py-12 text-center">
+              <p class="text-xs sm:text-sm text-red-600 mb-3 sm:mb-4 px-2">{{ embassyError }}</p>
+              <Button
+                @click="fetchEmbassies"
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-[6px] text-white"
+                style="background-color: #1ece84;"
+              >
+                Try Again
+              </Button>
+            </div>
+
+            <!-- No Embassies Available -->
+            <div v-else-if="!embassies || embassies.length === 0" class="py-8 sm:py-12 text-center">
+              <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">No embassies available for the selected countries.</p>
+            </div>
+
+            <!-- Embassy Options -->
+            <div v-else class="space-y-3 sm:space-y-4">
+              <button
+                v-for="embassy in embassies"
+                :key="embassy.id"
+                @click="selectEmbassy(embassy)"
+                type="button"
+                class="text-left transition-all w-full"
+                :style="{
+                  minHeight: '60px',
+                  gap: '8px',
+                  borderRadius: '8px',
+                  paddingTop: '12px',
+                  paddingRight: '12px',
+                  paddingBottom: '12px',
+                  paddingLeft: '12px',
+                  border: selectedEmbassyId === embassy.id ? '1px solid #1ECE84' : '1px solid #D4D4DA',
+                  backgroundColor: selectedEmbassyId === embassy.id ? '#E8FFF6' : '#FFFFFF'
+                }"
+              >
+                <div class="flex flex-col gap-1">
+                  <h4 class="text-sm sm:text-base leading-[20px] sm:leading-[24px]" style="font-family: Geist; font-weight: 600; color: #0B3947;">
+                    {{ embassy.embassyName || 'Embassy' }}
+                  </h4>
+                  <p v-if="embassy.destinationCountry" class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
+                    {{ embassy.destinationCountry }}
+                  </p>
+                  <p v-if="embassy.address || embassy.location" class="text-xs leading-[16px] sm:leading-[18px]" style="font-family: Manrope; font-weight: 400; color: #9CA3AF;">
+                    {{ embassy.address || embassy.location }}
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            <!-- Save Button -->
+            <div v-if="embassies && embassies.length > 0" class="mt-6 pt-6 border-t" style="border-color: #E5E7EB;">
+              <Button
+                @click="saveEmbassySelection"
+                :disabled="!selectedEmbassyId || isSavingEmbassy"
+                class="h-9 px-4 sm:px-6 rounded-md text-white font-medium text-xs sm:text-sm w-full sm:w-auto"
+                :style="
+                  selectedEmbassyId && !isSavingEmbassy
+                    ? 'background-color: #1ece84; font-family: Geist; min-width: 100px;'
+                    : 'background-color: #9ca3af; font-family: Geist; min-width: 100px; cursor: not-allowed;'
+                "
+              >
+                {{ isSavingEmbassy ? 'Saving...' : 'Save Embassy Selection' }}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated, watch } from "vue";
+import { ref, reactive, computed, onMounted, onActivated, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Input from "@/components/ui/Input.vue";
 import Button from "@/components/ui/button.vue";
@@ -566,6 +710,7 @@ import {
   type Traveler,
 } from "@/composables/useVisaApplications";
 import { useApi } from "@/composables/useApi";
+import { useEmbassiesApi, type Embassy } from "@/composables/useEmbassies";
 
 const route = useRoute();
 const router = useRouter();
@@ -574,8 +719,9 @@ const {
   submitFieldResponses,
   checkAllAdditionalInfoSubmitted,
 } = useVisaProductFieldsApi();
-const { getApplicationById } = useVisaApplications();
+const { getApplicationById, updateDraftApplication } = useVisaApplications();
 const api = useApi();
+const { getEmbassiesByCountries } = useEmbassiesApi();
 
 const applicationId = computed(() => {
   const id = route.query.applicationId || route.params.applicationId;
@@ -591,6 +737,16 @@ const fields = ref<VisaProductFieldWithResponse[]>([]);
 const application = ref<any>(null);
 const travelers = ref<Traveler[]>([]);
 const fieldErrors = reactive<Record<number, string>>({});
+
+// Main tab state (Visa Questions vs Embassy Selection)
+const activeMainTab = ref<'fields' | 'embassy'>('fields' as 'fields' | 'embassy');
+
+// Embassy selection state
+const embassies = ref<Embassy[]>([]);
+const selectedEmbassyId = ref<number | null>(null);
+const isLoadingEmbassies = ref(false);
+const embassyError = ref<string | null>(null);
+const isSavingEmbassy = ref(false);
 
 // Traveler selection state
 const selectedTravelerId = ref<number | null>(null);
@@ -1477,6 +1633,47 @@ const adminNoteToShow = computed(() => {
   return "";
 });
 
+// Check if embassy selection is required (not an eVisa)
+const requiresEmbassy = computed(() => {
+  const app = application.value as any;
+  if (!app) return false;
+  
+  // Use requiresEmbassy flag from API if available
+  if (app.requiresEmbassy !== undefined) {
+    return app.requiresEmbassy;
+  }
+  
+  // Fallback: Check visa product name for eVisa keywords
+  const productName = app.visaProductName || app.visaType || '';
+  const isEVisa = /e[\s-]?visa/i.test(productName);
+  
+  return !isEVisa;
+});
+
+// Check if fields are complete
+const fieldsComplete = computed(() => {
+  // Check if all required fields have responses
+  if (!fields.value || fields.value.length === 0) return true;
+  
+  return fields.value.every(field => {
+    if (!field.isRequired) return true;
+    if (field.editable === false) return true; // Skip non-editable fields
+    
+    const response = formResponses[field.id!];
+    if (!response) return false;
+    
+    const hasValue = response.value !== null && response.value !== '' && response.value !== undefined;
+    const hasFile = response.filePath !== null && response.filePath !== '' && response.filePath !== undefined;
+    
+    return hasValue || hasFile;
+  });
+});
+
+// Check if embassy is selected
+const embassyComplete = computed(() => {
+  return selectedEmbassyId.value !== null && selectedEmbassyId.value !== undefined;
+});
+
 const shouldHighlightField = (field: any) => {
   if (!application.value) return false;
   const app = application.value.data || application.value;
@@ -1612,6 +1809,18 @@ const fetchApplication = async () => {
     if (response.success && response.data) {
       const appData = response.data.data || response.data;
       application.value = appData;
+      
+      // Load embassy ID if available
+      if (appData.embassyId) {
+        selectedEmbassyId.value = appData.embassyId;
+      }
+      
+      // Load embassies if required (check after setting application.value so computed works)
+      // Use nextTick to ensure computed property is updated
+      await nextTick();
+      if (requiresEmbassy.value && appData.destinationCountry && appData.nationality) {
+        fetchEmbassies();
+      }
 
       // Extract travelers from application and deduplicate
       if (appData.travelers && Array.isArray(appData.travelers)) {
@@ -3839,6 +4048,88 @@ watch(formResponses, () => {
 watch(savedTravelerResponses, () => {
   debouncedSave();
 }, { deep: true });
+
+// Embassy selection functions
+const fetchEmbassies = async () => {
+  const app = application.value as any;
+  if (!app || !app.destinationCountry || !app.nationality) {
+    console.warn('⚠️ Missing destination or nationality for embassy fetch');
+    return;
+  }
+
+  isLoadingEmbassies.value = true;
+  embassyError.value = null;
+
+  try {
+    console.log('🔍 Fetching embassies for:', {
+      destination: app.destinationCountry,
+      nationality: app.nationality
+    });
+    
+    const response = await getEmbassiesByCountries(app.nationality, app.destinationCountry);
+    
+    if (response.success && response.data) {
+      embassies.value = response.data;
+      console.log('✅ Loaded embassies:', embassies.value.length);
+      
+      // Auto-select embassy if already selected in application
+      if (selectedEmbassyId.value && embassies.value.length > 0) {
+        const savedEmbassy = embassies.value.find(
+          embassy => embassy.id === selectedEmbassyId.value
+        );
+        if (savedEmbassy) {
+          console.log('✅ Restored selected embassy:', savedEmbassy.embassyName);
+        }
+      }
+    } else {
+      embassies.value = [];
+      embassyError.value = response.message || 'Failed to load embassies';
+    }
+  } catch (err: any) {
+    console.error('❌ Error fetching embassies:', err);
+    embassyError.value = err.message || 'Failed to load embassies';
+    embassies.value = [];
+  } finally {
+    isLoadingEmbassies.value = false;
+  }
+};
+
+const selectEmbassy = (embassy: Embassy) => {
+  selectedEmbassyId.value = embassy.id;
+  console.log('✅ Embassy selected:', embassy.embassyName);
+};
+
+const saveEmbassySelection = async () => {
+  if (!selectedEmbassyId.value || !applicationId.value) {
+    return;
+  }
+
+  isSavingEmbassy.value = true;
+
+  try {
+    console.log('💾 Saving embassy selection:', selectedEmbassyId.value);
+    
+    const response = await updateDraftApplication(applicationId.value, {
+      embassyId: selectedEmbassyId.value
+    });
+
+    if (response.success) {
+      console.log('✅ Embassy selection saved successfully');
+      // Update local application state
+      if (application.value) {
+        const app = application.value as any;
+        app.embassyId = selectedEmbassyId.value;
+      }
+    } else {
+      throw new Error(response.message || 'Failed to save embassy selection');
+    }
+  } catch (err: any) {
+    console.error('❌ Error saving embassy selection:', err);
+    embassyError.value = err.message || 'Failed to save embassy selection';
+  } finally {
+    isSavingEmbassy.value = false;
+  }
+};
 
 watch([selectedTravelerId, selectedTravelerIndex], () => {
   debouncedSave();

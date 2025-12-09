@@ -65,32 +65,20 @@
           @back="currentStep = 2"
         />
 
-        <!-- Step 4: Embassy Selection -->
-        <EmbassySelectionForm
-          v-if="currentStep === 4"
-          :destination="destinationCountry"
-          :nationality="tripData.nationality"
-          :traveler-count="travelersData.travelers?.length || 0"
-          :product-details="tripData.productDetails"
-          :initial-data="embassyData"
-          @next="handleStepFour"
-          @back="currentStep = 3"
-        />
-
-        <!-- Step 5: Processing Time (Checkout) -->
+        <!-- Step 4: Processing Time (Checkout) -->
         <CheckoutForm
-          v-if="currentStep === 5"
+          v-if="currentStep === 4"
           :destination="destinationCountry"
           :traveler-count="travelersData.travelers?.length || 0"
           :product-details="tripData.productDetails"
           :initial-data="processingData"
-          @next="handleStepFive"
-          @back="currentStep = 4"
+          @next="handleStepFour"
+          @back="currentStep = 3"
         />
 
-        <!-- Step 6: Review Order -->
+        <!-- Step 5: Review Order -->
         <ReviewOrder
-          v-if="currentStep === 6"
+          v-if="currentStep === 5"
           :destination="destinationCountry"
           :travelers="getTravelerNames()"
           :processing-fee="processingData.processingFee || 0"
@@ -99,8 +87,8 @@
           :product-details="tripData.productDetails"
           :application-data="completeApplicationData"
           :embassy="selectedEmbassy"
-          @next="handleStepSix"
-          @back="currentStep = 5"
+          @next="handleStepFive"
+          @back="currentStep = 4"
         />
 
         <!-- Loading Overlay -->
@@ -130,7 +118,6 @@ import VisaStats from '@/components/visa/VisaStats.vue'
 import TripInfoForm from '@/components/visa/TripInfoForm.vue'
 import YourInfoForm from '@/components/visa/YourInfoForm.vue'
 import PassportDetailsForm from '@/components/visa/PassportDetailsForm.vue'
-import EmbassySelectionForm from '@/components/visa/EmbassySelectionForm.vue'
 import CheckoutForm from '@/components/visa/CheckoutForm.vue'
 import ReviewOrder from '@/components/visa/ReviewOrder.vue'
 
@@ -362,9 +349,8 @@ const completeApplicationData = computed(() => {
     }),
     processingFeeId: processingData.value.processingFeeId,
     processingType: processingData.value.processingType,
-    processingTime: processingData.value.processingTime,
-    embassyId: embassyData.value.embassyId || null,
-    notes: 'Application submitted via web form'
+        processingTime: processingData.value.processingTime,
+        notes: 'Application submitted via web form'
   }
 })
 
@@ -499,25 +485,13 @@ onMounted(async () => {
           }
         }
         
-        // ✅ Restore Step 4 data (embassy)
+        // ✅ Restore Step 4 data (processing options) - Embassy moved to additional info
         if (draftData.step4) {
-          embassyData.value = {
-            embassyId: draftData.step4.embassyId || (draft as any).embassyId || null
-          }
-          selectedEmbassy.value = draftData.step4.embassy || null
-        } else if ((draft as any).embassyId) {
-          embassyData.value = {
-            embassyId: (draft as any).embassyId
-          }
-        }
-        
-        // ✅ Restore Step 5 data (processing options)
-        if (draftData.step5) {
           processingData.value = {
-            processingType: draftData.step5.processingType || draft.processingType || 'standard',
-            processingFee: Number(draftData.step5.processingFee) || Number(draft.processingFee) || 0,
-            processingTime: draftData.step5.processingTime || (draft as any).processingTime || '',
-            processingFeeId: draftData.step5.processingFeeId || (draft as any).processingFeeId || null
+            processingType: draftData.step4.processingType || draft.processingType || 'standard',
+            processingFee: Number(draftData.step4.processingFee) || Number(draft.processingFee) || 0,
+            processingTime: draftData.step4.processingTime || (draft as any).processingTime || '',
+            processingFeeId: draftData.step4.processingFeeId || (draft as any).processingFeeId || null
           }
         } else if (draft.processingType || draft.processingFee) {
           processingData.value = {
@@ -528,27 +502,55 @@ onMounted(async () => {
           }
         }
         
-        // ✅ Set current step from draftData or determine from available data
-        if (draftData.currentStep) {
-          currentStep.value = draftData.currentStep
-        } else if (draft.currentStep) {
-          currentStep.value = draft.currentStep
-        } else {
-          // Determine step from available data
-          if (draftData.step5 || (draft.processingType && draft.processingFee)) {
-            currentStep.value = 6 // Review step
-          } else if (draftData.step4 || (draft as any).embassyId) {
-            currentStep.value = 5 // Processing options
-          } else if (draftData.step3 || (draft.travelers && draft.travelers[0]?.passportNumber)) {
-            currentStep.value = 4 // Embassy selection
-          } else if (draftData.step2 || (draft.travelers && draft.travelers.length > 0)) {
-            currentStep.value = 3 // Passport details
-          } else {
-            currentStep.value = 2 // Travelers info
+        // ✅ Restore embassy data if it exists (for backward compatibility)
+        if ((draft as any).embassyId) {
+          embassyData.value = {
+            embassyId: (draft as any).embassyId
           }
         }
         
-        console.log('✅ Draft application loaded successfully from draftData')
+        // ✅ Set current step from draftData or determine from available data
+        // Priority: draftData.currentStep > draft.currentStep > determine from data
+        if (draftData.currentStep) {
+          currentStep.value = draftData.currentStep
+          console.log('✅ Restored currentStep from draftData.currentStep:', currentStep.value)
+        } else if (draft.currentStep) {
+          currentStep.value = draft.currentStep
+          console.log('✅ Restored currentStep from draft.currentStep:', currentStep.value)
+        } else {
+          // Determine step from available data
+          // Steps: 1=Trip Info, 2=Travelers, 3=Passport, 4=Processing, 5=Review
+          if (draftData.step4 || (draft.processingType && draft.processingFee)) {
+            // Step 4 (Processing) completed → go to Step 5 (Review)
+            currentStep.value = 5
+            console.log('✅ Determined step 5 (Review) from processing data')
+          } else if (draftData.step3 || (draft.travelers && draft.travelers.length > 0 && draft.travelers[0]?.passportNumber)) {
+            // Step 3 (Passport) completed → go to Step 4 (Processing)
+            currentStep.value = 4
+            console.log('✅ Determined step 4 (Processing) from passport data')
+          } else if (draftData.step2 || (draft.travelers && draft.travelers.length > 0)) {
+            // Step 2 (Travelers) completed → go to Step 3 (Passport)
+            currentStep.value = 3
+            console.log('✅ Determined step 3 (Passport) from travelers data')
+          } else if (draftData.step1 || (tripData.value.email && tripData.value.productDetails)) {
+            // Step 1 (Trip Info) completed → go to Step 2 (Travelers)
+            currentStep.value = 2
+            console.log('✅ Determined step 2 (Travelers) from trip data')
+          } else {
+            // No data yet → start at Step 1
+            currentStep.value = 1
+            console.log('✅ Starting at step 1 (no data found)')
+          }
+        }
+        
+        console.log('✅ Draft application loaded successfully. Current step:', currentStep.value)
+        console.log('📋 Draft data summary:', {
+          hasStep1: !!draftData.step1,
+          hasStep2: !!draftData.step2,
+          hasStep3: !!draftData.step3,
+          hasStep4: !!draftData.step4,
+          currentStep: currentStep.value
+        })
       } else {
         console.error('❌ Failed to load draft application')
         // Fall back to normal initialization
@@ -676,11 +678,7 @@ const saveDraftBeforeLeaving = async () => {
       step3: passportData.value.passportDetails && passportData.value.passportDetails.length > 0 ? {
         passportDetails: passportData.value.passportDetails
       } : null,
-      step4: embassyData.value.embassyId ? {
-        embassyId: embassyData.value.embassyId,
-        embassy: selectedEmbassy.value
-      } : null,
-      step5: processingData.value.processingType ? {
+      step4: processingData.value.processingType ? {
         processingType: processingData.value.processingType,
         processingFee: processingData.value.processingFee,
         processingFeeId: processingData.value.processingFeeId,
@@ -1122,28 +1120,35 @@ const handleStepThree = async (data: any) => {
 }
 
 const handleStepFour = async (data: any) => {
-  console.log('✅ Step 4 (Embassy) data received:', data)
-  embassyData.value = { embassyId: data.embassyId }
+  console.log('✅ Step 4 (Processing Time) data received:', data)
+  processingData.value = { 
+    processingFeeId: data.processingFeeId,
+    processingType: data.processingType,
+    processingTime: data.processingTime,
+    processingFee: data.processingFee
+  }
   
-  // Store embassy info if available (for display in review)
-  selectedEmbassy.value = data.embassy || null
-  
-  // ✅ Update draft with Step 4 data (embassy selection)
+  // ✅ Update draft with Step 4 data (processing options)
   if (applicationId.value) {
     try {
       await updateDraftApplication(applicationId.value, {
-        embassyId: data.embassyId || null,
+        processingType: data.processingType,
+        processingFee: Number(data.processingFee) || 0,
+        processingFeeId: data.processingFeeId || null,
+        processingTime: data.processingTime || '',
         // ✅ Save Step 4 data in draftData
         draftData: {
           step4: {
-            embassyId: data.embassyId || null,
-            embassy: data.embassy || null
+            processingType: data.processingType,
+            processingFee: Number(data.processingFee) || 0,
+            processingFeeId: data.processingFeeId || null,
+            processingTime: data.processingTime || ''
           },
           currentStep: 4
         },
         currentStep: 4
       })
-      console.log('✅ Draft updated with Step 4 data (embassy selection)')
+      console.log('✅ Draft updated with Step 4 data (processing options)')
     } catch (err) {
       console.error('❌ Failed to update draft with Step 4 data:', err)
       // Don't block user from proceeding
@@ -1153,46 +1158,7 @@ const handleStepFour = async (data: any) => {
   currentStep.value = 5
 }
 
-const handleStepFive = async (data: any) => {
-  console.log('✅ Step 5 (Processing Time) data received:', data)
-  processingData.value = { 
-    processingFeeId: data.processingFeeId,
-    processingType: data.processingType,
-    processingTime: data.processingTime,
-    processingFee: data.processingFee
-  }
-  
-  // ✅ Update draft with Step 5 data (processing options)
-  if (applicationId.value) {
-    try {
-      await updateDraftApplication(applicationId.value, {
-        processingType: data.processingType,
-        processingFee: Number(data.processingFee) || 0,
-        processingFeeId: data.processingFeeId || null,
-        processingTime: data.processingTime || '',
-        // ✅ Save Step 5 data in draftData
-        draftData: {
-          step5: {
-            processingType: data.processingType,
-            processingFee: Number(data.processingFee) || 0,
-            processingFeeId: data.processingFeeId || null,
-            processingTime: data.processingTime || ''
-          },
-          currentStep: 5
-        },
-        currentStep: 5
-      })
-      console.log('✅ Draft updated with Step 5 data (processing options)')
-    } catch (err) {
-      console.error('❌ Failed to update draft with Step 5 data:', err)
-      // Don't block user from proceeding
-    }
-  }
-  
-  currentStep.value = 6
-}
-
-const handleStepSix = async (result: any) => {
+const handleStepFive = async (result: any) => {
   console.log('✅ Payment completed, application submitted:', result)
   console.log('🔑 Final applicationId that was submitted:', applicationId.value)
   

@@ -45,10 +45,13 @@ export interface VisaApplication {
   nationality: string
   destinationCountry: string
   visaType: string
+  visaProductName?: string // Product name for eVisa detection
   numberOfTravelers: number
   processingType: string
   processingFee: number
   notes?: string
+  requiresEmbassy?: boolean // NEW: Flag indicating if embassy selection is required (false for eVisas)
+  embassyId?: number | null // Embassy ID if selected
 
   // ✅ NEW: Array of resubmission requests (Option B)
   resubmissionRequests?: ResubmissionRequest[] | null

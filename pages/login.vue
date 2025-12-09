@@ -73,15 +73,24 @@
             </div>
 
             <!-- Password Input -->
-            <div>
+            <div class="relative">
               <Input
                 v-model="formData.password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="Password"
                 required
-                class="w-full h-12 border-gray-200"
+                class="w-full h-12 border-gray-200 pr-10"
                 :disabled="isSubmitting"
               />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                tabindex="-1"
+              >
+                <Eye v-if="showPassword" class="h-5 w-5" />
+                <EyeOff v-else class="h-5 w-5" />
+              </button>
             </div>
 
             <!-- Forgot Password Link -->
@@ -123,6 +132,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
 import Input from "@/components/ui/Input.vue";
 import Button from "@/components/ui/button.vue";
 
@@ -133,6 +143,7 @@ const route = useRoute();
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 const successMessage = ref("");
+const showPassword = ref(false);
 
 const formData = reactive<LoginDto>({
   email: "",
