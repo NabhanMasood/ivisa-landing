@@ -456,21 +456,19 @@
             <Button 
               variant="ghost" 
               size="sm"
-              class="h-[32px] sm:h-[34px] px-2 sm:px-4 font-medium text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent"
+              class="h-[32px] sm:h-[34px] px-3 sm:px-4 font-medium text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent whitespace-nowrap"
               @click="handleLogin"
             >
-              <span class="hidden sm:inline">Login</span>
-              <span class="sm:hidden">Log</span>
+              Login
             </Button>
 
             <!-- Sign Up Button -->
             <Button 
               size="sm"
-              class="!bg-[#1ECE84] hover:!bg-[#1AB876] !text-white !rounded-full !h-[32px] sm:!h-[34px] !px-3 sm:!px-5 !min-w-[70px] sm:!min-w-[95px] !font-medium !border-0 !text-xs sm:!text-sm"
+              class="!bg-[#1ECE84] hover:!bg-[#1AB876] !text-white !rounded-full !h-[32px] sm:!h-[34px] !px-3 sm:!px-5 !min-w-[80px] sm:!min-w-[95px] !font-medium !border-0 !text-xs sm:!text-sm whitespace-nowrap"
               @click="handleSignUp"
             >
-              <span class="hidden sm:inline">Sign Up</span>
-              <span class="sm:hidden">Sign</span>
+              Sign Up
             </Button>
           </div>
 

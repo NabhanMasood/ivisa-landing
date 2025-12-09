@@ -87,8 +87,19 @@
                     <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
                   </SelectTrigger>
                   <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
+                    <!-- Search Input -->
+                    <div class="p-2 border-b sticky top-0 bg-white z-10">
+                      <input
+                        v-model="fromSearchQuery"
+                        type="text"
+                        placeholder="Search countries..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                        @click.stop
+                        @keydown.stop
+                      />
+                    </div>
                     <SelectItem 
-                      v-for="country in countries" 
+                      v-for="country in filteredFromCountries" 
                       :key="country.id" 
                       :value="String(country.id)"
                     >
@@ -159,8 +170,19 @@
                     <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
                   </SelectTrigger>
                   <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
+                    <!-- Search Input -->
+                    <div class="p-2 border-b sticky top-0 bg-white z-10">
+                      <input
+                        v-model="toSearchQuery"
+                        type="text"
+                        placeholder="Search countries..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                        @click.stop
+                        @keydown.stop
+                      />
+                    </div>
                     <SelectItem 
-                      v-for="country in destinationCountries" 
+                      v-for="country in filteredToCountries" 
                       :key="country.id" 
                       :value="String(country.id)"
                     >
@@ -278,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Button from '@/components/ui/button.vue'
 import Card from '@/components/ui/card/Card.vue'
@@ -302,6 +324,8 @@ const selectedFrom = ref<string>('')
 const selectedTo = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const fromSearchQuery = ref('')
+const toSearchQuery = ref('')
 
 // API
 const { getCountries } = useCountriesApi()
@@ -318,6 +342,28 @@ const handleLogoError = (event: Event) => {
   console.error('❌ Logo failed to load:', img.src)
   img.style.display = 'none'
 }
+
+// ✅ Filtered countries for "From" dropdown - matches from start
+const filteredFromCountries = computed(() => {
+  if (!fromSearchQuery.value || !fromSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = fromSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
+
+// ✅ Filtered countries for "To" dropdown - matches from start
+const filteredToCountries = computed(() => {
+  if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
+    return destinationCountries.value
+  }
+  const query = toSearchQuery.value.toLowerCase().trim()
+  return destinationCountries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
 
 // Helper functions for "From" dropdown (Countries table)
 const getCountryName = (countryId: string) => {
@@ -460,6 +506,15 @@ watch(() => route.query.toId, (newToId) => {
       selectedTo.value = toIdString
     }
   }
+})
+
+// Watch for selection changes to reset search queries
+watch(() => selectedFrom.value, () => {
+  fromSearchQuery.value = ''
+})
+
+watch(() => selectedTo.value, () => {
+  toSearchQuery.value = ''
 })
 
 // Fetch data on component mount

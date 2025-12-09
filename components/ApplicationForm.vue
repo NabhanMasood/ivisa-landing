@@ -1,7 +1,7 @@
 <template>
   <!-- Your Visa Our Priority Section -->
   <section 
-    class="relative overflow-hidden w-full min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]"
+    class="relative overflow-hidden w-full min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] rounded-2xl sm:rounded-[30px]"
     style="background: linear-gradient(90deg, #31B560 0%, #0582A2 33.14%, #2567BE 51.18%, #5051DA 69.41%, #2C229B 100%);"
   >
       <div class="w-full h-full relative">
@@ -16,7 +16,7 @@
 
       <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]">
         <!-- Content - Full Width -->
-        <div class="w-full px-4 sm:px-6 lg:pl-[144px] lg:pr-[120px]">
+        <div class="w-full px-4 sm:px-6 lg:pl-[60px] lg:pr-[80px]">
           
           <!-- Left Content -->
           <div class="text-white z-10 relative max-w-[676px] py-6 sm:py-8 lg:py-12">
