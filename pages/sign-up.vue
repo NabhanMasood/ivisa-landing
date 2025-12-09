@@ -9,7 +9,7 @@
       />
     </div>
 
-    <!-- Right Side - Form Section -->
+    <!-- Right Side - Foorm Section -->
     <div
       class="w-full lg:w-1/2 min-h-screen flex items-center justify-center bg-gray-50/50 shadow-sm p-6"
     >
