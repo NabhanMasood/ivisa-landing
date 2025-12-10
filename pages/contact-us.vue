@@ -4,7 +4,7 @@
     <!-- Header -->
     <HeaderLoggedIn />
 
-    <!-- Contact Section -->
+    <!-- Contact Sections -->
     <div class="container mx-auto max-w-7xl px-6 lg:px-8 py-12">
       <!-- Section Header -->
       <div class="mb-12">
