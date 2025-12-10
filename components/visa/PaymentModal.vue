@@ -325,6 +325,7 @@ import Button from "@/components/ui/button.vue";
 import SuccessModal from "@/components/visa/Successmodal.vue";
 import { useCardInfo, type CardInfo } from "@/composables/useCardInfo";
 import { useStripe, type StripeCardElement } from "@/composables/useStripe";
+import { constructVisaType } from "@/lib/visaTypeUtils";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -780,28 +781,58 @@ const resetForm = () => {
 };
 
 // Transform application data to match backend DTO
-const transformApplicationData = (applicationData: any) => {
+const transformApplicationData = async (applicationData: any) => {
   console.log("🔄 Transforming application data...");
   console.log("📥 Raw data received:", applicationData);
 
-  // Transform visa type: "Tourist Visa|single" -> "30-single"
-  // Use duration from productDetails if available, otherwise try to extract from productName
+  // Transform visa type: Handle both legacy format and backend format
+  // No validation on entry type values - accepts any custom entry type
   let visaType = "";
-  if (applicationData.visaType && applicationData.visaType.includes("|")) {
-    const [productName, entryType] = applicationData.visaType.split("|");
-    
-    // ✅ PRIORITY 1: Get duration from productDetails (most reliable)
-    let duration = "";
-    if (applicationData.productDetails && applicationData.productDetails.duration) {
-      duration = String(applicationData.productDetails.duration);
-      console.log("✅ Got duration from productDetails:", duration);
+  
+  if (applicationData.visaType) {
+    // Check if already in backend format (e.g., "30-single", "90-multiple", "30-Standard Visitor Visa (6m)", etc.)
+    if (/^\d+-.+$/.test(applicationData.visaType)) {
+      // Already in correct backend format - accept as-is, no validation on entry type value
+      visaType = applicationData.visaType;
+      console.log("✅ Visa type already in backend format:", visaType);
+    } else if (applicationData.visaType.includes("|")) {
+      // Legacy format: "Tourist Visa|entryType" -> construct backend format
+      const [productName, entryType] = applicationData.visaType.split("|");
+      
+      // ✅ Use constructVisaType helper to properly handle any entry type (including custom)
+      const product = applicationData.productDetails;
+      
+      if (product) {
+        visaType = constructVisaType({
+          validity: Number(product.validity) || Number(product.duration) || 180,
+          entryType: product.entryType || entryType || '',
+          customEntryName: product.customEntryName
+        });
+        console.log("✅ Constructed visa type from product:", visaType);
+      } else {
+        // Fallback: construct from legacy format - use entryType as-is (no validation)
+        let duration = "";
+        if (applicationData.productDetails && applicationData.productDetails.duration) {
+          duration = String(applicationData.productDetails.duration);
+        } else {
+          duration = productName.match(/\d+/)?.[0] || "180";
+        }
+        // Use entryType directly without any validation or transformation
+        visaType = `${duration}-${entryType}`;
+        console.log("⚠️ Fallback: Constructed visa type from legacy format:", visaType);
+      }
     } else {
-      // FALLBACK: Try to extract from productName
-      duration = productName.match(/\d+/)?.[0] || "";
-      console.log("⚠️ Extracted duration from productName:", duration);
+      // Try to construct from productDetails
+      const product = applicationData.productDetails;
+      if (product) {
+        visaType = constructVisaType({
+          validity: Number(product.validity) || Number(product.duration) || 180,
+          entryType: product.entryType || '',
+          customEntryName: product.customEntryName
+        });
+        console.log("✅ Constructed visa type from productDetails:", visaType);
+      }
     }
-    
-    visaType = `${duration}-${entryType}`;
   }
 
   console.log("✅ Visa type for SUBMISSION:", visaType);
@@ -954,10 +985,12 @@ const transformApplicationData = (applicationData: any) => {
     }))
   );
 
-  // Validate only the essential fields
-  if (!payload.visaType || !payload.visaType.match(/^\d+-\w+$/)) {
+  // Validate only the essential fields - format check only, no restriction on entry type values
+  // Format: {validity}-{entryType} where validity is a number and entryType can be any string
+  // This allows unlimited custom entry types without validation restrictions
+  if (!payload.visaType || !payload.visaType.match(/^\d+-.+$/)) {
     throw new Error(
-      `Invalid visa type: "${payload.visaType}". Expected format: "30-single"`
+      `Invalid visa type format: "${payload.visaType}". Expected format: "{validity}-{entryType}" where validity is a number and entryType can be any value (e.g., "30-single", "90-multiple", "30-Standard Visitor Visa (6m)", etc.)`
     );
   }
 
@@ -1017,7 +1050,7 @@ const handlePayment = async () => {
     }
 
     // Transform the data first
-    const transformedData = transformApplicationData(props.applicationData);
+    const transformedData = await transformApplicationData(props.applicationData);
 
     // Convert amount to cents for Stripe (amount should be in smallest currency unit)
     // Assuming amount is in dollars, multiply by 100 for cents

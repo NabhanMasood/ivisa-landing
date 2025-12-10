@@ -46,9 +46,7 @@
                 Start your application
               </h2>
 
-              <!-- Country Selectors Row -->
               <div class="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <!-- From Country Dropdown (All Countries) -->
                 <div class="space-y-2">
                   <Select v-model="selectedNationality">
                     <SelectTrigger 

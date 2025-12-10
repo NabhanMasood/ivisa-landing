@@ -322,24 +322,57 @@ export const useNationalitiesApi = () => {
       const response = await api.get<{ status: boolean; message: string; data: Array<any> }>(url)
 
       // Handle the response structure
-      if (response.data.status && response.data.data) {
-        // Cache the data for 2 minutes (reduced to ensure fresh pricing data)
-        setCachedData(cacheKey, response.data.data, 2 * 60 * 1000)
+      // Key distinction based on backend status field:
+      // - status: true → Request was successful (even if empty array = free visa)
+      // - status: false → Request failed or no products configured
 
+      // Check if response.data exists and has status field
+      if (response.data && typeof response.data === 'object' && 'status' in response.data) {
+        const backendResponse = response.data as { status: boolean; message: string; data: Array<any> }
+
+        if (backendResponse.status === true) {
+          // Backend returned status: true, which means the request was successful
+          // Empty array with status: true = free visa (products exist but are filtered out)
+          if (Array.isArray(backendResponse.data)) {
+            // Cache the data for 2 minutes (reduced to ensure fresh pricing data)
+            setCachedData(cacheKey, backendResponse.data, 2 * 60 * 1000)
+
+            return {
+              data: backendResponse.data,
+              message: backendResponse.message,
+              success: true, // Always true when backend status is true (even for empty array)
+            }
+          }
+        }
+
+        // Backend returned status: false - no products configured
         return {
-          data: response.data.data,
-          message: response.data.message,
-          success: true,
+          data: [],
+          message: backendResponse.message || 'No products found',
+          success: false, // success: false indicates no products configured
         }
       }
 
+      // Fallback: if response structure is unexpected, treat as no products
       return {
         data: [],
-        message: response.data.message || 'No products found',
+        message: 'No products found',
         success: false,
       }
-    } catch (error) {
-      // If API fails, try to return cached data as fallback
+    } catch (error: any) {
+      // Check if it's a 404 or similar error that indicates no products configured
+      const errorStatus = error?.response?.status || error?.statusCode
+      if (errorStatus === 404 || errorStatus === 400) {
+        // 404 or 400 likely means no products configured for this pair
+        console.log(`⚠️ No products configured (${errorStatus}) for ${nationality} -> ${destination}`)
+        return {
+          data: [],
+          message: 'No products found for this nationality-destination combination',
+          success: false, // No products configured
+        }
+      }
+
+      // For other errors, try to return cached data as fallback
       const cacheKey = `${CACHE_KEYS.VISA_PRODUCTS}_${nationality}_${destination}`.toLowerCase()
       const cached = getCachedData<Array<any>>(cacheKey)
       if (cached) {
@@ -350,6 +383,8 @@ export const useNationalitiesApi = () => {
           success: true,
         }
       }
+
+      // If no cache and not a 404/400, throw the error
       throw new Error(handleApiError(error))
     }
   }

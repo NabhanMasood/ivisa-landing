@@ -11,8 +11,8 @@
 
       <!-- Hero Section with Featured Guide -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
-        <!-- Main Featured Guide (Left - 2 columns) -->
-        <div class="lg:col-span-2 relative">
+        <!-- Main Featured Guide (Left - 2 columns, or full width if no other featured guides) -->
+        <div :class="featuredGuides.length > 0 ? 'lg:col-span-2 relative' : 'lg:col-span-3 relative'">
           <div v-if="loading" class="animate-pulse">
             <div class="bg-gray-200 rounded-lg h-[400px] sm:h-[500px]"></div>
           </div>
@@ -65,8 +65,8 @@
           </div>
         </div>
 
-        <!-- Featured Guides Sidebar (Right - 1 column) -->
-        <aside class="lg:col-span-1">
+        <!-- Featured Guides Sidebar (Right - 1 column) - Only show when there are other featured guides -->
+        <aside v-if="featuredGuides.length > 0" class="lg:col-span-1">
           <div class="bg-white rounded-lg">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">The featured</h2>
             

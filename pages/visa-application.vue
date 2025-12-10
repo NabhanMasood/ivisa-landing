@@ -19,10 +19,10 @@
           </h1>
         </div>
 
-        <VisaStepper :current-step="currentStep" />
+        <VisaStepper v-if="!isFreeVisa" :current-step="currentStep" />
         
         <VisaStats 
-          v-if="currentStep === 1" 
+          v-if="currentStep === 1 && !isFreeVisa" 
           :destination="destinationCountry" 
           :product-details="tripData.productDetails"
         />
@@ -38,6 +38,7 @@
           }"
           @next="handleStepOne"
           @update="handleStepOneUpdate"
+          @freeVisa="handleFreeVisa"
         />
         
         <!-- Step 2: Personal Details (Your Info) -->
@@ -150,6 +151,7 @@ const { saveState, loadState, clearState, setupAutoSave } = useFormPersistence(g
 const currentStep = ref(1)
 const nationalityCountry = ref('')
 const destinationCountry = ref('')
+const isFreeVisa = ref(false)
 
 // Store all form data
 const tripData = ref<any>({
@@ -200,6 +202,12 @@ const handleStepThreeUpdate = (data: any) => {
   passportData.value = { ...data }
 }
 
+// Handle free visa detection from TripInfoForm
+const handleFreeVisa = (freeVisa: boolean) => {
+  isFreeVisa.value = freeVisa
+  console.log('ℹ️ Free visa status:', freeVisa)
+}
+
 // Get traveler names for review page
 const getTravelerNames = () => {
   if (!travelersData.value.travelers || travelersData.value.travelers.length === 0) return []
@@ -220,10 +228,20 @@ const getVisaDetails = () => {
     }
   }
   
+  // Handle custom entry types
+  let entriesDisplay = 'Unknown'
+  if (product.entryType === 'custom' && product.customEntryName) {
+    entriesDisplay = product.customEntryName
+  } else if (product.entryType === 'single') {
+    entriesDisplay = 'Single entry'
+  } else if (product.entryType === 'multiple') {
+    entriesDisplay = 'Multiple entry'
+  }
+  
   return {
     validity: `${product.validity} days after issued`,
     maxStay: `${product.duration} days per entry`,
-    entries: product.entryType === 'single' ? 'Single entry' : 'Multiple entry'
+    entries: entriesDisplay
   }
 }
 
@@ -255,10 +273,14 @@ const completeApplicationData = computed(() => {
   // Check if visaType is in backend format (e.g., "90-single") or PaymentModal format (e.g., "Morocco e-Visa|single")
   let visaTypeForPayment = tripData.value.visaType
   
-  // If visaType is in backend format (digits-dash-word like "90-single"), reconstruct PaymentModal format
-  if (visaTypeForPayment && visaTypeForPayment.match(/^\d+-\w+$/)) {
-    // It's in backend format, reconstruct from product
-    const entryType = product.entryType || 'single'
+  // If visaType is in backend format (digits-dash-anything like "90-Double Entry"), reconstruct PaymentModal format
+  if (visaTypeForPayment && /^\d+-.+$/.test(visaTypeForPayment) && !visaTypeForPayment.includes('|')) {
+    // Parse backend format and reconstruct PaymentModal format
+    const parts = visaTypeForPayment.split('-')
+    const entryTypeValue = parts.slice(1).join('-') // Handle custom entry types with hyphens
+    const entryType = entryTypeValue === 'single' ? 'single' : 
+                      entryTypeValue === 'multiple' ? 'multiple' : 
+                      entryTypeValue.toLowerCase() // For custom entry types, use as-is
     visaTypeForPayment = `${product.productName || 'Visa'}|${entryType}`
     console.log('🔄 Reconstructed visaType for PaymentModal from backend format:', {
       original: tripData.value.visaType,
@@ -420,12 +442,16 @@ onMounted(async () => {
             phoneNumber: step1.phoneNumber || ''
           }
           
-          // ✅ If visaType is in backend format (e.g., "90-single"), reconstruct original format for PaymentModal
-          if (tripData.value.visaType && tripData.value.visaType.match(/^\d+-\w+$/)) {
-            // It's in backend format, reconstruct from product
+          // ✅ If visaType is in backend format (e.g., "90-Double Entry"), reconstruct original format for PaymentModal
+          if (tripData.value.visaType && /^\d+-.+$/.test(tripData.value.visaType) && !tripData.value.visaType.includes('|')) {
+            // Parse backend format to extract entry type
             const product = tripData.value.productDetails
             if (product) {
-              const entryType = product.entryType || 'single'
+              const parts = tripData.value.visaType.split('-')
+              const entryTypeValue = parts.slice(1).join('-')
+              const entryType = entryTypeValue === 'single' ? 'single' : 
+                                entryTypeValue === 'multiple' ? 'multiple' : 
+                                entryTypeValue.toLowerCase()
               tripData.value.visaType = `${product.productName || 'Visa'}|${entryType}`
               console.log('🔄 Reconstructed visaType for PaymentModal:', tripData.value.visaType)
             }
@@ -656,10 +682,32 @@ const saveDraftBeforeLeaving = async () => {
     }
 
     // Parse visa type
-    const visaTypeParts = tripData.value.visaType?.split('|') || []
-    const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
-    const duration = Number(product.duration) || Number(product.validity) || 180
-    const visaType = `${duration}-${entryType}`
+    // Handle both visaType formats:
+    // 1. Backend format: "90-Double Entry" (new format with custom entry types)
+    // 2. Legacy format: "ProductName|entryType" (old format)
+    let visaType: string
+    const parsedVisaType = tripData.value.visaType
+    
+    if (parsedVisaType && parsedVisaType.includes('|')) {
+      // Legacy format: productName|entryType - convert to backend format using constructVisaType
+      const { constructVisaType } = await import('@/lib/visaTypeUtils')
+      visaType = constructVisaType({
+        validity: Number(product.validity) || Number(product.duration) || 180,
+        entryType: product.entryType || 'single',
+        customEntryName: product.customEntryName
+      })
+    } else if (parsedVisaType && /^\d+-.+$/.test(parsedVisaType)) {
+      // Backend format: already in correct format (e.g., "90-Double Entry")
+      visaType = parsedVisaType
+    } else {
+      // Fallback: construct from product using constructVisaType
+      const { constructVisaType } = await import('@/lib/visaTypeUtils')
+      visaType = constructVisaType({
+        validity: Number(product.validity) || Number(product.duration) || 180,
+        entryType: product.entryType || 'single',
+        customEntryName: product.customEntryName
+      })
+    }
 
     // Build complete draftData object with all step data
     const completeDraftData: any = {
@@ -819,8 +867,23 @@ const handleStepOneUpdate = async (data: any) => {
           customerId = currentUser.value.id
         }
 
-        const visaTypeParts = data.visaType?.split('|') || []
-        const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+        // Handle both visaType formats (backend format or legacy format)
+        let entryType = 'single'
+        if (data.visaType) {
+          if (data.visaType.includes('|')) {
+            // Legacy format: productName|entryType
+            const visaTypeParts = data.visaType.split('|')
+            entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+          } else if (/^\d+-.+$/.test(data.visaType)) {
+            // Backend format: extract entry type
+            const parts = data.visaType.split('-')
+            entryType = parts.slice(1).join('-').toLowerCase().trim()
+          } else {
+            entryType = (product.entryType || 'single').toLowerCase().trim()
+          }
+        } else {
+          entryType = (product.entryType || 'single').toLowerCase().trim()
+        }
         const duration = Number(product.duration) || Number(product.validity) || 180
         
         // ✅ Map visa type to backend-accepted format
@@ -936,33 +999,29 @@ const handleStepOne = async (data: any) => {
         console.log('⚠️ User not authenticated - customer will be created from email')
       }
 
-      // ✅ Use the SAME visaType mapping logic as PaymentModal to ensure consistency
-      // Parse visa type from the format "productName|entryType"
-      const visaTypeParts = data.visaType?.split('|') || []
-      const entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
-      
-      // ✅ Get duration from productDetails (same as PaymentModal)
-      const duration = Number(product.duration) || Number(product.validity) || 180
-      
-      // ✅ Map visa type to backend-accepted format
-      // Backend only accepts: 180-single, 180-multiple, or 90-single
-      // Map based on duration and entry type
+      // ✅ Use constructVisaType helper to ensure correct format
+      const { constructVisaType } = await import('@/lib/visaTypeUtils')
       let visaType: string
-      if (duration <= 90) {
-        visaType = '90-single' // For durations <= 90, use 90-single
+      
+      if (data.visaType && /^\d+-.+$/.test(data.visaType)) {
+        // Already in backend format, use as-is
+        visaType = data.visaType
       } else {
-        // For durations > 90, use 180-single or 180-multiple based on entry type
-        visaType = entryType === 'multiple' ? '180-multiple' : '180-single'
+        // Construct from product using constructVisaType helper
+        visaType = constructVisaType({
+          validity: Number(product.validity) || Number(product.duration) || 180,
+          entryType: product.entryType || 'single',
+          customEntryName: product.customEntryName
+        })
       }
       
       console.log('🎫 Mapped visaType for DRAFT:', { 
         original: data.visaType, 
-        originalDuration: duration,
-        entryType: entryType,
         mapped: visaType,
         productDuration: product?.duration,
         productValidity: product?.validity,
-        productEntryType: product?.entryType
+        productEntryType: product?.entryType,
+        customEntryName: product?.customEntryName
       })
       console.log('✅ Draft will be created with visaType:', visaType, '(backend-accepted format)')
 

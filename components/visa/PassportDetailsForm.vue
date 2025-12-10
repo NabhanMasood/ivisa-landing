@@ -911,7 +911,7 @@ const getSelectedCountry = (countryName: string) => {
   return countries.value.find((c) => c.countryName === countryName);
 };
 
-// ✅ Filtered countries based on search query for nationality
+// ✅ Filtered countries based on search query for nationality - matches from start
 const getFilteredNationalityCountries = (index: number) => {
   const query = nationalitySearchQueries.value[index] || '';
   if (!query.trim()) {
@@ -919,11 +919,11 @@ const getFilteredNationalityCountries = (index: number) => {
   }
   const searchTerm = query.toLowerCase().trim();
   return countries.value.filter((country) =>
-    country.countryName.toLowerCase().includes(searchTerm)
+    country.countryName.toLowerCase().startsWith(searchTerm)
   );
 };
 
-// ✅ Filtered countries based on search query for residence country
+// ✅ Filtered countries based on search query for residence country - matches from start
 const getFilteredResidenceCountries = (index: number) => {
   const query = residenceCountrySearchQueries.value[index] || '';
   if (!query.trim()) {
@@ -931,7 +931,7 @@ const getFilteredResidenceCountries = (index: number) => {
   }
   const searchTerm = query.toLowerCase().trim();
   return countries.value.filter((country) =>
-    country.countryName.toLowerCase().includes(searchTerm)
+    country.countryName.toLowerCase().startsWith(searchTerm)
   );
 };
 

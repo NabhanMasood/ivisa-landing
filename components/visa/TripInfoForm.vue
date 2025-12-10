@@ -1,20 +1,337 @@
 <template>
   <div class="rounded-lg sm:rounded-xl p-4 sm:p-6">
-    <div class="mb-4 sm:mb-6">
-      <p
-        class="text-xs sm:text-sm leading-[18px] sm:leading-[22px]"
-        style="
-          font-family: Geist;
-          font-weight: 600;
-          color: #0b3947;
-        "
-      >
-        The {{ destination }} Visa is mandatory for {{ formData.nationality || nationality }} passport
-        holders planning to enter {{ destination }}
-      </p>
+    <!-- Free Visa UI with Animated Clouds -->
+    <div
+      v-if="
+        !isLoadingProducts &&
+        availableProducts.length === 0 &&
+        !productError &&
+        formData.nationality &&
+        destination
+      "
+      class="py-2 sm:py-4"
+    >
+      <!-- Two Column Layout: Left (Animation + Dropdown) | Right (Button + Info) -->
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 lg:gap-8">
+        
+        <!-- LEFT SIDE: Animation + Nationality Dropdown -->
+        <div class="flex-1 flex flex-col items-center lg:items-start">
+          <!-- Animated Scene Container -->
+          <div class="free-visa-scene relative w-full max-w-[650px] h-[280px] sm:h-[320px] lg:h-[340px] mb-5 overflow-hidden rounded-2xl sm:rounded-3xl">
+            <!-- Background gradient sky -->
+            <div class="absolute inset-0 bg-gradient-to-b from-[#c9e8ff] via-[#e0f4ff] to-[#f0faff]"></div>
+            
+            <!-- Animated Clouds Layer -->
+            <!-- Cloud 1 - Large, slow moving from right -->
+            <div class="cloud cloud-1 absolute top-[12%] -left-24">
+              <svg viewBox="0 0 100 50" class="w-24 h-12 sm:w-32 sm:h-16 fill-white drop-shadow-md opacity-90">
+                <ellipse cx="25" cy="35" rx="20" ry="12"/>
+                <ellipse cx="45" cy="28" rx="25" ry="16"/>
+                <ellipse cx="70" cy="35" rx="22" ry="13"/>
+                <ellipse cx="50" cy="20" rx="18" ry="12"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 2 - Medium, faster from right -->
+            <div class="cloud cloud-2 absolute top-[30%] -left-20">
+              <svg viewBox="0 0 80 40" class="w-16 h-8 sm:w-24 sm:h-12 fill-white drop-shadow-sm opacity-85">
+                <ellipse cx="20" cy="28" rx="15" ry="10"/>
+                <ellipse cx="40" cy="22" rx="20" ry="14"/>
+                <ellipse cx="58" cy="28" rx="16" ry="10"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 3 - Small, fast moving from right -->
+            <div class="cloud cloud-3 absolute top-[50%] -left-16">
+              <svg viewBox="0 0 60 30" class="w-14 h-7 sm:w-20 sm:h-10 fill-white opacity-75">
+                <ellipse cx="15" cy="20" rx="12" ry="8"/>
+                <ellipse cx="30" cy="15" rx="15" ry="10"/>
+                <ellipse cx="45" cy="20" rx="12" ry="8"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 4 - Tiny accent cloud, very fast -->
+            <div class="cloud cloud-4 absolute top-[20%] -left-12">
+              <svg viewBox="0 0 40 20" class="w-10 h-5 sm:w-14 sm:h-7 fill-white opacity-65">
+                <ellipse cx="12" cy="14" rx="10" ry="6"/>
+                <ellipse cx="26" cy="11" rx="12" ry="8"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 5 - Background layer, slowest -->
+            <div class="cloud cloud-5 absolute top-[65%] -left-24">
+              <svg viewBox="0 0 90 45" class="w-20 h-10 sm:w-28 sm:h-14 fill-white opacity-55">
+                <ellipse cx="22" cy="32" rx="18" ry="10"/>
+                <ellipse cx="45" cy="25" rx="22" ry="14"/>
+                <ellipse cx="68" cy="32" rx="18" ry="10"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 6 - Extra cloud for more depth -->
+            <div class="cloud cloud-6 absolute top-[40%] -left-18">
+              <svg viewBox="0 0 70 35" class="w-16 h-8 sm:w-22 sm:h-11 fill-white opacity-70">
+                <ellipse cx="18" cy="24" rx="14" ry="9"/>
+                <ellipse cx="35" cy="18" rx="18" ry="12"/>
+                <ellipse cx="52" cy="24" rx="14" ry="9"/>
+              </svg>
+            </div>
+            
+            <!-- Cloud 7 - Additional top cloud -->
+            <div class="cloud cloud-7 absolute top-[8%] -left-16">
+              <svg viewBox="0 0 50 25" class="w-12 h-6 sm:w-16 sm:h-8 fill-white opacity-60">
+                <ellipse cx="15" cy="17" rx="12" ry="7"/>
+                <ellipse cx="32" cy="14" rx="14" ry="9"/>
+              </svg>
+            </div>
+            
+            <!-- Plane with subtle floating animation - positioned higher -->
+            <div class="plane-container absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 z-10">
+              <img
+                src="/images/plane.svg"
+                alt="Plane"
+                class="plane-float w-[200px] h-[78px] sm:w-[260px] sm:h-[100px] lg:w-[280px] lg:h-[108px] drop-shadow-xl"
+              />
+            </div>
+            
+            <!-- Sparkle/Star effects for celebration feel -->
+            <div class="sparkle sparkle-1 absolute w-2 h-2 sm:w-3 sm:h-3 rounded-full"></div>
+            <div class="sparkle sparkle-2 absolute w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"></div>
+            <div class="sparkle sparkle-3 absolute w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full"></div>
+            <div class="sparkle sparkle-4 absolute w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"></div>
+            
+            <!-- Contrail/Trail effects behind plane -->
+            <div class="trail trail-1 absolute"></div>
+            <div class="trail trail-2 absolute"></div>
+            
+            <!-- Message INSIDE the animated container -->
+            <div class="absolute bottom-6 sm:bottom-8 lg:bottom-10 left-0 right-0 z-20 text-center px-4">
+              <h2
+                class="free-visa-title text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold"
+                style="
+                  font-family: Geist, sans-serif;
+                  font-weight: 600;
+                  color: #0b3947;
+                  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+                "
+              >
+                Good news! You don't need a visa!
+              </h2>
+            </div>
+          </div>
+          
+          <!-- Nationality Dropdown Section - Below animation on left -->
+          <div class="w-full max-w-[650px] px-1">
+            <!-- Nationality Select -->
+            <div>
+              <Label
+                htmlFor="nationality"
+                style="
+                  font-family: Manrope, sans-serif;
+                  font-weight: 500;
+                  font-size: 14px;
+                  line-height: 20px;
+                  color: #0b3947;
+                "
+              >
+                What's your nationality?
+              </Label>
+
+              <!-- Loading State -->
+              <div
+                v-if="isLoadingCountries"
+                class="mt-2 flex items-center gap-2 text-sm text-gray-600"
+              >
+                <div
+                  class="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"
+                ></div>
+                Loading countries...
+              </div>
+
+              <!-- Countries Dropdown -->
+              <Select v-else v-model="formData.nationality">
+                <SelectTrigger
+                  variant="form"
+                  class="w-full mt-2 h-11 !bg-white/90 !rounded-[16px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                  style="
+                    font-family: Manrope, sans-serif;
+                    font-size: 14px;
+                    padding-left: 0.75rem !important;
+                    padding-right: 1rem !important;
+                  "
+                >
+                  <SelectValue>
+                    <div v-if="selectedCountry" class="flex items-center gap-2">
+                      <img
+                        v-if="selectedCountry.logoUrl"
+                        :src="getFullLogoUrl(selectedCountry.logoUrl)"
+                        :alt="selectedCountry.countryName"
+                        class="w-5 h-4 object-cover rounded-sm"
+                        @error="handleFlagError"
+                      />
+                      <span>{{ selectedCountry.countryName }}</span>
+                    </div>
+                    <span v-else>Select your nationality</span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent class="max-h-[300px] overflow-y-auto">
+                  <!-- Search Input -->
+                  <div class="p-2 border-b sticky top-0 bg-white z-10">
+                    <input
+                      v-model="nationalitySearchQuery"
+                      type="text"
+                      placeholder="Search countries..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                      @click.stop
+                      @keydown.stop
+                    />
+                  </div>
+                  <SelectItem
+                    v-for="country in filteredNationalityOptions"
+                    :key="country.id"
+                    :value="country.countryName"
+                  >
+                    <div class="flex items-center gap-2">
+                      <img
+                        v-if="country.logoUrl"
+                        :src="getFullLogoUrl(country.logoUrl)"
+                        :alt="country.countryName"
+                        class="w-5 h-4 object-cover rounded-sm"
+                        @error="handleFlagError"
+                      />
+                      <span>{{ country.countryName }}</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <p
+                style="
+                  font-family: Manrope;
+                  font-weight: 400;
+                  font-size: 12px;
+                  line-height: 16px;
+                  color: #6b7280;
+                "
+                class="mt-1.5"
+              >
+                Ensure you select the nationality of the passport you'll be traveling with.
+              </p>
+            </div>
+            
+            <!-- Trustpilot Badge -->
+            <div class="mt-6 flex items-center gap-3">
+              <div class="flex items-center gap-1">
+                <svg class="w-5 h-5 text-[#00B67A]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span class="text-sm font-semibold text-[#0B3947]">Trustpilot</span>
+              </div>
+              <div class="flex gap-0.5">
+                <div v-for="i in 5" :key="i" class="w-5 h-5 bg-[#00B67A] flex items-center justify-center">
+                  <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              </div>
+              <span class="text-xs text-gray-500">66,000+ Reviews</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- RIGHT SIDE: Check Other Destinations Button + Additional Info -->
+        <div class="flex-shrink-0 flex flex-col items-center lg:items-end gap-6 lg:w-[320px]">
+          <!-- Main CTA Button -->
+          <Button
+            @click="handleCheckOtherDestinations"
+            class="free-visa-btn w-full h-[52px] sm:h-[56px] !rounded-[16px] sm:!rounded-[20px] !font-semibold !text-base sm:!text-lg shadow-xl transition-all hover:shadow-2xl hover:scale-[1.02] active:scale-100"
+            style="
+              background: linear-gradient(90deg, #00C6A7 0%, #26D07A 100%);
+              color: white;
+              font-family: Geist, sans-serif;
+            "
+          >
+            Check Other Destinations
+          </Button>
+          
+          <!-- Info Card -->
+          <div class="w-full bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <h3 class="text-sm font-semibold text-[#0B3947] mb-4" style="font-family: Geist, sans-serif;">
+              Why travelers love us
+            </h3>
+            
+            <!-- Feature List -->
+            <div class="space-y-3">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#E8FBF3] flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-[#1ECE84]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[#0B3947]">Fast Processing</p>
+                  <p class="text-xs text-gray-500">Get your visa in as little as 24 hours</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#E8FBF3] flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-[#1ECE84]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[#0B3947]">98% Approval Rate</p>
+                  <p class="text-xs text-gray-500">Expert review ensures success</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#E8FBF3] flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-[#1ECE84]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[#0B3947]">24/7 Support</p>
+                  <p class="text-xs text-gray-500">We're here whenever you need us</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Stats Row -->
+          <div class="w-full grid grid-cols-2 gap-3">
+            <div class="bg-white rounded-xl p-4 border border-gray-100 text-center shadow-sm">
+              <p class="text-2xl font-bold text-[#0B3947]" style="font-family: Manrope, sans-serif;">180K+</p>
+              <p class="text-xs text-gray-500">Happy Travelers</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-gray-100 text-center shadow-sm">
+              <p class="text-2xl font-bold text-[#0B3947]" style="font-family: Manrope, sans-serif;">11+</p>
+              <p class="text-xs text-gray-500">Years Experience</p>
+            </div>
+          </div>
+        </div>
+        
+      </div>
     </div>
 
-    <div class="space-y-4 sm:space-y-6">
+    <!-- Regular Visa Application Form -->
+    <div v-else>
+      <div class="mb-4 sm:mb-6">
+        <p
+          class="text-xs sm:text-sm leading-[18px] sm:leading-[22px]"
+          style="
+            font-family: Geist;
+            font-weight: 600;
+            color: #0b3947;
+          "
+        >
+          The {{ destination }} Visa is mandatory for {{ formData.nationality || nationality }} passport
+          holders planning to enter {{ destination }}
+        </p>
+      </div>
+
+      <div class="space-y-4 sm:space-y-6">
       <!-- Nationality - Editable Select -->
       <div>
         <Label
@@ -151,12 +468,12 @@
           <SelectContent>
             <SelectItem
               v-for="product in (Array.isArray(availableProducts) ? availableProducts : [])"
-              :key="`${product.productName}-${product.entryType}`"
-              :value="`${product.productName}|${product.entryType}`"
+              :key="`${product.productName}-${product.entryType || product.visaType}`"
+              :value="product.visaType || constructVisaType({ validity: product.validity, entryType: product.entryType || 'single', customEntryName: product.customEntryName })"
             >
               {{ product.productName }} -
               {{ formatPrice(Number(product.totalAmount)) }} ({{
-                product.entryType
+                getEntryTypeDisplay(product)
               }}, {{ product.duration }} days, Valid
               {{ product.validity }} days)
             </SelectItem>
@@ -222,7 +539,7 @@
           type="email"
           class="w-full mt-2"
           placeholder="your.email@example.com"
-          :readonly="isAuthenticated && currentUser?.email"
+          :readonly="!!(isAuthenticated && currentUser?.email)"
           required
         />
         <p
@@ -252,30 +569,31 @@
         </p>
       </div>
 
-      <Button
-        @click="handleNext"
-        :disabled="
-          !formData.visaType ||
-          !formData.email ||
-          emailError ||
-          isLoadingProducts ||
-          availableProducts.length === 0
-        "
-        class="w-full sm:w-[143px] h-9"
-        style="
-          background-color: #1ece84;
-          color: white;
-          border-radius: 6px;
-          padding: 8px 16px;
-          font-family: Geist, sans-serif;
-          font-weight: 500;
-          font-size: 14px;
-          line-height: 20px;
-          text-align: center;
-        "
-      >
-        Start Application
-      </Button>
+        <Button
+          @click="handleNext"
+          :disabled="
+            !formData.visaType ||
+            !formData.email ||
+            emailError ||
+            isLoadingProducts ||
+            availableProducts.length === 0
+          "
+          class="w-full sm:w-[143px] h-9"
+          style="
+            background-color: #1ece84;
+            color: white;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-family: Geist, sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+          "
+        >
+          Start Application
+        </Button>
+      </div>
     </div>
   </div>
 </template>
@@ -297,6 +615,7 @@ import { useCountriesApi } from "@/composables/useCountries";
 import { useVisaProductsApi } from "@/composables/useVisaProducts";
 import { useCurrency } from "@/composables/useCurrency";
 import { useAuthApi } from "@/composables/useAuth";
+import { parseVisaType, formatVisaTypeForDisplay, formatEntryTypeForDisplay, constructVisaType, getEntryTypeDisplay } from "@/lib/visaTypeUtils";
 
 const props = defineProps<{
   nationality: string;
@@ -305,8 +624,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  next: [data: any];
-  update: [data: any];
+  next: [any];
+  update: [any];
+  freeVisa: [boolean];
 }>();
 
 // API composables
@@ -316,6 +636,7 @@ const { getVisaProductById } = useVisaProductsApi();
 const { formatPrice, initializeRates, selectedCurrency, getCurrentRate } =
   useCurrency();
 const { currentUser, isAuthenticated } = useAuthApi();
+const router = useRouter();
 
 // State
 const formData = ref({
@@ -330,6 +651,7 @@ interface Country {
   countryName: string;
   flag?: string;
   code?: string;
+  logoUrl?: string | null; // Add logoUrl for flag display (can be null from API)
 }
 
 const nationalityOptions = ref<Country[]>([]);
@@ -341,12 +663,14 @@ const availableProducts = ref<
     productName: string;
     duration: number;
     validity: number;
-    entryType: string;
-    visaType: string;
+    entryType?: 'single' | 'multiple' | 'custom' | string;
+    customEntryName?: string | null; // Custom entry name when entryType is "custom"
+    visaType?: string; // Backend format: "90-Double Entry" (constructed from validity and entryType/customEntryName)
     totalAmount: number | string;
     govtFee?: number | string;
     serviceFee?: number | string;
-    processingFees?: any[]; // ✅ ADD THIS
+    processingFees?: any[];
+    visaProductId?: number | string;
   }>
 >([]);
 const isLoadingProducts = ref(false);
@@ -363,7 +687,7 @@ const selectedCountry = computed(() => {
   );
 });
 
-// ✅ Filtered nationality options based on search query
+// ✅ Filtered nationality options based on search query - matches from start
 const filteredNationalityOptions = computed(() => {
   // Ensure nationalityOptions is an array before filtering
   if (!nationalityOptions.value || !Array.isArray(nationalityOptions.value)) {
@@ -374,7 +698,7 @@ const filteredNationalityOptions = computed(() => {
   }
   const query = nationalitySearchQuery.value.toLowerCase().trim();
   return nationalityOptions.value.filter((country) =>
-    country && country.countryName && country.countryName.toLowerCase().includes(query)
+    country && country.countryName && country.countryName.toLowerCase().startsWith(query)
   );
 });
 
@@ -490,16 +814,38 @@ const fetchVisaProducts = async (nationality: string, destination: string, force
     );
 
     console.log("📦 Raw API Response:", response);
+    console.log("📦 Response details:", { 
+      success: response.success, 
+      dataLength: response.data?.length, 
+      message: response.message,
+      nationality,
+      destination
+    });
 
+    // ✅ Check if response is successful
     if (response.success && response.data) {
       console.log("📊 Products received:", response.data.length);
 
-      // ✅ Remove duplicates based on BOTH productName AND entryType
-      const uniqueProducts = response.data.reduce((acc, product) => {
+      // ✅ CRITICAL: Distinguish between free visa and no products configured
+      // If success is true but data is empty, it means free visa (products exist but are filtered out)
+      // The composable already handles this: status: true → success: true, status: false → success: false
+      if (Array.isArray(response.data) && response.data.length === 0) {
+        // If we reach here with success: true and empty array, it's a free visa
+        // (The composable would have returned success: false if backend returned status: false)
+        productError.value = null;
+        console.log("ℹ️ No paid visa products available - all products are free visas");
+        emit('freeVisa', true);
+        availableProducts.value = [];
+        return; // Exit early for free visa case
+      }
+
+      // ✅ Remove duplicates based on BOTH productName AND entryType/visaType
+      const uniqueProducts = response.data.reduce((acc, product: any) => {
         const existing = acc.find(
-          (p) =>
+          (p: any) =>
             p.productName === product.productName &&
-            p.entryType === product.entryType
+            (p.visaType === product.visaType || 
+             (p.entryType === product.entryType && !p.visaType && !product.visaType))
         );
         if (!existing) {
           acc.push(product);
@@ -507,21 +853,40 @@ const fetchVisaProducts = async (nationality: string, destination: string, force
           console.log(
             "⚠️ Duplicate found, skipping:",
             product.productName,
-            product.entryType
+            product.visaType || product.entryType
           );
         }
         return acc;
-      }, [] as typeof response.data);
+      }, [] as any[]);
 
       // ✅ ENRICH PRODUCTS WITH PROCESSING FEES
       console.log("🔄 Enriching products with processing fees...");
       const enrichedProducts = await Promise.all(
-        uniqueProducts.map((product) =>
+        uniqueProducts.map((product: any) =>
           enrichProductWithProcessingFees(product)
         )
       );
 
-      availableProducts.value = enrichedProducts;
+      // ✅ Construct visaType for each product if not already present
+      // This ensures we have the correct format: {validity}-{entryTypeValue}
+      const productsWithVisaType = enrichedProducts.map((product: any) => {
+        if (!product.visaType) {
+          // Construct visaType from product data
+          product.visaType = constructVisaType({
+            validity: product.validity,
+            entryType: product.entryType || 'single',
+            customEntryName: product.customEntryName
+          })
+        }
+        return product
+      })
+
+      availableProducts.value = productsWithVisaType;
+
+      // Reset free visa flag if products are found
+      if (availableProducts.value.length > 0) {
+        emit('freeVisa', false);
+      }
 
       console.log(
         "✅ Products loaded with processing fees:",
@@ -538,47 +903,82 @@ const fetchVisaProducts = async (nationality: string, destination: string, force
       );
 
       // ✅ PRIORITY 1: Restore previous selection if it exists
-      if (
-        previousVisaType &&
-        enrichedProducts.some(
-          (p) => `${p.productName}|${p.entryType}` === previousVisaType
-        )
-      ) {
-        formData.value.visaType = previousVisaType;
-        console.log("✅ Restored previous selection:", previousVisaType);
+      // Support both formats: backend visaType and legacy productName|entryType
+      if (previousVisaType) {
+        const matchingProduct = enrichedProducts.find((p) => {
+          // Check backend format first (visaType field)
+          if (p.visaType && p.visaType === previousVisaType) return true;
+          // Check legacy format (productName|entryType)
+          if (previousVisaType.includes('|')) {
+            const [productName, entryType] = previousVisaType.split("|");
+            return p.productName === productName && p.entryType === entryType;
+          }
+          return false;
+        });
+        
+        if (matchingProduct) {
+          // Use visaType from product if available, otherwise use legacy format
+          formData.value.visaType = matchingProduct.visaType || previousVisaType;
+          console.log("✅ Restored previous selection:", formData.value.visaType);
+        }
       }
       // ✅ PRIORITY 2: Use initialData if going back
-      else if (
-        props.initialData?.visaType &&
-        enrichedProducts.some(
-          (p) =>
-            `${p.productName}|${p.entryType}` === props.initialData.visaType
-        )
-      ) {
-        formData.value.visaType = props.initialData.visaType;
-        console.log(
-          "✅ Restored from initialData:",
-          props.initialData.visaType
-        );
+      else if (props.initialData?.visaType) {
+        const matchingProduct = enrichedProducts.find((p) => {
+          if (p.visaType && p.visaType === props.initialData.visaType) return true;
+          if (props.initialData.visaType.includes('|')) {
+            const [productName, entryType] = props.initialData.visaType.split("|");
+            return p.productName === productName && p.entryType === entryType;
+          }
+          return false;
+        });
+        
+        if (matchingProduct) {
+          formData.value.visaType = matchingProduct.visaType || props.initialData.visaType;
+          console.log("✅ Restored from initialData:", formData.value.visaType);
+        }
       }
       // ✅ PRIORITY 3: Auto-select first product only if no previous selection
       else if (availableProducts.value.length > 0) {
-        formData.value.visaType = `${availableProducts.value[0].productName}|${availableProducts.value[0].entryType}`;
+        // Use visaType from product if available, otherwise fallback to legacy format
+        const firstProduct = availableProducts.value[0];
+        if (firstProduct) {
+          formData.value.visaType = firstProduct.visaType || `${firstProduct.productName}|${firstProduct.entryType || 'single'}`;
         console.log("✅ Auto-selected first product:", formData.value.visaType);
-      } else {
-        productError.value =
-          "No visa products available for this nationality-destination combination";
+        }
       }
     } else {
-      console.log("❌ API returned error:", response.message);
-      productError.value = response.message || "Failed to load visa products";
+      // ✅ CRITICAL: If response.success is false, it means NO PRODUCTS ARE CONFIGURED
+      // This is NOT a free visa case - it's an error/not configured case
+      console.log("❌ API returned error or no products configured:", response.message);
+      productError.value = response.message || "No visa products are configured for this nationality-destination combination. Please contact support or try a different destination.";
+      emit('freeVisa', false);
+      availableProducts.value = [];
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error fetching visa products:", error);
-    productError.value = "Failed to load visa products. Please try again.";
+    
+    // Check if it's a 404/400 error (no products configured)
+    const errorStatus = error?.response?.status || error?.statusCode || error?.status
+    if (errorStatus === 404 || errorStatus === 400) {
+      // HTTP 404/400 means no products configured for this pair
+      productError.value = "No visa products are configured for this nationality-destination combination. Please contact support or try a different destination.";
+      console.log("⚠️ No products configured (HTTP error):", errorStatus);
+    } else {
+      // Other errors (network, server error, etc.)
+      productError.value = "Failed to load visa products. Please try again.";
+    }
+    
+    emit('freeVisa', false);
+    availableProducts.value = [];
   } finally {
     isLoadingProducts.value = false;
   }
+};
+
+// Handle check other destinations button
+const handleCheckOtherDestinations = () => {
+  router.push('/');
 };
 
 const getFullLogoUrl = (logoUrl: string) => {
@@ -600,10 +1000,22 @@ const getFullLogoUrl = (logoUrl: string) => {
 // Get selected product details
 const selectedProduct = computed(() => {
   if (!formData.value.visaType) return null;
+  
+  // Handle both formats:
+  // 1. Backend format: "90-Double Entry" (from visaType field)
+  // 2. Legacy format: "ProductName|entryType" (for backward compatibility)
+  if (formData.value.visaType.includes('|')) {
+    // Legacy format: productName|entryType
   const [productName, entryType] = formData.value.visaType.split("|");
   return availableProducts.value.find(
     (p) => p.productName === productName && p.entryType === entryType
   );
+  } else {
+    // Backend format: visaType (e.g., "90-Double Entry")
+    return availableProducts.value.find(
+      (p) => p.visaType === formData.value.visaType
+    );
+  }
 });
 
 // Watch for changes in selected product and emit updates in real-time
@@ -719,3 +1131,240 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+/* ===== FREE VISA ANIMATION STYLES ===== */
+
+/* Cloud flying animation - moves from left to right across the scene */
+@keyframes flyCloud {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw + 150px));
+    opacity: 0;
+  }
+}
+
+/* Different cloud speeds and positions */
+.cloud-1 {
+  animation: flyCloud 14s linear infinite;
+  animation-delay: 0s;
+}
+
+.cloud-2 {
+  animation: flyCloud 11s linear infinite;
+  animation-delay: 2s;
+}
+
+.cloud-3 {
+  animation: flyCloud 8s linear infinite;
+  animation-delay: 4s;
+}
+
+.cloud-4 {
+  animation: flyCloud 6s linear infinite;
+  animation-delay: 1s;
+}
+
+.cloud-5 {
+  animation: flyCloud 16s linear infinite;
+  animation-delay: 6s;
+}
+
+.cloud-6 {
+  animation: flyCloud 12s linear infinite;
+  animation-delay: 3s;
+}
+
+.cloud-7 {
+  animation: flyCloud 9s linear infinite;
+  animation-delay: 5s;
+}
+
+/* Plane subtle floating animation */
+@keyframes planeFloat {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0) rotate(-2deg);
+  }
+  25% {
+    transform: translate(-50%, -50%) translateY(-8px) rotate(-1deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-4px) rotate(-2deg);
+  }
+  75% {
+    transform: translate(-50%, -50%) translateY(-10px) rotate(-3deg);
+  }
+}
+
+.plane-float {
+  animation: planeFloat 4.5s ease-in-out infinite;
+}
+
+/* Sparkle/twinkle animation */
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.sparkle {
+  background: linear-gradient(135deg, #4FACFE, #00D474);
+  box-shadow: 0 0 8px rgba(79, 172, 254, 0.6), 0 0 16px rgba(0, 212, 116, 0.4);
+}
+
+.sparkle-1 {
+  top: 18%;
+  left: 15%;
+  animation: sparkle 2.5s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  top: 25%;
+  right: 18%;
+  animation: sparkle 2.5s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+.sparkle-3 {
+  top: 45%;
+  left: 22%;
+  animation: sparkle 2.5s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+.sparkle-4 {
+  top: 38%;
+  right: 15%;
+  animation: sparkle 2.5s ease-in-out infinite;
+  animation-delay: 1.8s;
+}
+
+/* Contrail/trail animation */
+@keyframes trail {
+  0% {
+    width: 0;
+    opacity: 0;
+    transform: translateX(0);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    width: 120px;
+    opacity: 0;
+    transform: translateX(-150px);
+  }
+}
+
+.trail {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.3), transparent);
+}
+
+.trail-1 {
+  top: 36%;
+  left: 20%;
+  animation: trail 2.5s ease-out infinite;
+  animation-delay: 0s;
+}
+
+.trail-2 {
+  top: 40%;
+  left: 20%;
+  animation: trail 2.5s ease-out infinite;
+  animation-delay: 0.4s;
+}
+
+/* Title fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.free-visa-title {
+  animation: fadeInUp 0.8s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+/* Button hover effects */
+.free-visa-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.free-visa-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.free-visa-btn:hover::before {
+  left: 100%;
+}
+
+/* Scene container with enhanced shadow */
+.free-visa-scene {
+  box-shadow: 
+    0 4px 24px rgba(79, 172, 254, 0.2), 
+    0 8px 32px rgba(0, 212, 116, 0.15),
+    inset 0 -20px 40px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .cloud-1 { animation-duration: 11s; }
+  .cloud-2 { animation-duration: 9s; }
+  .cloud-3 { animation-duration: 6s; }
+  .cloud-4 { animation-duration: 5s; }
+  .cloud-5 { animation-duration: 13s; }
+  .cloud-6 { animation-duration: 10s; }
+  .cloud-7 { animation-duration: 7s; }
+  
+  .sparkle-1, .sparkle-2 {
+    display: block;
+  }
+  
+  .sparkle-3, .sparkle-4 {
+    display: none;
+  }
+  
+  .trail-1, .trail-2 {
+    display: none;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+  .sparkle {
+    display: none;
+  }
+}
+</style>
