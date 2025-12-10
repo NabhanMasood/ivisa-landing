@@ -58,10 +58,10 @@
           </h4>
           <div class="flex flex-col gap-1">
             <span class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 500; color: #0B3947;">
-              {{ embassy.embassyName || embassy.name }}
+              {{ embassy.embassyName }}
             </span>
             <span v-if="embassy.destinationCountry" class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
-              {{ embassy.destinationCountry || embassy.country }}
+              {{ embassy.destinationCountry }}
             </span>
             <span v-if="embassy.address" class="text-xs leading-[16px] sm:leading-[18px]" style="font-family: Manrope; font-weight: 400; color: #9CA3AF;">
               {{ embassy.address }}
@@ -96,6 +96,23 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- Estimated Delivery Date Card -->
+      <div v-if="processingTime && expectedDeliveryDate" class="border-2 rounded-xl p-4 sm:p-6 mt-4 sm:mt-6" style="border-color: #1ECE84;">
+        <div class="flex justify-between items-center">
+          <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+            Estimated Delivery Date
+          </span>
+          <div class="flex flex-col items-end">
+            <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
+              {{ expectedDeliveryDate }}
+            </span>
+            <span style="font-family: Manrope; font-weight: 400; font-size: 12px; line-height: 16px; color: #6B7280; margin-top: 2px;">
+              {{ formattedProcessingTime }} Processing
+            </span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -141,6 +158,7 @@ const props = defineProps<{
   productDetails?: any
   processingFee: number
   processingType?: string
+  processingTime?: string
   visaDetails: {
     validity: string
     maxStay: string
@@ -207,10 +225,53 @@ const applicationDataWithDiscount = computed(() => {
   }
 })
 
+// Calculate estimated delivery date based on processing time
 const expectedDeliveryDate = computed(() => {
+  if (!props.processingTime) {
+    return null
+  }
+  
   const date = new Date()
-  date.setDate(date.getDate() + 3)
+  
+  // Parse processing time (e.g., "3 days", "24 hours", "1 day")
+  const timeMatch = props.processingTime.match(/(\d+)\s*(day|days|hour|hours)/i)
+  if (timeMatch && timeMatch[1] && timeMatch[2]) {
+    const value = parseInt(timeMatch[1])
+    const unit = timeMatch[2].toLowerCase()
+    
+    if (unit.includes('hour')) {
+      date.setHours(date.getHours() + value)
+    } else if (unit.includes('day')) {
+      date.setDate(date.getDate() + value)
+    }
+  } else {
+    // Fallback: add 3 days if parsing fails
+    date.setDate(date.getDate() + 3)
+  }
+  
   return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })
+})
+
+// Format processing time for display
+const formattedProcessingTime = computed(() => {
+  if (!props.processingTime) {
+    return null
+  }
+  
+  // Parse and format (e.g., "3 days" -> "3 Days", "24 hours" -> "24 Hours")
+  const timeMatch = props.processingTime.match(/(\d+)\s*(day|days|hour|hours)/i)
+  if (timeMatch && timeMatch[1] && timeMatch[2]) {
+    const value = timeMatch[1]
+    const unit = timeMatch[2].toLowerCase()
+    
+    if (unit.includes('hour')) {
+      return `${value} ${value === '1' ? 'Hour' : 'Hours'}`
+    } else if (unit.includes('day')) {
+      return `${value} ${value === '1' ? 'Day' : 'Days'}`
+    }
+  }
+  
+  return props.processingTime
 })
 
 // ✅ NEW: Handle coupon applied

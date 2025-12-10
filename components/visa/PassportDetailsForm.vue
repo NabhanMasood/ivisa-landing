@@ -141,7 +141,7 @@
             <div class="flex items-center gap-2">
               <Checkbox
                 :checked="passportDetails[0].addPassportDetailsLater || false"
-                @update:checked="(val: boolean) => passportDetails[0].addPassportDetailsLater = val"
+                @update:checked="(val: boolean) => handleAddPassportLaterToggle(0, val)"
               />
               <Label
                 htmlFor="addPassportLater-0"
@@ -153,7 +153,7 @@
                   color: #0b3947;
                   cursor: pointer;
                 "
-                @click="passportDetails[0].addPassportDetailsLater = !passportDetails[0].addPassportDetailsLater"
+                @click="handleAddPassportLaterToggle(0, !passportDetails[0].addPassportDetailsLater)"
               >
                 Add passport details later
               </Label>
@@ -175,7 +175,7 @@
           </div>
 
           <!-- Passport Number -->
-          <div v-if="!passportDetails[0].addPassportDetailsLater">
+          <div v-show="!passportDetails[0].addPassportDetailsLater">
             <Label
               htmlFor="passportNumber-0"
               style="
@@ -197,7 +197,7 @@
           </div>
 
           <!-- Passport Expiration Date -->
-          <div v-if="!passportDetails[0].addPassportDetailsLater">
+          <div v-show="!passportDetails[0].addPassportDetailsLater">
             <Label
               style="
                 font-family: Manrope;
@@ -281,7 +281,7 @@
           </div>
 
           <!-- Residence Country -->
-          <div v-if="!passportDetails[0].addPassportDetailsLater">
+          <div v-show="!passportDetails[0].addPassportDetailsLater">
             <Label
               htmlFor="residenceCountry-0"
               style="
@@ -372,7 +372,7 @@
           </div>
 
           <!-- Schengen Visa Question -->
-          <div v-if="!passportDetails[0].addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
+          <div v-show="!passportDetails[0].addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
             <Label
               style="
                 font-family: Manrope;
@@ -551,7 +551,7 @@
                 <div class="flex items-center gap-2">
                   <Checkbox
                     :checked="traveler.addPassportDetailsLater || false"
-                    @update:checked="(val: boolean) => traveler.addPassportDetailsLater = val"
+                    @update:checked="(val: boolean) => handleAddPassportLaterToggle(index, val)"
                   />
                   <Label
                     :htmlFor="`addPassportLater-${index}`"
@@ -563,7 +563,7 @@
                       color: #0b3947;
                       cursor: pointer;
                     "
-                    @click="traveler.addPassportDetailsLater = !traveler.addPassportDetailsLater"
+                    @click="handleAddPassportLaterToggle(index, !traveler.addPassportDetailsLater)"
                   >
                     Add passport details later
                   </Label>
@@ -585,7 +585,7 @@
               </div>
 
               <!-- Passport Number -->
-              <div v-if="!traveler.addPassportDetailsLater">
+              <div v-show="!traveler.addPassportDetailsLater">
                 <Label
                   :htmlFor="`passportNumber-${index}`"
                   style="
@@ -607,7 +607,7 @@
               </div>
 
               <!-- Passport Expiration Date -->
-              <div v-if="!traveler.addPassportDetailsLater">
+              <div v-show="!traveler.addPassportDetailsLater">
                 <Label
                   style="
                     font-family: Manrope;
@@ -691,7 +691,7 @@
               </div>
 
               <!-- Residence Country -->
-              <div v-if="!traveler.addPassportDetailsLater">
+              <div v-show="!traveler.addPassportDetailsLater">
                 <Label
                   :htmlFor="`residenceCountry-${index}`"
                   style="
@@ -782,7 +782,7 @@
               </div>
 
               <!-- Schengen Visa Question -->
-              <div v-if="!traveler.addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
+              <div v-show="!traveler.addPassportDetailsLater" style="gap: 8px; display: flex; flex-direction: column">
                 <Label
                   style="
                     font-family: Manrope;
@@ -1018,6 +1018,21 @@ const initializePassportDetails = () => {
 
 const toggleTraveler = (index: number) => {
   expandedTravelers.value[index] = !expandedTravelers.value[index];
+};
+
+// Handle "Add passport details later" checkbox toggle - preserve existing data
+const handleAddPassportLaterToggle = (index: number, value: boolean) => {
+  const traveler = passportDetails.value[index];
+  if (!traveler) return;
+  
+  // Simply update the checkbox value without clearing any existing data
+  // The data is preserved in the reactive object via v-model bindings
+  // When fields are hidden with v-if, the data remains in the object
+  // When fields are shown again, v-model will restore the values
+  traveler.addPassportDetailsLater = value;
+  
+  // Explicitly ensure data is not cleared - preserve all existing values
+  // This prevents any accidental clearing when the checkbox is toggled
 };
 
 const handleSaveAndContinue = () => {

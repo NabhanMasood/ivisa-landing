@@ -84,6 +84,7 @@
           :travelers="getTravelerNames()"
           :processing-fee="processingData.processingFee || 0"
           :processing-type="processingData.processingType"
+          :processing-time="processingData.processingTime"
           :visa-details="getVisaDetails()"
           :product-details="tripData.productDetails"
           :application-data="completeApplicationData"
