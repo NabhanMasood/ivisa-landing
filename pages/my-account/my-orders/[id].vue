@@ -56,32 +56,6 @@
             </div>
           </div>
 
-          <!-- Additional Info Alert -->
-          <div 
-            v-if="effectiveStatus === 'Additional Info required'"
-            class="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4 text-orange-900"
-          >
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 mt-0.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86A2.07 2.07 0 0021 16.93L13.93 4.14a2.07 2.07 0 00-3.86 0L3 16.93A2.07 2.07 0 005.07 19z" />
-                </svg>
-                <div>
-                  <p class="font-medium font-geist">Additional information requested</p>
-                  <p class="text-sm mt-1 font-inter">
-                    We need some updates to continue processing your application. Please fill the requested fields.
-                  </p>
-                </div>
-              </div>
-              <Button 
-                @click="navigateToAdditionalInfo"
-                class="rounded-md !bg-[#1ECE84] hover:!bg-[#1AB876] !text-white font-geist h-9 px-3"
-              >
-                Fill Additional Info
-              </Button>
-            </div>
-          </div>
-
           <!-- Search Bar -->
           <div>
             <input
@@ -139,6 +113,26 @@
           <div class="flex items-center justify-between flex-wrap gap-4 w-full">
             <div class="text-sm text-[#64748B] font-geist">
               {{ selectedRows.length }} of {{ filteredTravelers.length }} row(s) selected.
+            </div>
+          </div>
+
+          <!-- Estimated Delivery Date Card -->
+          <div v-if="application && (application.processingType || application.processingTime || application.processingFeeId || application.draftData?.step4?.processingFeeId || application.draftData?.step4?.processingTime) && expectedDeliveryDate" class="border-2 rounded-xl p-4 sm:p-6 mt-6" style="border-color: #1ECE84;">
+            <div class="flex justify-between items-center">
+              <span style="font-family: Geist; font-weight: 600; font-size: 16px; line-height: 24px; color: #0B3947;">
+                Estimated Delivery Date
+              </span>
+              <div class="flex flex-col items-end">
+                <span style="font-family: Geist; font-weight: 400; font-size: 14px; line-height: 20px; color: #27272B;">
+                  {{ expectedDeliveryDate }}
+                </span>
+                <span v-if="formattedProcessingTime" style="font-family: Manrope; font-weight: 400; font-size: 12px; line-height: 16px; color: #6B7280; margin-top: 2px;">
+                  {{ formattedProcessingTime }} Processing
+                </span>
+                <span v-else-if="application.processingType" style="font-family: Manrope; font-weight: 400; font-size: 12px; line-height: 16px; color: #6B7280; margin-top: 2px;">
+                  {{ application.processingType }} Processing
+                </span>
+              </div>
             </div>
           </div>
 
@@ -246,17 +240,20 @@ import TableHead from '@/components/ui/table/TableHead.vue'
 import TableHeader from '@/components/ui/table/TableHeader.vue'
 import TableRow from '@/components/ui/table/TableRow.vue'
 import { useVisaProductFieldsApi } from '@/composables/useVisaProductFields'
+import { useVisaProductsApi } from '@/composables/useVisaProducts'
 
 const router = useRouter()
 const route = useRoute()
 
 const { getApplicationById, formatStatus, getStatusColor } = useVisaApplications()
 const { checkAllAdditionalInfoSubmitted } = useVisaProductFieldsApi()
+const { getVisaProductById } = useVisaProductsApi()
 
 // Currency conversion
 const { formatPrice, selectedCurrency } = useCurrency()
 
 const application = ref<any>(null)
+const productDetails = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
 const searchQuery = ref('')
@@ -357,8 +354,40 @@ const fetchApplicationDetails = async () => {
       console.log('✅ Application details loaded:', {
         applicationId: application.value.id,
         applicationNumber: application.value.applicationNumber,
-        travelersCount: application.value.travelers?.length || 0
+        travelersCount: application.value.travelers?.length || 0,
+        processingType: application.value.processingType,
+        processingTime: application.value.processingTime,
+        processingFee: application.value.processingFee,
+        processingFeeId: application.value.processingFeeId,
+        draftDataStep4: application.value.draftData?.step4,
+        visaProductId: application.value.visaProductId,
+        hasVisaProduct: !!application.value.visaProduct,
+        hasProcessingFees: !!application.value.visaProduct?.processingFees
       })
+      
+      // Check if visaProduct with processingFees is already included in the response
+      if (application.value.visaProduct?.processingFees) {
+        // Use the visaProduct data from the application response
+        productDetails.value = application.value.visaProduct
+        console.log('✅ Using visaProduct from application response:', {
+          productId: productDetails.value.id,
+          processingFees: productDetails.value.processingFees
+        })
+      } else if (application.value.visaProductId) {
+        // Fallback: Fetch product details separately if not included in response
+        try {
+          const productResponse = await getVisaProductById(application.value.visaProductId)
+          if (productResponse.success && productResponse.data) {
+            productDetails.value = productResponse.data
+            console.log('✅ Product details fetched separately:', {
+              productId: productDetails.value.id,
+              processingFees: productDetails.value.processingFees
+            })
+          }
+        } catch (err) {
+          console.error('❌ Error fetching product details:', err)
+        }
+      }
       
       // ✅ CRITICAL: Verify travelers belong to this application
       const travelers = application.value.travelers || []
@@ -453,6 +482,144 @@ const formatDate = (dateString: string) => {
     day: 'numeric'
   })
 }
+
+// Get the selected processing fee from product details
+const selectedProcessingFee = computed(() => {
+  // Check both top-level and draftData.step4 for processingFeeId
+  const processingFeeId = application.value?.processingFeeId || 
+                          application.value?.draftData?.step4?.processingFeeId
+  
+  if (!processingFeeId || !productDetails.value?.processingFees) {
+    console.log('⚠️ selectedProcessingFee: Missing data', {
+      hasProcessingFeeId: !!processingFeeId,
+      processingFeeId: processingFeeId,
+      topLevel: application.value?.processingFeeId,
+      draftData: application.value?.draftData?.step4?.processingFeeId,
+      hasProductDetails: !!productDetails.value,
+      hasProcessingFees: !!productDetails.value?.processingFees,
+      processingFees: productDetails.value?.processingFees
+    })
+    return null
+  }
+  
+  const feeId = Number(processingFeeId)
+  const found = productDetails.value.processingFees.find((fee: any) => Number(fee.id) === feeId)
+  
+  console.log('🔍 selectedProcessingFee lookup:', {
+    lookingFor: feeId,
+    availableIds: productDetails.value.processingFees.map((f: any) => ({ id: f.id, type: typeof f.id, numId: Number(f.id) })),
+    found: found
+  })
+  
+  return found
+})
+
+// Calculate estimated delivery date based on processing time
+const expectedDeliveryDate = computed(() => {
+  if (!application.value) {
+    console.log('⚠️ expectedDeliveryDate: No application')
+    return null
+  }
+  
+  // Use submission date if available, otherwise use current date
+  const submissionDate = application.value.submittedAt || application.value.createdAt
+  const date = submissionDate ? new Date(submissionDate) : new Date()
+  
+  console.log('📅 expectedDeliveryDate calculation:', {
+    submissionDate,
+    startDate: date.toISOString(),
+    selectedProcessingFee: selectedProcessingFee.value
+  })
+  
+  // First, try to get timeValue and timeUnit from the selected processing fee
+  if (selectedProcessingFee.value?.timeValue && selectedProcessingFee.value?.timeUnit) {
+    const timeValue = Number(selectedProcessingFee.value.timeValue)
+    const timeUnit = selectedProcessingFee.value.timeUnit
+    
+    console.log('✅ Using selectedProcessingFee:', { timeValue, timeUnit })
+    
+    if (timeUnit === 'hours' || timeUnit === 'hour') {
+      date.setHours(date.getHours() + timeValue)
+    } else if (timeUnit === 'days' || timeUnit === 'day') {
+      date.setDate(date.getDate() + timeValue)
+    }
+    
+    const formatted = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })
+    console.log('✅ Calculated delivery date:', formatted)
+    return formatted
+  }
+  
+  // Fallback: Try to use processingTime string if available (check both top-level and draftData)
+  const processingTime = application.value.processingTime || 
+                         application.value.draftData?.step4?.processingTime
+  
+  if (processingTime) {
+    const processingTimeStr = String(processingTime)
+    
+    console.log('⚠️ Using processingTime fallback:', processingTimeStr)
+    
+    // Parse processing time (e.g., "3 days", "24 hours", "1 day")
+    const timeMatch = processingTimeStr.match(/(\d+)\s*(day|days|hour|hours)/i)
+    if (timeMatch && timeMatch[1] && timeMatch[2]) {
+      const value = parseInt(timeMatch[1])
+      const unit = timeMatch[2].toLowerCase()
+      
+      if (unit.includes('hour')) {
+        date.setHours(date.getHours() + value)
+      } else if (unit.includes('day')) {
+        date.setDate(date.getDate() + value)
+      }
+      
+      const formatted = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })
+      console.log('✅ Calculated delivery date from processingTime:', formatted)
+      return formatted
+    }
+  }
+  
+  // If no processing info at all, return null
+  console.log('❌ expectedDeliveryDate: No processing info available')
+  return null
+})
+
+// Format processing time for display
+const formattedProcessingTime = computed(() => {
+  // First, try to get timeValue and timeUnit from the selected processing fee
+  if (selectedProcessingFee.value?.timeValue && selectedProcessingFee.value?.timeUnit) {
+    const timeValue = selectedProcessingFee.value.timeValue
+    const timeUnit = selectedProcessingFee.value.timeUnit
+    
+    if (timeUnit === 'hours' || timeUnit === 'hour') {
+      return `${timeValue} ${timeValue === 1 ? 'Hour' : 'Hours'}`
+    } else if (timeUnit === 'days' || timeUnit === 'day') {
+      return `${timeValue} ${timeValue === 1 ? 'Day' : 'Days'}`
+    }
+  }
+  
+  // Fallback: Try to use processingTime string if available (check both top-level and draftData)
+  const processingTime = application.value?.processingTime || 
+                         application.value?.draftData?.step4?.processingTime
+  
+  if (processingTime) {
+    const processingTimeStr = String(processingTime)
+    
+    // Parse and format (e.g., "3 days" -> "3 Days", "24 hours" -> "24 Hours")
+    const timeMatch = processingTimeStr.match(/(\d+)\s*(day|days|hour|hours)/i)
+    if (timeMatch && timeMatch[1] && timeMatch[2]) {
+      const value = timeMatch[1]
+      const unit = timeMatch[2].toLowerCase()
+      
+      if (unit.includes('hour')) {
+        return `${value} ${value === '1' ? 'Hour' : 'Hours'}`
+      } else if (unit.includes('day')) {
+        return `${value} ${value === '1' ? 'Day' : 'Days'}`
+      }
+    }
+    
+    return processingTimeStr
+  }
+  
+  return null
+})
 
 // Helper function to get traveler display name
 // ✅ CRITICAL: Always use traveler's firstName/lastName, never customer name
