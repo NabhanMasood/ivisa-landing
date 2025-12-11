@@ -33,15 +33,38 @@
         </div>
       </div>
 
-      <!-- Search Bar -->
-      <div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search Applications"
-          class="h-9 px-3 py-1 border border-[#E5E5E5] rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 font-geist bg-white w-full sm:w-[384px]"
-          style="box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);"
-        />
+      <!-- Search Bar and Hide Drafts Toggle -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <div>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search Applications"
+            class="h-9 px-3 py-1 border border-[#E5E5E5] rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 font-geist bg-white w-full sm:w-[384px]"
+            style="box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);"
+          />
+        </div>
+        <!-- Hide Drafts Toggle -->
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <span class="text-sm font-geist text-[#27272B]">Hide Drafts</span>
+            <button
+              type="button"
+              @click="toggleHideDrafts"
+              :class="[
+                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1ECE84] focus:ring-offset-2',
+                hideDrafts ? 'bg-[#1ECE84]' : 'bg-gray-200'
+              ]"
+            >
+              <span
+                :class="[
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                  hideDrafts ? 'translate-x-6' : 'translate-x-1'
+                ]"
+              />
+            </button>
+          </label>
+        </div>
       </div>
 
       <!-- Alerts for Applications Requiring Additional Info -->
@@ -222,16 +245,56 @@ const error = ref('')
 const additionalInfoSubmittedMap = ref<Record<number, boolean>>({})
 const hasAdditionalInfoFieldsMap = ref<Record<number, boolean>>({}) // Track which applications have additional info fields
 
-// Computed filtered orders based on search
+// Hide drafts toggle with localStorage persistence
+const hideDrafts = ref<boolean>(false)
+const HIDE_DRAFTS_STORAGE_KEY = 'hideDraftsPreference'
+
+// Load hide drafts preference from localStorage on mount
+const loadHideDraftsPreference = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(HIDE_DRAFTS_STORAGE_KEY)
+    if (saved !== null) {
+      hideDrafts.value = saved === 'true'
+    }
+  }
+}
+
+// Save hide drafts preference to localStorage
+const saveHideDraftsPreference = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(HIDE_DRAFTS_STORAGE_KEY, String(hideDrafts.value))
+  }
+}
+
+// Toggle hide drafts
+const toggleHideDrafts = () => {
+  hideDrafts.value = !hideDrafts.value
+  saveHideDraftsPreference()
+}
+
+// Computed filtered orders based on search and hide drafts preference
 const filteredOrders = computed(() => {
-  if (!searchQuery.value) return applications.value
+  let filtered = applications.value
   
-  const query = searchQuery.value.toLowerCase()
-  return applications.value.filter(order => 
-    order.applicationNumber.toLowerCase().includes(query) ||
-    order.destinationCountry.toLowerCase().includes(query) ||
-    getCustomerName(order).toLowerCase().includes(query)
-  )
+  // Filter out drafts if hideDrafts is enabled
+  if (hideDrafts.value) {
+    filtered = filtered.filter(order => {
+      const status = getEffectiveStatus(order)
+      return status !== 'draft'
+    })
+  }
+  
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(order => 
+      order.applicationNumber.toLowerCase().includes(query) ||
+      order.destinationCountry.toLowerCase().includes(query) ||
+      getCustomerName(order).toLowerCase().includes(query)
+    )
+  }
+  
+  return filtered
 })
 
 // Applications that currently require additional info
@@ -243,6 +306,7 @@ const applicationsNeedingInfo = computed(() => {
 })
 
 onMounted(async () => {
+  loadHideDraftsPreference()
   await fetchApplications()
 })
 
