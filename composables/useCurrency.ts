@@ -322,23 +322,27 @@ export const useCurrency = () => {
       } catch (primaryError) {
         console.warn('⚠️ Primary API failed, trying fallback...', primaryError)
 
-        // Fallback API: ip-api.com
+        // Fallback API: ipwhois.io (HTTPS, no mixed content issues)
         try {
-          const fallbackResponse = await fetch('http://ip-api.com/json/', {
+          const fallbackResponse = await fetch('https://ipwho.is/', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
           })
 
           if (fallbackResponse.ok) {
             const fallbackData = await fallbackResponse.json()
-            data = {
-              country_code: fallbackData.countryCode,
-              country: fallbackData.countryCode,
-              country_name: fallbackData.country
+            if (fallbackData.success !== false) {
+              data = {
+                country_code: fallbackData.country_code,
+                country: fallbackData.country_code,
+                country_name: fallbackData.country
+              }
+              console.log('🌍 Fallback API (ipwho.is) response:', data)
+            } else {
+              throw new Error('ipwho.is returned unsuccessful response')
             }
-            console.log('🌍 Fallback API (ip-api.com) response:', data)
           } else {
-            throw new Error(`ip-api.com returned ${fallbackResponse.status}`)
+            throw new Error(`ipwho.is returned ${fallbackResponse.status}`)
           }
         } catch (fallbackError) {
           console.warn('⚠️ Fallback API also failed:', fallbackError)

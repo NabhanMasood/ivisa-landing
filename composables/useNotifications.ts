@@ -24,17 +24,14 @@ export const useNotifications = () => {
    * Check if an application has active resubmission requests
    */
   const hasActiveResubmission = (app: VisaApplication): boolean => {
-    // Check if status indicates resubmission
-    if (app.status === 'resubmission' || app.status === 'Additional Info required') {
-      return true
+    // Only show resubmission notifications if the status indicates it
+    // Don't rely on resubmissionRequests array alone as it may have stale data
+    if (app.status !== 'resubmission' && app.status !== 'Additional Info required') {
+      return false
     }
 
-    // Check for active resubmission requests
-    if (app.resubmissionRequests && Array.isArray(app.resubmissionRequests)) {
-      return app.resubmissionRequests.some((req: ResubmissionRequest) => !req.fulfilledAt)
-    }
-
-    return false
+    console.log(`🔔 App ${app.id} (${app.applicationNumber}) has resubmission status: ${app.status}`)
+    return true
   }
 
   /**
@@ -195,7 +192,7 @@ export const useNotifications = () => {
         notifications.value = allNotifications
         lastFetchTime.value = new Date()
 
-        console.log(`✅ Fetched ${allNotifications.length} notifications`)
+        console.log(`✅ Fetched ${allNotifications.length} notifications:`, allNotifications.map(n => ({ id: n.id, type: n.type, appNumber: n.applicationNumber })))
       } else {
         notifications.value = []
       }

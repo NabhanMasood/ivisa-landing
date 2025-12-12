@@ -84,14 +84,11 @@
                   class="cursor-pointer"
                 >
                   <span class="flex w-full justify-between items-center">
-                    <span class="flex items-center gap-2">
-                      <span v-if="currency.symbol" class="font-medium min-w-[24px]">{{ currency.symbol }}</span>
-                      <span>{{ currency.name }}</span>
-                    </span>
+                    <span>{{ currency.name }}</span>
                     <span class="text-gray-500 text-sm font-medium">{{ currency.code }}</span>
                   </span>
                 </DropdownMenuItem>
-                
+
                 <!-- No results message -->
                 <div v-if="filteredCurrencies.length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
                   No currencies found
@@ -416,21 +413,18 @@
               
               <!-- Currency List -->
               <div class="max-h-[300px] overflow-y-auto">
-                <DropdownMenuItem 
-                  v-for="currency in filteredCurrencies" 
+                <DropdownMenuItem
+                  v-for="currency in filteredCurrencies"
                   :key="currency.code"
                   @click="handleCurrencyChange(currency)"
                   class="cursor-pointer"
                 >
                   <span class="flex w-full justify-between items-center">
-                    <span class="flex items-center gap-2">
-                      <span v-if="currency.symbol" class="font-medium min-w-[24px]">{{ currency.symbol }}</span>
-                      <span>{{ currency.name }}</span>
-                    </span>
+                    <span>{{ currency.name }}</span>
                     <span class="text-gray-500 text-sm font-medium">{{ currency.code }}</span>
                   </span>
                 </DropdownMenuItem>
-                
+
                 <!-- No results message -->
                 <div v-if="filteredCurrencies.length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
                   No currencies found
@@ -996,12 +990,44 @@ const fetchDraftApplications = async () => {
   try {
     const response = await getMyApplications()
     if (response.success && response.data?.data) {
-      // Filter for draft applications only
+      // Filter for draft applications that have progressed past step 1
+      // Step 1 is visa product selection - we only show Continue button for step 2+
       draftApplications.value = response.data.data.filter((app: any) => {
         const status = app.status?.toLowerCase()
-        return status === 'draft'
+        if (status !== 'draft') return false
+
+        // Parse draftData if it's a string (JSON)
+        let draftData = app.draftData
+        if (typeof draftData === 'string') {
+          try {
+            draftData = JSON.parse(draftData)
+          } catch (e) {
+            console.warn('Failed to parse draftData:', e)
+            draftData = {}
+          }
+        }
+
+        // Check currentStep from multiple sources
+        // Priority: draftData.currentStep > app.currentStep > check for travelers data
+        let currentStep = draftData?.currentStep || app.currentStep || 0
+
+        // If currentStep not available, check if travelers have real data (indicates step 2 completed)
+        if (!currentStep && app.travelers && Array.isArray(app.travelers) && app.travelers.length > 0) {
+          const hasRealTravelerData = app.travelers.some((t: any) =>
+            t.firstName || t.lastName || t.email
+          )
+          if (hasRealTravelerData) {
+            currentStep = 2 // At least step 2 was completed
+          }
+        }
+
+        // Default to 1 if no indicators found
+        if (!currentStep) currentStep = 1
+
+        console.log(`📋 Draft ${app.id} - currentStep: ${currentStep}, hasTravelers: ${app.travelers?.length || 0}, draftData:`, draftData)
+        return currentStep > 1
       })
-      console.log('📋 Draft applications found:', draftApplications.value.length)
+      console.log('📋 Draft applications found (step 2+):', draftApplications.value.length)
       if (draftApplications.value.length > 0) {
         console.log('✅ Latest draft:', latestDraftApplication.value)
       }
@@ -1038,10 +1064,15 @@ watch(isAuthenticated, (newValue) => {
   }
 })
 
-// Refresh drafts when navigating to my-account pages
-watch(() => route.path, (newPath) => {
-  if (newPath.startsWith('/my-account') && isAuthenticated.value) {
-    fetchDraftApplications()
+// Refresh drafts when navigating away from visa-application page
+watch(() => route.path, (newPath, oldPath) => {
+  // Refresh when navigating TO home page or my-account pages (not visa-application)
+  if (isAuthenticated.value && !newPath.includes('/visa-application')) {
+    // Only refresh if coming from visa-application or if navigating to relevant pages
+    if (oldPath?.includes('/visa-application') || newPath === '/' || newPath.startsWith('/my-account')) {
+      console.log('🔄 Refreshing draft applications after route change:', { from: oldPath, to: newPath })
+      fetchDraftApplications()
+    }
   }
 })
 </script>
