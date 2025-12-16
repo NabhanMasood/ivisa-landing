@@ -941,7 +941,7 @@ const fetchCountries = async () => {
   try {
     const response = await getCountries();
     if (response.success && response.data) {
-      countries.value = response.data;
+      countries.value = response.data.sort((a, b) => a.countryName.localeCompare(b.countryName));
       console.log(
         "✅ Loaded countries for passport form:",
         countries.value.length

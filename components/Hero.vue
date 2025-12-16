@@ -140,35 +140,35 @@
                 </div>
                 <Select v-else v-model="selectedTo" :disabled="isLoading && !destinationCountries.length">
                   <SelectTrigger 
-                    id="to" 
-                    class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
-                  >
-                    <SelectValue>
-                      <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedTo">
-                        <!-- Logo with fallback -->
-                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <img 
-                            v-if="getCountryLogo(selectedTo)"
-                            :src="getCountryLogo(selectedTo)" 
-                            :alt="getCountryName(selectedTo)"
-                            class="max-w-full max-h-full object-contain"
-                            @error="handleLogoError"
-                          />
-                          <div 
-                            v-else
-                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                          >
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                            </svg>
-                          </div>
-                        </div>
-                        <span class="text-base">{{ getCountryName(selectedTo) }}</span>
-                      </div>
-                      <span v-else class="text-gray-500 py-3 pl-2">Select destination</span>
-                    </SelectValue>
-                    <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
-                  </SelectTrigger>
+  id="to" 
+  class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
+>
+  <!-- Custom content instead of SelectValue -->
+  <div class="flex-1 text-left">
+    <div v-if="selectedTo" class="flex items-center gap-3 pl-2">
+      <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+        <img 
+          v-if="getCountryLogo(selectedTo)"
+          :src="getCountryLogo(selectedTo)" 
+          :alt="getCountryName(selectedTo)"
+          class="max-w-full max-h-full object-contain"
+          @error="handleLogoError"
+        />
+        <div 
+          v-else
+          class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+        >
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+          </svg>
+        </div>
+      </div>
+      <span class="text-base text-gray-900">{{ getCountryName(selectedTo) }}</span>
+    </div>
+    <span v-else class="text-gray-400 py-3 pl-6">Traveling to</span>
+    </div>
+  <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
+</SelectTrigger>
                   <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
                     <!-- Search Input -->
                     <div class="p-2 border-b sticky top-0 bg-white z-10">
@@ -321,8 +321,8 @@ const route = useRoute()
 const countries = ref<Country[]>([])
 const destinationCountries = ref<Country[]>([]) // Countries with visa products (with logos)
 const selectedFrom = ref<string>('')
-const selectedTo = ref<string>('')
-const isLoading = ref(false)
+  const selectedTo = ref<string>('')
+  const isLoading = ref(false)
 const error = ref<string | null>(null)
 const fromSearchQuery = ref('')
 const toSearchQuery = ref('')
@@ -366,12 +366,14 @@ const filteredToCountries = computed(() => {
 })
 
 // Helper functions for "From" dropdown (Countries table)
-const getCountryName = (countryId: string) => {
+const getCountryName = (countryId: string | undefined) => {
+  if (!countryId) return ''
   const country = countries.value.find(c => String(c.id) === countryId)
   return country?.countryName || ''
 }
 
-const getCountryLogo = (countryId: string): string | undefined => {
+const getCountryLogo = (countryId: string | undefined): string | undefined => {
+  if (!countryId) return undefined
   const country = countries.value.find(c => String(c.id) === countryId)
   if (!country?.logoUrl) {
     return undefined
@@ -449,7 +451,7 @@ const fetchAllData = async () => {
     // Fetch countries (will use cache if available, populated by plugin)
     const countriesResponse = await fetchCountries()
     if (countriesResponse.success && countriesResponse.data) {
-      countries.value = countriesResponse.data
+      countries.value = countriesResponse.data.sort((a, b) => a.countryName.localeCompare(b.countryName))
       const firstCountry = countries.value[0]
       if (firstCountry && !selectedFrom.value) {
         selectedFrom.value = String(firstCountry.id)
@@ -465,16 +467,12 @@ const fetchAllData = async () => {
         .filter(country => visaProductCountryNames.includes(country.countryName))
         .sort((a, b) => a.countryName.localeCompare(b.countryName))
       
-      // Set default "To" value
+      // Set default "To" value only if provided in query params
       const toIdFromQuery = route.query.toId as string | undefined
       if (toIdFromQuery && destinationCountries.value.some(c => String(c.id) === toIdFromQuery)) {
         selectedTo.value = toIdFromQuery
-      } else {
-        const firstDestination = destinationCountries.value[0]
-        if (firstDestination && !selectedTo.value) {
-          selectedTo.value = String(firstDestination.id)
-        }
       }
+      // Don't auto-select a destination - let user choose
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load data'
@@ -485,8 +483,8 @@ const fetchAllData = async () => {
 
 const handleGetStarted = () => {
   const fromCountry = getCountryName(selectedFrom.value)
-  const toCountry = getCountryName(selectedTo.value)
-  
+  const toCountry = selectedTo.value ? getCountryName(selectedTo.value) : ''
+
   console.log('🚀 Get Started:', {
     from: fromCountry,
     fromId: selectedFrom.value,
@@ -495,7 +493,7 @@ const handleGetStarted = () => {
   })
   
   // Pass both country IDs and names as query parameters
-  navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
+  navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value || ''}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
 }
 
 // Watch for route query changes (when navigating from header)

@@ -749,7 +749,7 @@ const fetchNationalityOptions = async () => {
   try {
     const response = await getCountries();
     if (response.success && response.data) {
-      nationalityOptions.value = response.data;
+      nationalityOptions.value = response.data.sort((a, b) => a.countryName.localeCompare(b.countryName));
       console.log(
         "✅ Loaded database countries:",
         nationalityOptions.value.length
