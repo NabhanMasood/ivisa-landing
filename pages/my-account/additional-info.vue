@@ -218,6 +218,38 @@
                 </p>
               </div>
 
+              <!-- Copy to All Travelers Button (only show for first traveler when multiple travelers exist) -->
+              <div
+                v-if="allTravelers.length > 1 && selectedTravelerIndex === 0"
+                class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <div class="flex items-center gap-2 flex-1">
+                  <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-sm text-blue-800" style="font-family: Inter">
+                    Have similar info for all travelers?
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  @click="handleCopyToAllTravelers"
+                  class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors whitespace-nowrap"
+                  style="font-family: Inter"
+                >
+                  Copy to All Travelers
+                </button>
+              </div>
+              <p
+                v-if="showCopySuccessMessage && allTravelers.length > 1 && selectedTravelerIndex === 0"
+                class="text-xs text-green-600 flex items-center gap-1"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Data copied to all travelers! You can now switch tabs and edit individual forms.
+              </p>
+
               <!-- Dynamic Fields -->
               <div
                 v-for="field in sortedFields"
@@ -786,6 +818,81 @@ const savedTravelerResponses = reactive<
 // Track which travelers have completed their forms
 const completedTravelers = reactive<Set<string>>(new Set());
 
+// Track success message for copy to all travelers action
+const showCopySuccessMessage = ref(false);
+
+// Function to copy first traveler's form data to all other travelers
+const handleCopyToAllTravelers = () => {
+  if (allTravelers.value.length <= 1) return;
+
+  // Get first traveler's key
+  const firstTraveler = allTravelers.value[0];
+  const firstTravelerKey = getTravelerKey(firstTraveler?.id || null, 0);
+
+  // Get current form responses (from first traveler since button only shows on first)
+  const firstTravelerResponses: Record<number | string, any> = {};
+
+  // Use current formResponses if we're on first traveler, otherwise use savedTravelerResponses
+  const sourceResponses = selectedTravelerIndex.value === 0
+    ? formResponses
+    : (savedTravelerResponses[firstTravelerKey] || {});
+
+  Object.keys(sourceResponses).forEach((key) => {
+    const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+    const response = sourceResponses[fieldId];
+    if (response) {
+      firstTravelerResponses[fieldId] = {
+        value: response.value,
+        filePath: response.filePath,
+        fileName: response.fileName,
+        fileSize: response.fileSize,
+        date: response.date ? { ...response.date } : undefined,
+        isUploading: response.isUploading || false,
+        isUploaded: response.isUploaded || false,
+        uploadError: response.uploadError,
+      };
+    }
+  });
+
+  // Copy to all other travelers
+  for (let i = 1; i < allTravelers.value.length; i++) {
+    const traveler = allTravelers.value[i];
+    const travelerKey = getTravelerKey(traveler?.id || null, i);
+
+    // Deep copy the responses
+    if (!savedTravelerResponses[travelerKey]) {
+      savedTravelerResponses[travelerKey] = {};
+    }
+    Object.keys(firstTravelerResponses).forEach((key) => {
+      const fieldId: number | string = isNaN(Number(key)) ? key : Number(key);
+      const response = firstTravelerResponses[fieldId];
+      if (response && savedTravelerResponses[travelerKey]) {
+        savedTravelerResponses[travelerKey][fieldId] = {
+          value: response.value,
+          filePath: response.filePath,
+          fileName: response.fileName,
+          fileSize: response.fileSize,
+          date: response.date ? { ...response.date } : undefined,
+          isUploading: response.isUploading || false,
+          isUploaded: response.isUploaded || false,
+          uploadError: response.uploadError,
+        };
+      }
+    });
+
+    console.log('📋 Copied form data to traveler:', travelerKey);
+  }
+
+  // Save to localStorage
+  saveFormDataToStorage();
+
+  // Show success message
+  showCopySuccessMessage.value = true;
+  setTimeout(() => {
+    showCopySuccessMessage.value = false;
+  }, 5000);
+};
+
 // ✅ Local Storage Functions for Form Persistence
 const getStorageKey = () => {
   if (!applicationId.value) return null;
@@ -978,9 +1085,11 @@ const monthOptions = [
 ];
 
 const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 100 }, (_, i) => ({
-  value: String(currentYear - i),
-  label: String(currentYear - i),
+const futureYears = 20; // For expiry dates
+const pastYears = 100;
+const yearOptions = Array.from({ length: futureYears + pastYears + 1 }, (_, i) => ({
+  value: String(currentYear + futureYears - i),
+  label: String(currentYear + futureYears - i),
 }));
 
 // Computed properties
@@ -1095,8 +1204,12 @@ const sortedFields = computed(() => {
         }
       } else if (fieldTravelerId === selectedTravelerId.value) {
         // Traveler-specific field for selected traveler - show it
+      } else if (!isPassport) {
+        // ✅ CRITICAL: Regular additional info fields should be shown to ALL travelers
+        // Even if they have a travelerId set, they are shared fields
+        // Only passport fields should be filtered by travelerId
       } else {
-        // Field for different traveler - filter it out
+        // Passport field for different traveler - filter it out
         return false;
       }
       
@@ -2067,9 +2180,12 @@ const fetchFields = async (travelerId: number | null = null) => {
   error.value = "";
 
   try {
+    // ✅ CRITICAL: Always fetch ALL fields without travelerId filter
+    // The backend filters by travelerId which causes non-first travelers to only see their specific fields
+    // We want ALL fields to be available and filter on the frontend instead
     const response = await getFieldsByApplication(
       applicationId.value,
-      travelerId || undefined
+      undefined // Don't pass travelerId - fetch all fields for the application
     );
 
     if (response.success && response.data) {
@@ -2184,12 +2300,11 @@ const fetchFields = async (travelerId: number | null = null) => {
           const traveler = travelers.value.find((t: any) => t.id === travelerId) as any;
           const hasSkippedPassportDetails = traveler?.addPassportDetailsLater === true ||
             (!traveler?.passportNumber || traveler.passportNumber === 'missing' || traveler.passportNumber === '');
-          
-          const travelerRegularFields = regularFieldsInResponse.filter((f: any) => {
-            // Show application-level fields (travelerId is null/undefined) OR fields for this traveler
-            return !f.travelerId || f.travelerId === null || f.travelerId === undefined || f.travelerId === travelerId;
-          });
-          
+
+          // ✅ CRITICAL: Regular additional info fields should be shown to ALL travelers
+          // Don't filter by travelerId - these are shared fields across all travelers
+          const travelerRegularFields = regularFieldsInResponse;
+
           // ✅ CRITICAL: Only include passport fields if the traveler needs them (skipped or missing)
           // Don't show passport fields to travelers who already have passport data filled
           let allPassportFieldsForTraveler: any[] = [];
@@ -2203,13 +2318,13 @@ const fetchFields = async (travelerId: number | null = null) => {
             // Traveler already has passport data - don't show passport fields
             allPassportFieldsForTraveler = [...travelerSpecificPassportFields];
           }
-          
+
           // ✅ CRITICAL: Passport fields FIRST, then regular fields
           fieldsToProcess = [
             ...allPassportFieldsForTraveler,
             ...travelerRegularFields
           ];
-          
+
           console.log('✅ Traveler', travelerId, ': showing passport fields FIRST (including application-level), then regular fields', {
             travelerSpecificPassportFields: travelerSpecificPassportFields.length,
             applicationLevelPassportFields: applicationLevelPassportFields.length,

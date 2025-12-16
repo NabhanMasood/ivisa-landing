@@ -33,15 +33,38 @@
         </div>
       </div>
 
-      <!-- Search Bar -->
-      <div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search Applications"
-          class="h-9 px-3 py-1 border border-[#E5E5E5] rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 font-geist bg-white w-full sm:w-[384px]"
-          style="box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);"
-        />
+      <!-- Search Bar and Hide Drafts Toggle -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <div>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search Applications"
+            class="h-9 px-3 py-1 border border-[#E5E5E5] rounded-md focus:outline-none focus:ring-2 focus:ring-gray-200 font-geist bg-white w-full sm:w-[384px]"
+            style="box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);"
+          />
+        </div>
+        <!-- Hide Drafts Toggle -->
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <span class="text-sm font-geist text-[#27272B]">Hide Drafts</span>
+            <button
+              type="button"
+              @click="toggleHideDrafts"
+              :class="[
+                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1ECE84] focus:ring-offset-2',
+                hideDrafts ? 'bg-[#1ECE84]' : 'bg-gray-200'
+              ]"
+            >
+              <span
+                :class="[
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                  hideDrafts ? 'translate-x-6' : 'translate-x-1'
+                ]"
+              />
+            </button>
+          </label>
+        </div>
       </div>
 
       <!-- Alerts for Applications Requiring Additional Info -->
@@ -222,16 +245,56 @@ const error = ref('')
 const additionalInfoSubmittedMap = ref<Record<number, boolean>>({})
 const hasAdditionalInfoFieldsMap = ref<Record<number, boolean>>({}) // Track which applications have additional info fields
 
-// Computed filtered orders based on search
+// Hide drafts toggle with localStorage persistence
+const hideDrafts = ref<boolean>(false)
+const HIDE_DRAFTS_STORAGE_KEY = 'hideDraftsPreference'
+
+// Load hide drafts preference from localStorage on mount
+const loadHideDraftsPreference = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(HIDE_DRAFTS_STORAGE_KEY)
+    if (saved !== null) {
+      hideDrafts.value = saved === 'true'
+    }
+  }
+}
+
+// Save hide drafts preference to localStorage
+const saveHideDraftsPreference = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(HIDE_DRAFTS_STORAGE_KEY, String(hideDrafts.value))
+  }
+}
+
+// Toggle hide drafts
+const toggleHideDrafts = () => {
+  hideDrafts.value = !hideDrafts.value
+  saveHideDraftsPreference()
+}
+
+// Computed filtered orders based on search and hide drafts preference
 const filteredOrders = computed(() => {
-  if (!searchQuery.value) return applications.value
+  let filtered = applications.value
   
-  const query = searchQuery.value.toLowerCase()
-  return applications.value.filter(order => 
-    order.applicationNumber.toLowerCase().includes(query) ||
-    order.destinationCountry.toLowerCase().includes(query) ||
-    getCustomerName(order).toLowerCase().includes(query)
-  )
+  // Filter out drafts if hideDrafts is enabled
+  if (hideDrafts.value) {
+    filtered = filtered.filter(order => {
+      const status = getEffectiveStatus(order)
+      return status !== 'draft'
+    })
+  }
+  
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(order => 
+      order.applicationNumber.toLowerCase().includes(query) ||
+      order.destinationCountry.toLowerCase().includes(query) ||
+      getCustomerName(order).toLowerCase().includes(query)
+    )
+  }
+  
+  return filtered
 })
 
 // Applications that currently require additional info
@@ -243,6 +306,7 @@ const applicationsNeedingInfo = computed(() => {
 })
 
 onMounted(async () => {
+  loadHideDraftsPreference()
   await fetchApplications()
 })
 
@@ -340,96 +404,58 @@ const fetchApplications = async () => {
 }
 
 const getCustomerName = (order: any) => {
-  // ✅ CRITICAL: Always show the first traveler's name with an ID, never the customer account name
-  // This ensures each application shows the actual traveler name, not the account name
-  // NOTE: Some applications have travelers without IDs (duplicates) - skip those
-  
+  // ✅ CRITICAL: Show the customer name (person who filled/created the application)
+  // The customer is stored in order.customer, NOT in travelers array
+  // Travelers are the people traveling, but the customer is the account holder who created the order
+
   if (!order) {
     console.error('❌ getCustomerName called with null/undefined order')
     return 'N/A'
   }
-  
-  // PRIORITY 1: Use first traveler's name from travelers array
-  // ✅ CRITICAL: Always use the FIRST traveler (index 0) regardless of whether they have an ID
-  // The first traveler is the primary applicant and should always be displayed
-  if (order.travelers && Array.isArray(order.travelers) && order.travelers.length > 0) {
-    // Log all travelers for debugging
-    console.log(`🔍 getCustomerName for ${order.applicationNumber || order.id}:`, {
-      totalTravelers: order.travelers.length,
-      travelers: order.travelers.map((t: any, idx: number) => ({
-        index: idx,
-        id: t.id,
-        name: `${t.firstName || ''} ${t.lastName || ''}`.trim(),
-        hasId: t.id !== undefined && t.id !== null
-      }))
-    })
-    
-    // ✅ CRITICAL: Always use the FIRST traveler (index 0) as the primary applicant
+
+  // PRIORITY 1: Use customer.fullname (the person who created/filled the application)
+  if (order.customer && order.customer.fullname) {
+    const name = order.customer.fullname.trim()
+    if (name && name.length > 0) {
+      console.log(`✅ Using customer name: "${name}" for application:`, order.applicationNumber || order.id)
+      return name
+    }
+  }
+
+  // PRIORITY 2: For single traveler applications, use the traveler name as fallback
+  // (In single traveler cases, the customer is often the same as the traveler)
+  if (order.travelers && Array.isArray(order.travelers) && order.travelers.length === 1) {
     const firstTraveler = order.travelers[0]
     if (firstTraveler) {
       const name = `${firstTraveler.firstName || ''} ${firstTraveler.lastName || ''}`.trim()
       if (name && name.length > 0) {
-        console.log(`✅✅✅ Using first traveler name: "${name}" (index 0, ID: ${firstTraveler.id || 'none'}) for application:`, order.applicationNumber || order.id)
+        console.log(`✅ Using single traveler name as fallback: "${name}" for application:`, order.applicationNumber || order.id)
         return name
       }
     }
-    
-    // Fallback: If first traveler has no name, try to find any traveler with a name
-    const travelerWithName = order.travelers.find((t: any) => {
-      const name = `${t.firstName || ''} ${t.lastName || ''}`.trim()
-      return name && name.length > 0
-    })
-    
-    if (travelerWithName) {
-      const name = `${travelerWithName.firstName || ''} ${travelerWithName.lastName || ''}`.trim()
-      console.warn(`⚠️ First traveler has no name, using fallback traveler: "${name}" for application:`, order.applicationNumber || order.id)
-      return name
-    }
-  } else {
-    console.warn(`⚠️ No travelers array or empty for application:`, order.applicationNumber || order.id)
   }
-  
-  // PRIORITY 2: Check draftData for traveler names (FALLBACK)
-  // draftData contains the original names entered when creating the application
-  // Only use this if travelers array doesn't have valid names
+
+  // PRIORITY 3: Check draftData for customer/traveler names (FALLBACK)
   if (order.draftData) {
-    // Check step2 (traveler information step)
+    // Check step2 (traveler information step) - first traveler
     if (order.draftData.step2 && order.draftData.step2.travelers) {
       const draftTravelers = order.draftData.step2.travelers
       if (Array.isArray(draftTravelers) && draftTravelers.length > 0) {
-        // ✅ First, try to find a traveler with an ID in draftData (if IDs are stored there)
-        const draftTravelerWithId = draftTravelers.find((t: any) => t.id !== undefined && t.id !== null)
-        
-        if (draftTravelerWithId && (draftTravelerWithId.firstName || draftTravelerWithId.lastName)) {
-          const name = `${draftTravelerWithId.firstName || ''} ${draftTravelerWithId.lastName || ''}`.trim()
-          if (name && name.length > 0) {
-            console.log(`✅ Using traveler with ID from draftData: ${name} for application:`, order.applicationNumber)
-            return name
-          }
-        }
-        
-        // Fallback: Get the FIRST traveler's name if no IDs in draftData
         const firstDraftTraveler = draftTravelers[0]
         if (firstDraftTraveler && (firstDraftTraveler.firstName || firstDraftTraveler.lastName)) {
           const name = `${firstDraftTraveler.firstName || ''} ${firstDraftTraveler.lastName || ''}`.trim()
           if (name && name.length > 0) {
-            const travelerCount = draftTravelers.length
-            if (travelerCount > 1) {
-              console.log(`✅ Using first traveler name from draftData (fallback): ${name} (${travelerCount} travelers) for application:`, order.applicationNumber)
-            } else {
-              console.log(`✅ Using traveler name from draftData (fallback): ${name} for application:`, order.applicationNumber)
-            }
+            console.log(`✅ Using traveler name from draftData (fallback): ${name} for application:`, order.applicationNumber)
             return name
           }
         }
       }
     }
   }
-  
-  // ✅ NEVER fall back to customer account name - always show traveler-specific info
-  // If no traveler name is found, show a generic placeholder
-  console.log('⚠️ No traveler name found for application:', order.applicationNumber)
-  return 'Traveler Name Not Available'
+
+  // Final fallback
+  console.log('⚠️ No customer name found for application:', order.applicationNumber)
+  return 'Name Not Available'
 }
 
 const goBack = () => {

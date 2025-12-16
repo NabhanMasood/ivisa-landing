@@ -183,7 +183,6 @@
                 :disabled="!selectedNationality || !selectedDestination"
                 class="w-full h-[44px] sm:h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-sm sm:text-base rounded-[8px] sm:rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span class="text-base sm:text-lg">→</span>
                 <span>Apply Now!</span>
               </button>
             </div>

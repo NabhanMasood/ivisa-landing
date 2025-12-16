@@ -181,7 +181,6 @@
                         :disabled="!selectedFrom || !selectedTo || isLoading"
                         class="w-full h-12 sm:h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-sm sm:text-base rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <span class="text-base sm:text-lg">→</span>
                         <span>Apply Now!</span>
                       </button>
                     </div>
@@ -234,7 +233,7 @@
           </div>
 
           <!-- Separator: responsive width -->
-          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t-2 border-[#1ECE84]"></div>
 
           <!-- Gap after separator - responsive -->
           <div class="w-2 sm:w-4 lg:w-8"></div>
@@ -252,7 +251,7 @@
           <div class="w-2 sm:w-4 lg:w-8"></div>
 
           <!-- Separator: responsive width -->
-          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t border-[#EEEEF0]"></div>
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t-2 border-[#1ECE84]"></div>
 
           <!-- Step 3 Icon -->
           <div class="flex flex-col items-center">
@@ -268,7 +267,7 @@
         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-[45px] justify-center">
           
           <!-- Card 1: responsive width and height -->
-          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
             <!-- Heading: responsive width and font size -->
             <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Smarter Task Management Flow
@@ -280,7 +279,7 @@
           </div>
 
           <!-- Card 2: responsive width and height -->
-          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
             <!-- Heading: responsive width and font size -->
             <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               All-in-One Project Beam Control
@@ -292,7 +291,7 @@
           </div>
 
           <!-- Card 3: responsive width and height -->
-          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10">
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[200px] sm:h-[220px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-6 sm:py-8 lg:py-10 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
             <!-- Heading: responsive width and font size -->
             <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Real-Time Usage Analytics
