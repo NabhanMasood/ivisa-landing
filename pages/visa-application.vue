@@ -271,17 +271,36 @@ const completeApplicationData = computed(() => {
   
   // ✅ Ensure visaType is in the correct format for PaymentModal
   // PaymentModal expects format: "ProductName|entryType" (e.g., "Morocco e-Visa|single")
-  // Check if visaType is in backend format (e.g., "90-single") or PaymentModal format (e.g., "Morocco e-Visa|single")
   let visaTypeForPayment = tripData.value.visaType
   
-  // If visaType is in backend format (digits-dash-anything like "90-Double Entry"), reconstruct PaymentModal format
-  if (visaTypeForPayment && /^\d+-.+$/.test(visaTypeForPayment) && !visaTypeForPayment.includes('|')) {
-    // Parse backend format and reconstruct PaymentModal format
+  // Handle new format: "ProductName|visaType" (e.g., "UK Academic Visit Visa|182-multiple")
+  // Need to extract just the entryType for PaymentModal
+  if (visaTypeForPayment && visaTypeForPayment.includes('|')) {
+    const parts = visaTypeForPayment.split('|')
+    const productNamePart = parts[0]
+    const visaTypePart = parts[1]
+    
+    // Check if second part is in backend visaType format (e.g., "182-multiple")
+    if (visaTypePart && /^\d+-.+$/.test(visaTypePart)) {
+      // Extract entryType from visaType (e.g., "182-multiple" → "multiple")
+      const visaTypeParts = visaTypePart.split('-')
+      const entryTypeValue = visaTypeParts.slice(1).join('-')
+      // Use product.entryType as source of truth, fall back to parsed value
+      const entryType = product.entryType || entryTypeValue
+      visaTypeForPayment = `${productNamePart}|${entryType}`
+      console.log('🔄 Converted new format to PaymentModal format:', {
+        original: tripData.value.visaType,
+        converted: visaTypeForPayment,
+        productName: productNamePart,
+        entryType: entryType
+      })
+    }
+    // Otherwise, it's already in correct format or old format
+  } else if (visaTypeForPayment && /^\d+-.+$/.test(visaTypeForPayment)) {
+    // If visaType is in backend format (digits-dash-anything like "90-Double Entry"), reconstruct PaymentModal format
     const parts = visaTypeForPayment.split('-')
-    const entryTypeValue = parts.slice(1).join('-') // Handle custom entry types with hyphens
-    const entryType = entryTypeValue === 'single' ? 'single' : 
-                      entryTypeValue === 'multiple' ? 'multiple' : 
-                      entryTypeValue.toLowerCase() // For custom entry types, use as-is
+    const entryTypeValue = parts.slice(1).join('-')
+    const entryType = product.entryType || entryTypeValue
     visaTypeForPayment = `${product.productName || 'Visa'}|${entryType}`
     console.log('🔄 Reconstructed visaType for PaymentModal from backend format:', {
       original: tripData.value.visaType,
@@ -443,18 +462,22 @@ onMounted(async () => {
             phoneNumber: step1.phoneNumber || ''
           }
           
-          // ✅ If visaType is in backend format (e.g., "90-Double Entry"), reconstruct original format for PaymentModal
+          // ✅ If visaType is in backend format (e.g., "90-Double Entry"), reconstruct to new format "ProductName|visaType"
           if (tripData.value.visaType && /^\d+-.+$/.test(tripData.value.visaType) && !tripData.value.visaType.includes('|')) {
-            // Parse backend format to extract entry type
+            // Backend format - reconstruct to "ProductName|visaType" format
             const product = tripData.value.productDetails
             if (product) {
-              const parts = tripData.value.visaType.split('-')
-              const entryTypeValue = parts.slice(1).join('-')
-              const entryType = entryTypeValue === 'single' ? 'single' : 
-                                entryTypeValue === 'multiple' ? 'multiple' : 
-                                entryTypeValue.toLowerCase()
-              tripData.value.visaType = `${product.productName || 'Visa'}|${entryType}`
-              console.log('🔄 Reconstructed visaType for PaymentModal:', tripData.value.visaType)
+              // Use the full visaType (e.g., "182-multiple") instead of just entryType
+              tripData.value.visaType = `${product.productName || 'Visa'}|${tripData.value.visaType}`
+              console.log('🔄 Reconstructed visaType to new format:', tripData.value.visaType)
+            }
+          } else if (tripData.value.visaType && tripData.value.visaType.includes('|') && !tripData.value.visaType.split('|')[1]?.includes('-')) {
+            // Old format "ProductName|entryType" - convert to new format "ProductName|visaType"
+            const product = tripData.value.productDetails
+            if (product && product.visaType) {
+              const productName = tripData.value.visaType.split('|')[0]
+              tripData.value.visaType = `${productName}|${product.visaType}`
+              console.log('🔄 Converted old format to new format:', tripData.value.visaType)
             }
           }
         } else {
@@ -868,17 +891,30 @@ const handleStepOneUpdate = async (data: any) => {
           customerId = currentUser.value.id
         }
 
-        // Handle both visaType formats (backend format or legacy format)
+        // Handle multiple visaType formats
         let entryType = 'single'
         if (data.visaType) {
           if (data.visaType.includes('|')) {
-            // Legacy format: productName|entryType
+            // New format: "ProductName|visaType" (e.g., "UK Academic Visit Visa|182-multiple")
+            // or old format: "ProductName|entryType" (e.g., "Morocco e-Visa|single")
             const visaTypeParts = data.visaType.split('|')
-            entryType = (product.entryType || visaTypeParts[1] || 'single').toLowerCase().trim()
+            const secondPart = visaTypeParts[1]
+            
+            // Check if second part is in backend format (e.g., "182-multiple")
+            if (secondPart && /^\d+-.+$/.test(secondPart)) {
+              // Extract entryType from visaType
+              const parts = secondPart.split('-')
+              const extractedEntryType = parts.slice(1).join('-')
+              // Prioritize product.entryType, fallback to extracted
+              entryType = (product.entryType || extractedEntryType || 'single').toLowerCase().trim()
+            } else {
+              // Old format: second part is just entryType
+              entryType = (product.entryType || secondPart || 'single').toLowerCase().trim()
+            }
           } else if (/^\d+-.+$/.test(data.visaType)) {
-            // Backend format: extract entry type
+            // Backend format: extract entry type (e.g., "182-multiple")
             const parts = data.visaType.split('-')
-            entryType = parts.slice(1).join('-').toLowerCase().trim()
+            entryType = (product.entryType || parts.slice(1).join('-') || 'single').toLowerCase().trim()
           } else {
             entryType = (product.entryType || 'single').toLowerCase().trim()
           }
