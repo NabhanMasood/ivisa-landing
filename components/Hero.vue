@@ -68,7 +68,7 @@
                             v-if="getCountryLogo(selectedFrom)"
                             :src="getCountryLogo(selectedFrom)" 
                             :alt="getCountryName(selectedFrom)"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
@@ -110,7 +110,7 @@
                             v-if="country.logoUrl"
                             :src="getFullLogoUrl(country.logoUrl)" 
                             :alt="country.countryName"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
@@ -151,7 +151,7 @@
           v-if="getCountryLogo(selectedTo)"
           :src="getCountryLogo(selectedTo)" 
           :alt="getCountryName(selectedTo)"
-          class="max-w-full max-h-full object-contain"
+          class="w-6 h-6 object-cover rounded-full border border-gray-200"
           @error="handleLogoError"
         />
         <div 
@@ -193,7 +193,7 @@
                             v-if="country.logoUrl"
                             :src="getFullLogoUrl(country.logoUrl)" 
                             :alt="country.countryName"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
@@ -354,13 +354,13 @@ const filteredFromCountries = computed(() => {
   )
 })
 
-// ✅ Filtered countries for "To" dropdown - matches from start
+// ✅ Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
 const filteredToCountries = computed(() => {
   if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
-    return destinationCountries.value
+    return countries.value
   }
   const query = toSearchQuery.value.toLowerCase().trim()
-  return destinationCountries.value.filter((country) =>
+  return countries.value.filter((country) =>
     country.countryName.toLowerCase().startsWith(query)
   )
 })

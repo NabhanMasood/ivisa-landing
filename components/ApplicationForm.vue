@@ -60,7 +60,7 @@
                       <SelectTrigger 
                         class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
                       >
-                        <SelectValue placeholder="Select country">
+                        <SelectValue placeholder="Select your country">
                           <div class="flex items-center gap-2 pl-4" v-if="selectedFrom">
                             <!-- Logo with fallback -->
                             <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
@@ -68,7 +68,7 @@
                                 v-if="getCountryLogo(selectedFrom)"
                                 :src="getCountryLogo(selectedFrom)" 
                                 :alt="getCountryName(selectedFrom)"
-                                class="max-w-full max-h-full object-contain"
+                                class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                 @error="handleLogoError"
                               />
                               <div 
@@ -82,15 +82,26 @@
                             </div>
                             <span class="text-[15px] text-gray-700">{{ getCountryName(selectedFrom) }}</span>
                           </div>
-                          <span v-else class="text-gray-500 pl-4">Select your country</span>
+                          <span v-else class="text-gray-400 pl-4">Select your country</span>
                         </SelectValue>
                         <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
                           <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                       </SelectTrigger>
                       <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
+                        <!-- Search Input -->
+                        <div class="p-2 border-b sticky top-0 bg-white z-10">
+                          <input
+                            v-model="fromSearchQuery"
+                            type="text"
+                            placeholder="Search countries..."
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                            @click.stop
+                            @keydown.stop
+                          />
+                        </div>
                         <SelectItem 
-                          v-for="country in countries" 
+                          v-for="country in filteredFromCountries" 
                           :key="country.id" 
                           :value="String(country.id)"
                           class="pl-4"
@@ -102,7 +113,7 @@
                                 v-if="country.logoUrl"
                                 :src="getFullLogoUrl(country.logoUrl)" 
                                 :alt="country.countryName"
-                                class="max-w-full max-h-full object-contain"
+                                class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                 @error="handleLogoError"
                               />
                               <div 
@@ -127,15 +138,16 @@
                       <SelectTrigger 
                         class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
                       >
-                        <SelectValue placeholder="Select country">
-                          <div class="flex items-center gap-2 pl-4" v-if="selectedTo">
+                        <!-- Custom content instead of SelectValue -->
+                        <div class="flex-1 text-left">
+                          <div v-if="selectedTo" class="flex items-center gap-2 pl-4">
                             <!-- Logo with fallback -->
                             <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
                               <img 
                                 v-if="getCountryLogo(selectedTo)"
                                 :src="getCountryLogo(selectedTo)" 
                                 :alt="getCountryName(selectedTo)"
-                                class="max-w-full max-h-full object-contain"
+                                class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                 @error="handleLogoError"
                               />
                               <div 
@@ -149,15 +161,26 @@
                             </div>
                             <span class="text-[15px] text-gray-700">{{ getCountryName(selectedTo) }}</span>
                           </div>
-                          <span v-else class="text-gray-500 pl-4">Select destination</span>
-                        </SelectValue>
+                          <span v-else class="text-gray-400 py-2 pl-4">Traveling to</span>
+                        </div>
                         <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
                           <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                       </SelectTrigger>
                       <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
+                        <!-- Search Input -->
+                        <div class="p-2 border-b sticky top-0 bg-white z-10">
+                          <input
+                            v-model="toSearchQuery"
+                            type="text"
+                            placeholder="Search countries..."
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                            @click.stop
+                            @keydown.stop
+                          />
+                        </div>
                         <SelectItem 
-                          v-for="country in destinationCountries" 
+                          v-for="country in filteredToCountries" 
                           :key="country.id" 
                           :value="String(country.id)"
                           class="pl-4"
@@ -169,7 +192,7 @@
                                 v-if="country.logoUrl"
                                 :src="getFullLogoUrl(country.logoUrl)" 
                                 :alt="country.countryName"
-                                class="max-w-full max-h-full object-contain"
+                                class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                 @error="handleLogoError"
                               />
                               <div 
@@ -209,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Select from '@/components/ui/select/Select.vue'
 import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
@@ -259,6 +282,8 @@ const selectedFrom = ref<string>('')
 const selectedTo = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const fromSearchQuery = ref('')
+const toSearchQuery = ref('')
 
 // API
 const { getCountries } = useCountriesApi()
@@ -271,6 +296,28 @@ const handleLogoError = (event: Event) => {
   console.error('❌ Logo failed to load:', img.src)
   img.style.display = 'none'
 }
+
+// Filtered countries for "From" dropdown - matches from start
+const filteredFromCountries = computed(() => {
+  if (!fromSearchQuery.value || !fromSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = fromSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
+
+// Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
+const filteredToCountries = computed(() => {
+  if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = toSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
 
 // Helper functions for "From" dropdown (Countries table)
 const getCountryName = (countryId: string) => {
@@ -357,7 +404,7 @@ const fetchDestinationCountries = async () => {
       const countrySlug = getCountrySlug()
       if (countrySlug) {
         const possibleNames = getCountryNameFromSlug(countrySlug)
-        const matchedCountry = destinationCountries.value.find(country => 
+        const matchedCountry = countries.value.find(country => 
           possibleNames.some(name => 
             country.countryName.toLowerCase() === name.toLowerCase() ||
             country.countryName.toLowerCase().includes(name.toLowerCase()) ||
@@ -368,14 +415,10 @@ const fetchDestinationCountries = async () => {
         if (matchedCountry) {
           selectedTo.value = String(matchedCountry.id)
           console.log('✅ Pre-selected destination country in ApplicationForm:', matchedCountry.countryName)
-        } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-          // Fallback to first country if no match found
-          selectedTo.value = String(destinationCountries.value[0].id)
         }
-      } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-        // Set default "To" value if no country slug provided
-        selectedTo.value = String(destinationCountries.value[0].id)
+        // Don't auto-select if no match found - let user choose
       }
+      // Don't auto-select a destination - let user choose (shows "Traveling to" placeholder)
     } else {
       throw new Error(response.message || 'Failed to load destination countries')
     }
@@ -418,6 +461,15 @@ const handleApply = () => {
   // Pass both country IDs and names as query parameters
   navigateTo(`/visa-application?fromId=${selectedFrom.value}&toId=${selectedTo.value}&from=${encodeURIComponent(fromCountry)}&to=${encodeURIComponent(toCountry)}`)
 }
+
+// Watch for selection changes to reset search queries
+watch(() => selectedFrom.value, () => {
+  fromSearchQuery.value = ''
+})
+
+watch(() => selectedTo.value, () => {
+  toSearchQuery.value = ''
+})
 
 // Fetch data on component mount
 onMounted(() => {

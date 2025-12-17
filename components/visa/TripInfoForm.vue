@@ -165,7 +165,7 @@
                         v-if="selectedCountry.logoUrl"
                         :src="getFullLogoUrl(selectedCountry.logoUrl)"
                         :alt="selectedCountry.countryName"
-                        class="w-5 h-4 object-cover rounded-sm"
+                        class="w-6 h-6 object-cover rounded-full border border-gray-200"
                         @error="handleFlagError"
                       />
                       <span>{{ selectedCountry.countryName }}</span>
@@ -185,22 +185,22 @@
                       @keydown.stop
                     />
                   </div>
-                  <SelectItem
-                    v-for="country in filteredNationalityOptions"
-                    :key="country.id"
-                    :value="country.countryName"
-                  >
-                    <div class="flex items-center gap-2">
-                      <img
-                        v-if="country.logoUrl"
-                        :src="getFullLogoUrl(country.logoUrl)"
-                        :alt="country.countryName"
-                        class="w-5 h-4 object-cover rounded-sm"
-                        @error="handleFlagError"
-                      />
-                      <span>{{ country.countryName }}</span>
-                    </div>
-                  </SelectItem>
+            <SelectItem
+              v-for="country in filteredNationalityOptions"
+              :key="country.id"
+              :value="country.countryName"
+            >
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="country.logoUrl"
+                  :src="getFullLogoUrl(country.logoUrl)"
+                  :alt="country.countryName"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
+                  @error="handleFlagError"
+                />
+                <span>{{ country.countryName }}</span>
+              </div>
+            </SelectItem>
                 </SelectContent>
               </Select>
               
@@ -376,7 +376,7 @@
                   v-if="selectedCountry.logoUrl"
                   :src="getFullLogoUrl(selectedCountry.logoUrl)"
                   :alt="selectedCountry.countryName"
-                  class="w-5 h-4 object-cover rounded-sm"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
                   @error="handleFlagError"
                 />
                 <span>{{ selectedCountry.countryName }}</span>
@@ -406,7 +406,7 @@
                   v-if="country.logoUrl"
                   :src="getFullLogoUrl(country.logoUrl)"
                   :alt="country.countryName"
-                  class="w-5 h-4 object-cover rounded-sm"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
                   @error="handleFlagError"
                 />
                 <span>{{ country.countryName }}</span>
@@ -469,7 +469,7 @@
             <SelectItem
               v-for="product in (Array.isArray(availableProducts) ? availableProducts : [])"
               :key="`${product.productName}-${product.entryType || product.visaType}`"
-              :value="product.visaType || constructVisaType({ validity: product.validity, entryType: product.entryType || 'single', customEntryName: product.customEntryName })"
+              :value="`${product.productName}|${product.visaType || constructVisaType({ validity: product.validity, entryType: product.entryType || 'single', customEntryName: product.customEntryName })}`"
             >
               {{ product.productName }} -
               {{ formatPrice(Number(product.totalAmount)) }} ({{
@@ -903,48 +903,57 @@ const fetchVisaProducts = async (nationality: string, destination: string, force
       );
 
       // ✅ PRIORITY 1: Restore previous selection if it exists
-      // Support both formats: backend visaType and legacy productName|entryType
+      // Support format: "ProductName|visaType"
       if (previousVisaType) {
         const matchingProduct = enrichedProducts.find((p) => {
-          // Check backend format first (visaType field)
-          if (p.visaType && p.visaType === previousVisaType) return true;
-          // Check legacy format (productName|entryType)
+          // Check new format: "ProductName|visaType"
+          const newFormat = `${p.productName}|${p.visaType}`;
+          if (newFormat === previousVisaType) return true;
+          
+          // Check if previousVisaType matches the product by extracting parts
           if (previousVisaType.includes('|')) {
-            const [productName, entryType] = previousVisaType.split("|");
-            return p.productName === productName && p.entryType === entryType;
+            const [productName, visaType] = previousVisaType.split("|");
+            return p.productName === productName && (p.visaType === visaType || 
+              constructVisaType({ validity: p.validity, entryType: p.entryType || 'single', customEntryName: p.customEntryName }) === visaType);
           }
           return false;
         });
         
         if (matchingProduct) {
-          // Use visaType from product if available, otherwise use legacy format
-          formData.value.visaType = matchingProduct.visaType || previousVisaType;
+          // Always use the new format: "ProductName|visaType"
+          formData.value.visaType = `${matchingProduct.productName}|${matchingProduct.visaType}`;
           console.log("✅ Restored previous selection:", formData.value.visaType);
         }
       }
       // ✅ PRIORITY 2: Use initialData if going back
       else if (props.initialData?.visaType) {
         const matchingProduct = enrichedProducts.find((p) => {
-          if (p.visaType && p.visaType === props.initialData.visaType) return true;
+          // Check new format: "ProductName|visaType"
+          const newFormat = `${p.productName}|${p.visaType}`;
+          if (newFormat === props.initialData.visaType) return true;
+          
+          // Check if initialData.visaType matches the product by extracting parts
           if (props.initialData.visaType.includes('|')) {
-            const [productName, entryType] = props.initialData.visaType.split("|");
-            return p.productName === productName && p.entryType === entryType;
+            const [productName, visaType] = props.initialData.visaType.split("|");
+            return p.productName === productName && (p.visaType === visaType || 
+              constructVisaType({ validity: p.validity, entryType: p.entryType || 'single', customEntryName: p.customEntryName }) === visaType);
           }
           return false;
         });
         
         if (matchingProduct) {
-          formData.value.visaType = matchingProduct.visaType || props.initialData.visaType;
+          // Always use the new format: "ProductName|visaType"
+          formData.value.visaType = `${matchingProduct.productName}|${matchingProduct.visaType}`;
           console.log("✅ Restored from initialData:", formData.value.visaType);
         }
       }
       // ✅ PRIORITY 3: Auto-select first product only if no previous selection
       else if (availableProducts.value.length > 0) {
-        // Use visaType from product if available, otherwise fallback to legacy format
         const firstProduct = availableProducts.value[0];
         if (firstProduct) {
-          formData.value.visaType = firstProduct.visaType || `${firstProduct.productName}|${firstProduct.entryType || 'single'}`;
-        console.log("✅ Auto-selected first product:", formData.value.visaType);
+          // Always use the new format: "ProductName|visaType"
+          formData.value.visaType = `${firstProduct.productName}|${firstProduct.visaType}`;
+          console.log("✅ Auto-selected first product:", formData.value.visaType);
         }
       }
     } else {
@@ -1001,21 +1010,19 @@ const getFullLogoUrl = (logoUrl: string) => {
 const selectedProduct = computed(() => {
   if (!formData.value.visaType) return null;
   
-  // Handle both formats:
-  // 1. Backend format: "90-Double Entry" (from visaType field)
-  // 2. Legacy format: "ProductName|entryType" (for backward compatibility)
+  // Handle format: "ProductName|visaType" (e.g., "UK Academic Visit Visa|182-multiple")
   if (formData.value.visaType.includes('|')) {
-    // Legacy format: productName|entryType
-  const [productName, entryType] = formData.value.visaType.split("|");
-  return availableProducts.value.find(
-    (p) => p.productName === productName && p.entryType === entryType
-  );
-  } else {
-    // Backend format: visaType (e.g., "90-Double Entry")
+    const [productName, visaType] = formData.value.visaType.split("|");
     return availableProducts.value.find(
-      (p) => p.visaType === formData.value.visaType
+      (p) => p.productName === productName && (p.visaType === visaType || 
+        constructVisaType({ validity: p.validity, entryType: p.entryType || 'single', customEntryName: p.customEntryName }) === visaType)
     );
   }
+  
+  // Fallback: try to match by visaType only (backward compatibility)
+  return availableProducts.value.find(
+    (p) => p.visaType === formData.value.visaType
+  );
 });
 
 // Watch for changes in selected product and emit updates in real-time

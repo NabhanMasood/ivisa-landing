@@ -106,7 +106,7 @@
                           v-if="country.logoUrl"
                           :src="getFullLogoUrl(country.logoUrl)"
                           :alt="country.countryName"
-                          class="max-w-full max-h-full object-contain"
+                          class="w-6 h-6 object-cover rounded-full border border-gray-200"
                           @error="handleFlagError"
                         />
                         <div
@@ -341,7 +341,7 @@
                           v-if="country.logoUrl"
                           :src="getFullLogoUrl(country.logoUrl)"
                           :alt="country.countryName"
-                          class="max-w-full max-h-full object-contain"
+                          class="w-6 h-6 object-cover rounded-full border border-gray-200"
                           @error="handleFlagError"
                         />
                         <div
@@ -516,7 +516,7 @@
                               v-if="country.logoUrl"
                               :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleFlagError"
                             />
                             <div
@@ -751,7 +751,7 @@
                               v-if="country.logoUrl"
                               :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleFlagError"
                             />
                             <div
