@@ -354,13 +354,13 @@ const filteredFromCountries = computed(() => {
   )
 })
 
-// ✅ Filtered countries for "To" dropdown - matches from start
+// ✅ Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
 const filteredToCountries = computed(() => {
   if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
-    return destinationCountries.value
+    return countries.value
   }
   const query = toSearchQuery.value.toLowerCase().trim()
-  return destinationCountries.value.filter((country) =>
+  return countries.value.filter((country) =>
     country.countryName.toLowerCase().startsWith(query)
   )
 })

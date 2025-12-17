@@ -308,13 +308,13 @@ const filteredFromCountries = computed(() => {
   )
 })
 
-// Filtered countries for "To" dropdown - matches from start
+// Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
 const filteredToCountries = computed(() => {
   if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
-    return destinationCountries.value
+    return countries.value
   }
   const query = toSearchQuery.value.toLowerCase().trim()
-  return destinationCountries.value.filter((country) =>
+  return countries.value.filter((country) =>
     country.countryName.toLowerCase().startsWith(query)
   )
 })
@@ -404,7 +404,7 @@ const fetchDestinationCountries = async () => {
       const countrySlug = getCountrySlug()
       if (countrySlug) {
         const possibleNames = getCountryNameFromSlug(countrySlug)
-        const matchedCountry = destinationCountries.value.find(country => 
+        const matchedCountry = countries.value.find(country => 
           possibleNames.some(name => 
             country.countryName.toLowerCase() === name.toLowerCase() ||
             country.countryName.toLowerCase().includes(name.toLowerCase()) ||
@@ -415,14 +415,10 @@ const fetchDestinationCountries = async () => {
         if (matchedCountry) {
           selectedTo.value = String(matchedCountry.id)
           console.log('✅ Pre-selected destination country in ApplicationForm:', matchedCountry.countryName)
-        } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-          // Fallback to first country if no match found
-          selectedTo.value = String(destinationCountries.value[0].id)
         }
-      } else if (destinationCountries.value.length > 0 && destinationCountries.value[0]) {
-        // Set default "To" value if no country slug provided
-        selectedTo.value = String(destinationCountries.value[0].id)
+        // Don't auto-select if no match found - let user choose
       }
+      // Don't auto-select a destination - let user choose (shows "Traveling to" placeholder)
     } else {
       throw new Error(response.message || 'Failed to load destination countries')
     }
