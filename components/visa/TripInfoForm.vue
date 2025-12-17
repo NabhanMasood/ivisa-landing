@@ -165,7 +165,7 @@
                         v-if="selectedCountry.logoUrl"
                         :src="getFullLogoUrl(selectedCountry.logoUrl)"
                         :alt="selectedCountry.countryName"
-                        class="w-5 h-4 object-cover rounded-sm"
+                        class="w-6 h-6 object-cover rounded-full border border-gray-200"
                         @error="handleFlagError"
                       />
                       <span>{{ selectedCountry.countryName }}</span>
@@ -185,22 +185,22 @@
                       @keydown.stop
                     />
                   </div>
-                  <SelectItem
-                    v-for="country in filteredNationalityOptions"
-                    :key="country.id"
-                    :value="country.countryName"
-                  >
-                    <div class="flex items-center gap-2">
-                      <img
-                        v-if="country.logoUrl"
-                        :src="getFullLogoUrl(country.logoUrl)"
-                        :alt="country.countryName"
-                        class="w-5 h-4 object-cover rounded-sm"
-                        @error="handleFlagError"
-                      />
-                      <span>{{ country.countryName }}</span>
-                    </div>
-                  </SelectItem>
+            <SelectItem
+              v-for="country in filteredNationalityOptions"
+              :key="country.id"
+              :value="country.countryName"
+            >
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="country.logoUrl"
+                  :src="getFullLogoUrl(country.logoUrl)"
+                  :alt="country.countryName"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
+                  @error="handleFlagError"
+                />
+                <span>{{ country.countryName }}</span>
+              </div>
+            </SelectItem>
                 </SelectContent>
               </Select>
               
@@ -376,7 +376,7 @@
                   v-if="selectedCountry.logoUrl"
                   :src="getFullLogoUrl(selectedCountry.logoUrl)"
                   :alt="selectedCountry.countryName"
-                  class="w-5 h-4 object-cover rounded-sm"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
                   @error="handleFlagError"
                 />
                 <span>{{ selectedCountry.countryName }}</span>
@@ -406,7 +406,7 @@
                   v-if="country.logoUrl"
                   :src="getFullLogoUrl(country.logoUrl)"
                   :alt="country.countryName"
-                  class="w-5 h-4 object-cover rounded-sm"
+                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
                   @error="handleFlagError"
                 />
                 <span>{{ country.countryName }}</span>

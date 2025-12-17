@@ -68,7 +68,7 @@
                             v-if="getCountryLogo(selectedFrom)"
                             :src="getCountryLogo(selectedFrom)" 
                             :alt="getCountryName(selectedFrom)"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
@@ -110,7 +110,7 @@
                             v-if="country.logoUrl"
                             :src="getFullLogoUrl(country.logoUrl)" 
                             :alt="country.countryName"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
@@ -151,7 +151,7 @@
           v-if="getCountryLogo(selectedTo)"
           :src="getCountryLogo(selectedTo)" 
           :alt="getCountryName(selectedTo)"
-          class="max-w-full max-h-full object-contain"
+          class="w-6 h-6 object-cover rounded-full border border-gray-200"
           @error="handleLogoError"
         />
         <div 
@@ -193,7 +193,7 @@
                             v-if="country.logoUrl"
                             :src="getFullLogoUrl(country.logoUrl)" 
                             :alt="country.countryName"
-                            class="max-w-full max-h-full object-contain"
+                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
                             @error="handleLogoError"
                           />
                           <div 
