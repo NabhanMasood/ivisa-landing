@@ -2925,15 +2925,26 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
   // Validate file type
   if (field.allowedFileTypes && field.allowedFileTypes.length > 0) {
     const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
-    
-    // Normalize allowed extensions: ensure they all have dot prefix
-    const allowedExtensions = field.allowedFileTypes.map((type) => {
-      const normalized = type.toLowerCase().trim();
-      return normalized.startsWith(".") ? normalized : `.${normalized}`;
-    });
-    
-    // MIME type mapping for common file types
-    const mimeTypeMap: Record<string, string[]> = {
+    const fileMimeType = file.type.toLowerCase();
+
+    // Check if allowedFileTypes contains MIME types (e.g., "image/jpeg") or extensions (e.g., ".jpg")
+    const hasMimeTypes = field.allowedFileTypes.some((type) => type.includes("/"));
+
+    // MIME type to extension mapping (for when DB has MIME types)
+    const mimeToExtMap: Record<string, string[]> = {
+      "application/pdf": [".pdf"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/jpg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/gif": [".gif"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+    };
+
+    // Extension to MIME type mapping (for when DB has extensions)
+    const extToMimeMap: Record<string, string[]> = {
       ".pdf": ["application/pdf"],
       ".jpg": ["image/jpeg", "image/jpg"],
       ".jpeg": ["image/jpeg", "image/jpg"],
@@ -2944,24 +2955,54 @@ const handleFileUpload = async (event: Event, fieldId: number) => {
       ".xls": ["application/vnd.ms-excel"],
       ".xlsx": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
     };
-    
-    // Check if file extension matches
-    const extensionMatches = allowedExtensions.some(
-      (ext) => fileExtension === ext
-    );
-    
-    // Check if MIME type matches (handle jpg/jpeg variations)
-    const mimeMatches = allowedExtensions.some((ext) => {
-      const mimeTypes = mimeTypeMap[ext] || [];
-      return mimeTypes.includes(file.type);
-    });
-    
-    // Also handle jpg/jpeg equivalence
-    const jpgJpegEquivalence = 
-      (fileExtension === ".jpg" || fileExtension === ".jpeg") &&
-      (allowedExtensions.includes(".jpg") || allowedExtensions.includes(".jpeg"));
-    
-    if (!extensionMatches && !mimeMatches && !jpgJpegEquivalence) {
+
+    let isAllowed = false;
+
+    if (hasMimeTypes) {
+      // DB has MIME types - check directly against file.type and also check extension mapping
+      const allowedMimes = field.allowedFileTypes.map((t) => t.toLowerCase().trim());
+
+      // Direct MIME type match
+      if (allowedMimes.includes(fileMimeType)) {
+        isAllowed = true;
+      }
+
+      // Check if file extension matches any allowed MIME type's extensions
+      if (!isAllowed) {
+        isAllowed = allowedMimes.some((mime) => {
+          const allowedExts = mimeToExtMap[mime] || [];
+          return allowedExts.includes(fileExtension);
+        });
+      }
+    } else {
+      // DB has extensions - use existing logic
+      const allowedExtensions = field.allowedFileTypes.map((type) => {
+        const normalized = type.toLowerCase().trim();
+        return normalized.startsWith(".") ? normalized : `.${normalized}`;
+      });
+
+      // Check if file extension matches
+      if (allowedExtensions.includes(fileExtension)) {
+        isAllowed = true;
+      }
+
+      // Check if MIME type matches
+      if (!isAllowed) {
+        isAllowed = allowedExtensions.some((ext) => {
+          const mimeTypes = extToMimeMap[ext] || [];
+          return mimeTypes.includes(fileMimeType);
+        });
+      }
+
+      // Handle jpg/jpeg equivalence
+      if (!isAllowed) {
+        isAllowed =
+          (fileExtension === ".jpg" || fileExtension === ".jpeg") &&
+          (allowedExtensions.includes(".jpg") || allowedExtensions.includes(".jpeg"));
+      }
+    }
+
+    if (!isAllowed) {
       formResponses[
         fieldId
       ].uploadError = `File type not allowed. Allowed types: ${field.allowedFileTypes.join(
@@ -3402,30 +3443,67 @@ const handleSubmit = async () => {
         }
         
         // ✅ CRITICAL: Allow negative numeric IDs if they're in active resubmission requests
-        // These are admin-requested fields that the backend now supports
+        // OR if they're dynamically created passport fields
         if (typeof fieldId === 'number' && fieldId < 0) {
           if (resubmissionFieldIds.has(fieldId)) {
             console.log('✅ Including negative field ID in resubmission request:', fieldId, field.question);
             return true;
-          } else {
-            // Negative ID not in resubmission request - might be dynamically created passport field
-            // Skip it as backend should create these fields
-            console.warn('⚠️ Skipping negative field ID not in resubmission request:', fieldId, field.question);
-            return false;
           }
+
+          // ✅ CRITICAL: Check if this is a dynamically created passport field
+          // Dynamic passport fields are created with IDs: -1000 - travelerId (and decremented for each field)
+          // Check by the question text to identify passport fields
+          const questionLower = (field.question || '').toLowerCase();
+          const isPassportField =
+            questionLower.includes('passport number') ||
+            questionLower.includes('passport expir') ||
+            questionLower.includes('residence country') ||
+            questionLower.includes('schengen');
+
+          if (isPassportField) {
+            console.log('✅ Including dynamic passport field with negative ID:', fieldId, field.question);
+            return true;
+          }
+
+          // Other negative IDs not in resubmission - skip them
+          console.warn('⚠️ Skipping negative field ID not in resubmission request:', fieldId, field.question);
+          return false;
         }
         
         // Allow positive numeric IDs (regular fields)
         return true;
       })
       .map((field) => {
+        // ✅ CRITICAL: Convert negative passport field IDs to string IDs for backend
+        // Dynamic passport fields have negative numeric IDs, but backend expects string IDs
+        let fieldId: string | number = field.id;
+        const questionLower = (field.question || '').toLowerCase();
+
+        if (typeof field.id === 'number' && field.id < 0) {
+          // Check if this is a passport field by question text
+          if (questionLower.includes('passport number')) {
+            fieldId = '_passport_number';
+            console.log('🛂 Converting negative ID to string ID:', field.id, '->', fieldId);
+          } else if (questionLower.includes('passport expir')) {
+            fieldId = '_passport_expiry_date';
+            console.log('🛂 Converting negative ID to string ID:', field.id, '->', fieldId);
+          } else if (questionLower.includes('residence country')) {
+            fieldId = '_residence_country';
+            console.log('🛂 Converting negative ID to string ID:', field.id, '->', fieldId);
+          } else if (questionLower.includes('schengen')) {
+            fieldId = '_has_schengen_visa';
+            console.log('🛂 Converting negative ID to string ID:', field.id, '->', fieldId);
+          }
+        }
+
         const response: any = {
-          fieldId: field.id, // Can be string or number
+          fieldId: fieldId, // Can be string or number
         };
 
         // ✅ CRITICAL: For negative field IDs (admin-requested fields), include the question text
         // This ensures the backend can properly store and display the field label in the admin app
-        if (typeof field.id === 'number' && field.id < 0) {
+        if (typeof field.id === 'number' && field.id < 0 && typeof fieldId === 'number') {
+          // Only include question if we didn't convert to string ID
           response.question = field.question;
           console.log('✅ Including question text for negative field ID:', field.id, field.question);
         }
@@ -3650,7 +3728,7 @@ const handleSubmit = async () => {
             const response: any = {
               fieldId: passportFieldId,
             };
-            
+
             if (passportFieldId === '_passport_expiry_date') {
               const date = savedResponse.date;
               if (date && date.day && date.month && date.year) {
@@ -3664,30 +3742,91 @@ const handleSubmit = async () => {
             } else {
               response.value = savedResponse.value;
             }
-            
+
             passportFieldsInSavedResponses.push(response);
             console.log(`✅ Found passport field ${passportFieldId} in savedResponses for traveler ${travelerKey}`);
           }
         });
+
+        // ✅ CRITICAL: Also check for passport fields stored with negative IDs (from dynamic field creation)
+        // For travelers WITH IDs, the formula is: baseId = -1000 - travelerId
+        // So for traveler 216: -1216 (passport number), -1217 (expiry), -1218 (residence), -1219 (schengen)
+        const travelerId = traveler.id || 0;
+        const dynamicBaseId = -1000 - travelerId;
+        const dynamicNegativeIdMap: Record<number, string> = {
+          [dynamicBaseId]: '_passport_number',
+          [dynamicBaseId - 1]: '_passport_expiry_date',
+          [dynamicBaseId - 2]: '_residence_country',
+          [dynamicBaseId - 3]: '_has_schengen_visa'
+        };
+
+        console.log(`🔍 Checking for dynamic passport fields for traveler ${travelerKey} with base ID ${dynamicBaseId}`);
+
+        savedKeys.forEach((key) => {
+          const numKey = Number(key);
+          if (!isNaN(numKey) && numKey < 0) {
+            const passportFieldId = dynamicNegativeIdMap[numKey];
+            if (passportFieldId) {
+              // Check if we already added this passport field
+              const alreadyAdded = passportFieldsInSavedResponses.some((r: any) => r.fieldId === passportFieldId);
+              if (!alreadyAdded) {
+                const savedResponse = savedResponses[key];
+                const response: any = {
+                  fieldId: passportFieldId, // Use string ID instead of negative ID
+                };
+
+                if (passportFieldId === '_passport_expiry_date') {
+                  const date = savedResponse.date;
+                  if (date && date.day && date.month && date.year) {
+                    const year = date.year;
+                    const month = String(date.month).padStart(2, "0");
+                    const day = String(date.day).padStart(2, "0");
+                    response.value = `${year}-${month}-${day}`;
+                  } else if (savedResponse.value) {
+                    response.value = savedResponse.value;
+                  }
+                } else {
+                  response.value = savedResponse.value;
+                }
+
+                passportFieldsInSavedResponses.push(response);
+                console.log(`✅ Found passport field with negative ID ${numKey}, converted to ${passportFieldId} for traveler ${travelerKey}`);
+              }
+            }
+          }
+        });
+
+        console.log(`📋 Total passport fields found for traveler ${travelerKey} (with ID):`, passportFieldsInSavedResponses.length);
       }
       
       // Build responses from API fields
+      // Calculate dynamic base ID for this traveler (for skipping passport fields)
+      const travelerIdForFilter = traveler.id || 0;
+      const dynamicBaseIdForFilter = -1000 - travelerIdForFilter;
+
       const travelerResponses = travelerFields
         .filter((field: any) => {
           // Only include fields that have saved responses
           const fieldId = field.id;
           if (fieldId === undefined || fieldId === null) return false;
-          
+
           // ✅ CRITICAL: Skip passport fields with string IDs - they're already handled above
           if (typeof fieldId === 'string' && passportFieldIds.includes(fieldId)) {
             return false; // Skip, already handled in passportFieldsInSavedResponses
           }
-          
-          // ✅ CRITICAL: Skip negative IDs that are passport fields (-2000 to -2003) - they're already converted and added above
-          if (typeof fieldId === 'number' && fieldId < 0 && fieldId >= -2003 && fieldId <= -2000) {
-            return false; // Skip, already converted and added to passportFieldsInSavedResponses
+
+          // ✅ CRITICAL: Skip negative IDs that are passport fields - they're already converted and added above
+          if (typeof fieldId === 'number' && fieldId < 0) {
+            // For travelers without ID: skip -2000 to -2003
+            if (fieldId >= -2003 && fieldId <= -2000) {
+              return false;
+            }
+            // For travelers with ID: skip dynamic IDs (e.g., -1216 to -1219 for traveler 216)
+            if (fieldId >= dynamicBaseIdForFilter - 3 && fieldId <= dynamicBaseIdForFilter) {
+              return false;
+            }
           }
-          
+
           return savedResponses[fieldId] !== undefined;
         })
         .map((field: any) => {
