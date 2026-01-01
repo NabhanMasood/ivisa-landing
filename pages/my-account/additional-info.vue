@@ -83,87 +83,19 @@
         </div>
 
         <!-- Admin Note (when resubmission requested) -->
-        <div
-          v-if="isResubmissionActive && adminNoteToShow"
-          class="rounded-xl border p-3 sm:p-4 bg-orange-50 border-orange-200 text-orange-900"
-        >
-          <div class="flex items-start gap-2 sm:gap-3">
-            <svg
-              class="w-5 h-5 mt-0.5 text-orange-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01M5.07 19h13.86A2.07 2.07 0 0021 16.93L13.93 4.14a2.07 2.07 0 00-3.86 0L3 16.93A2.07 2.07 0 005.07 19z"
-              />
-            </svg>
-            <div>
-              <p class="font-medium" style="font-family: Geist">
-                Additional information requested
-              </p>
-              <p class="text-sm mt-1" style="font-family: Inter">
-                {{ adminNoteToShow }}
-              </p>
-            </div>
-          </div>
-        </div>
+        <ResubmissionAlert :visible="isResubmissionActive" :note="adminNoteToShow" />
 
         <!-- Main Tabs: Visa Questions and Embassy Selection -->
         <div class="bg-white rounded-xl border overflow-hidden" style="border-color: #e4e4e8">
           <!-- Main Tab Headers -->
-          <div class="border-b flex overflow-x-auto" style="border-color: #e4e4e8">
-            <button
-              @click="activeMainTab = 'fields'"
-              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors"
-              :class="
-                activeMainTab === 'fields'
-                  ? 'border-[#1ECE84] text-[#1ECE84]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              "
-            >
-              <div class="flex items-center gap-2">
-                <span>Visa Questions</span>
-                <span
-                  v-if="fieldsComplete"
-                  class="w-4 h-4 rounded-full bg-[#1ECE84] flex items-center justify-center"
-                >
-                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </span>
-              </div>
-            </button>
-            <button
-              v-if="requiresEmbassy"
-              @click="activeMainTab = 'embassy'"
-              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors"
-              :class="
-                activeMainTab === 'embassy'
-                  ? 'border-[#1ECE84] text-[#1ECE84]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              "
-            >
-              <div class="flex items-center gap-2">
-                <span>Embassy Selection</span>
-                <span
-                  v-if="embassyComplete"
-                  class="w-4 h-4 rounded-full bg-[#1ECE84] flex items-center justify-center"
-                >
-                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </span>
-                <span
-                  v-else-if="requiresEmbassy && !selectedEmbassyId"
-                  class="w-2 h-2 rounded-full bg-red-500"
-                ></span>
-              </div>
-            </button>
-          </div>
+          <MainTabsHeader
+            :active-tab="activeMainTab"
+            :fields-complete="fieldsComplete"
+            :embassy-complete="embassyComplete"
+            :requires-embassy="requiresEmbassy"
+            :selected-embassy-id="selectedEmbassyId"
+            @update:active-tab="activeMainTab = $event"
+          />
 
           <!-- Tab Content: Visa Questions -->
           <div v-if="activeMainTab === 'fields'" class="p-0">
@@ -173,34 +105,14 @@
           style="border-color: #e4e4e8"
         >
           <!-- Tab Headers -->
-          <div
-            class="border-b flex overflow-x-auto"
-            style="border-color: #e4e4e8; -webkit-overflow-scrolling: touch;"
-          >
-            <button
-              v-for="(traveler, index) in allTravelers"
-              :key="`traveler-${traveler.id || 'no-id'}-${index}-${traveler.firstName || ''}-${traveler.lastName || ''}`"
-              @click="selectTraveler(traveler.id || null, index)"
-              class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors relative"
-              :class="[
-                selectedTravelerId === (traveler.id || null) &&
-                selectedTravelerIndex === index
-                  ? 'border-[#1ECE84] text-[#1ECE84]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900',
-              ]"
-            >
-              <div class="flex items-center gap-2">
-                <span>{{ getTravelerName(traveler, index) }}</span>
-                <!-- Status Badge -->
-                <span
-                  class="px-2 py-0.5 text-xs rounded-full font-medium"
-                  :class="getTravelerStatusClass(traveler.id || null, index)"
-                >
-                  {{ getTravelerStatus(traveler.id || null, index) }}
-                </span>
-              </div>
-            </button>
-          </div>
+          <TravelerTabs
+            :travelers="allTravelers"
+            :selected-id="selectedTravelerId"
+            :selected-index="selectedTravelerIndex"
+            :submission-status="submissionStatus"
+            :completed-travelers="completedTravelers"
+            @select="selectTraveler"
+          />
 
           <!-- Form Content -->
           <div class="p-4 sm:p-6">
@@ -251,362 +163,22 @@
               </p>
 
               <!-- Dynamic Fields -->
-              <div
+              <FormFieldRenderer
                 v-for="field in sortedFields"
                 :key="field.id"
-                class="space-y-2"
-              >
-                <label
-                  class="block text-sm font-medium leading-5"
-                  :class="shouldHighlightField(field) ? 'text-red-600' : ''"
-                  style="font-family: Inter; letter-spacing: -0.006em"
-                >
-                  {{ getFieldLabel(field) }}
-                  <span v-if="field.isRequired" class="text-red-500">*</span>
-                  <span
-                    v-if="shouldHighlightField(field)"
-                    class="ml-2 text-xs font-medium text-red-600"
-                    >Requested</span
-                  >
-                </label>
-
-                <!-- Text Input -->
-                <Input
-                  v-if="field.fieldType === 'text'"
-                  :model-value="formResponses[field.id]?.value ?? ''"
-                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
-                  :placeholder="getFieldLabel(field)"
-                  class="w-full h-9 border"
-                  :class="
-                    shouldHighlightField(field)
-                      ? 'border-red-500 ring-1 ring-red-200'
-                      : ''
-                  "
-                  :required="field.isRequired"
-                  :minlength="field.minLength"
-                  :maxlength="field.maxLength"
-                  :disabled="isFieldDisabled(field)"
-                />
-
-                <!-- Number Input -->
-                <Input
-                  v-else-if="field.fieldType === 'number'"
-                  :model-value="formResponses[field.id]?.value ?? ''"
-                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
-                  type="number"
-                  :placeholder="getFieldLabel(field)"
-                  class="w-full h-9 border"
-                  :class="
-                    shouldHighlightField(field)
-                      ? 'border-red-500 ring-1 ring-red-200'
-                      : ''
-                  "
-                  :required="field.isRequired"
-                  :min="field.minLength"
-                  :max="field.maxLength"
-                  :disabled="isFieldDisabled(field)"
-                />
-
-                <!-- Textarea -->
-                <textarea
-                  v-else-if="field.fieldType === 'textarea'"
-                  :value="formResponses[field.id]?.value ?? ''"
-                  @input="(e: Event) => { const resp = formResponses[field.id!]; if (resp) resp.value = (e.target as HTMLTextAreaElement).value }"
-                  :placeholder="getFieldLabel(field)"
-                  class="w-full min-h-[100px] px-3 py-2 border rounded-md"
-                  :class="
-                    shouldHighlightField(field)
-                      ? 'border-red-500 ring-1 ring-red-200'
-                      : ''
-                  "
-                  :required="field.isRequired"
-                  :minlength="field.minLength"
-                  :maxlength="field.maxLength"
-                  :disabled="isFieldDisabled(field)"
-                />
-
-                <!-- Date Input -->
-                <div
-                  v-else-if="field.fieldType === 'date'"
-                  class="grid grid-cols-3 gap-2 sm:gap-4"
-                >
-                  <Select
-                    :model-value="formResponses[field.id]?.date?.day ?? ''"
-                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.day = val }"
-                    :disabled="isFieldDisabled(field)"
-                    :class="
-                      shouldHighlightField(field)
-                        ? 'border-red-500 ring-1 ring-red-200 rounded-md'
-                        : ''
-                    "
-                  >
-                    <SelectTrigger variant="form">
-                      <SelectValue placeholder="Day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem
-                        v-for="day in dayOptions"
-                        :key="day.value"
-                        :value="day.value"
-                      >
-                        {{ day.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    :model-value="formResponses[field.id]?.date?.month ?? ''"
-                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.month = val }"
-                    :disabled="isFieldDisabled(field)"
-                    :class="
-                      shouldHighlightField(field)
-                        ? 'border-red-500 ring-1 ring-red-200 rounded-md'
-                        : ''
-                    "
-                  >
-                    <SelectTrigger variant="form">
-                      <SelectValue placeholder="Month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem
-                        v-for="month in monthOptions"
-                        :key="month.value"
-                        :value="month.value"
-                      >
-                        {{ month.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    :model-value="formResponses[field.id]?.date?.year ?? ''"
-                    @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp && resp.date) resp.date.year = val }"
-                    :disabled="isFieldDisabled(field)"
-                    :class="
-                      shouldHighlightField(field)
-                        ? 'border-red-500 ring-1 ring-red-200 rounded-md'
-                        : ''
-                    "
-                  >
-                    <SelectTrigger variant="form">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem
-                        v-for="year in yearOptions"
-                        :key="year.value"
-                        :value="year.value"
-                      >
-                        {{ year.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <!-- Dropdown -->
-                <Select
-                  v-else-if="field.fieldType === 'dropdown'"
-                  :model-value="formResponses[field.id]?.value ?? ''"
-                  @update:model-value="(val: string) => { const resp = formResponses[field.id!]; if (resp) resp.value = val }"
-                  :required="field.isRequired"
-                  :disabled="isFieldDisabled(field)"
-                  :class="
-                    shouldHighlightField(field)
-                      ? 'border-red-500 ring-1 ring-red-200 rounded-md'
-                      : ''
-                  "
-                >
-                  <SelectTrigger variant="form">
-                    <SelectValue :placeholder="getFieldPlaceholder(field)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="option in field.options"
-                      :key="option"
-                      :value="option"
-                    >
-                      {{ option }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <!-- File Upload -->
-                <div v-else-if="field.fieldType === 'upload'" class="relative">
-                  <input
-                    type="file"
-                    :id="`file-input-${field.id}`"
-                    :ref="
-                      (el) => {
-                        if (el) setFileInputRef(field.id, el);
-                      }
-                    "
-                    @change="(e) => handleFileUpload(e, field.id)"
-                    class="hidden"
-                    :accept="field.allowedFileTypes?.join(',')"
-                    :required="
-                      field.isRequired && !formResponses[field.id]?.filePath
-                    "
-                    :disabled="isFieldDisabled(field)"
-                  />
-                  <button
-                    type="button"
-                    @click="triggerFileUpload(field.id)"
-                    :disabled="
-                      formResponses[field.id]?.isUploading ||
-                      isFieldDisabled(field)
-                    "
-                    class="w-full h-9 border rounded-md px-3 sm:px-4 text-left text-xs sm:text-sm flex items-center justify-between transition-colors"
-                    :class="[
-                      (formResponses[field.id]?.isUploaded || (formResponses[field.id]?.file && field.id < 0))
-                        ? 'bg-green-50 border-green-300 text-green-700 cursor-default'
-                        : formResponses[field.id]?.isUploading
-                        ? 'bg-gray-50 border-gray-300 text-gray-500 cursor-wait'
-                        : isFieldDisabled(field)
-                        ? 'text-gray-400 bg-gray-50 border-gray-300 cursor-not-allowed'
-                        : 'text-gray-500 hover:bg-gray-50 cursor-pointer border-[#D4D4DA]',
-                      shouldHighlightField(field)
-                        ? 'border-red-500 ring-1 ring-red-200'
-                        : '',
-                    ]"
-                  >
-                    <div class="flex items-center gap-2">
-                      <!-- Loading Spinner -->
-                      <svg
-                        v-if="formResponses[field.id]?.isUploading"
-                        class="animate-spin h-4 w-4 text-gray-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          class="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="4"
-                        ></circle>
-                        <path
-                          class="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <!-- Success Checkmark -->
-                      <svg
-                        v-else-if="formResponses[field.id]?.isUploaded"
-                        class="h-4 w-4 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        ></path>
-                      </svg>
-                      <!-- Upload Icon -->
-                      <svg
-                        v-else
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M11.3333 5.33333L8 2L4.66667 5.33333"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M8 2V10"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                      <span>
-                        <span v-if="formResponses[field.id]?.isUploading"
-                          >Uploading...</span
-                        >
-                        <span
-                          v-else-if="
-                            (formResponses[field.id]?.isUploaded || formResponses[field.id]?.file) &&
-                            formResponses[field.id]?.fileName
-                          "
-                        >
-                          {{ formResponses[field.id]?.fileName }}
-                          <span v-if="formResponses[field.id]?.isUploaded"> - Uploaded</span>
-                          <span v-else-if="field.id < 0"> - Ready to upload</span>
-                        </span>
-                        <span v-else>Upload</span>
-                      </span>
-                    </div>
-                  </button>
-                  <!-- Success Message -->
-                  <p
-                    v-if="
-                      formResponses[field.id]?.isUploaded &&
-                      !formResponses[field.id]?.uploadError
-                    "
-                    class="text-green-600 text-xs mt-1 flex items-center gap-1"
-                  >
-                    <svg
-                      class="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
-                    </svg>
-                    File uploaded successfully
-                  </p>
-                  <p
-                    v-if="formResponses[field.id]?.uploadError"
-                    class="text-red-500 text-xs mt-1"
-                  >
-                    {{ formResponses[field.id]?.uploadError }}
-                  </p>
-                  <p
-                    v-if="
-                      field.allowedFileTypes &&
-                      field.allowedFileTypes.length > 0
-                    "
-                    class="text-gray-500 text-xs mt-1"
-                  >
-                    Allowed types: {{ field.allowedFileTypes.join(", ") }}
-                  </p>
-                  <p
-                    v-if="field.maxFileSize"
-                    class="text-gray-500 text-xs mt-1"
-                  >
-                    Max size: {{ formatFileSize(field.maxFileSize) }}
-                  </p>
-                </div>
-
-                <!-- Error Message -->
-                <p v-if="fieldErrors[field.id]" class="text-red-500 text-xs">
-                  {{ fieldErrors[field.id] }}
-                </p>
-              </div>
+                :field="field"
+                :response="formResponses[field.id]"
+                :model-value="formResponses[field.id]?.value ?? ''"
+                :date-value="formResponses[field.id]?.date"
+                :label="getFieldLabel(field)"
+                :placeholder="getFieldPlaceholder(field)"
+                :highlighted="shouldHighlightField(field)"
+                :disabled="isFieldDisabled(field)"
+                :error="fieldErrors[field.id]"
+                @update:model-value="updateFieldValue(field.id, $event)"
+                @update:date-value="updateDateValue(field.id, $event)"
+                @file-change="handleFileUpload($event, field.id)"
+              />
 
               <!-- Submit Button -->
               <div
@@ -632,91 +204,17 @@
           </div>
 
           <!-- Tab Content: Embassy Selection -->
-          <div v-if="activeMainTab === 'embassy' && requiresEmbassy" class="p-4 sm:p-6">
-            <div class="mb-4 sm:mb-6">
-              <h3 class="text-base sm:text-lg font-semibold" style="font-family: Geist; color: #020617">
-                Select Embassy
-              </h3>
-              <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                Please select the embassy where you will submit your visa application.
-              </p>
-            </div>
-
-            <!-- Loading State -->
-            <div v-if="isLoadingEmbassies" class="flex items-center justify-center py-8 sm:py-12">
-              <div class="flex flex-col items-center gap-3">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
-                <p class="text-xs sm:text-sm text-gray-600">Loading embassies...</p>
-              </div>
-            </div>
-
-            <!-- Error State -->
-            <div v-else-if="embassyError" class="py-8 sm:py-12 text-center">
-              <p class="text-xs sm:text-sm text-red-600 mb-3 sm:mb-4 px-2">{{ embassyError }}</p>
-              <Button
-                @click="fetchEmbassies"
-                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-[6px] text-white"
-                style="background-color: #1ece84;"
-              >
-                Try Again
-              </Button>
-            </div>
-
-            <!-- No Embassies Available -->
-            <div v-else-if="!embassies || embassies.length === 0" class="py-8 sm:py-12 text-center">
-              <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">No embassies available for the selected countries.</p>
-            </div>
-
-            <!-- Embassy Options -->
-            <div v-else class="space-y-3 sm:space-y-4">
-              <button
-                v-for="embassy in embassies"
-                :key="embassy.id"
-                @click="selectEmbassy(embassy)"
-                type="button"
-                class="text-left transition-all w-full"
-                :style="{
-                  minHeight: '60px',
-                  gap: '8px',
-                  borderRadius: '8px',
-                  paddingTop: '12px',
-                  paddingRight: '12px',
-                  paddingBottom: '12px',
-                  paddingLeft: '12px',
-                  border: selectedEmbassyId === embassy.id ? '1px solid #1ECE84' : '1px solid #D4D4DA',
-                  backgroundColor: selectedEmbassyId === embassy.id ? '#E8FFF6' : '#FFFFFF'
-                }"
-              >
-                <div class="flex flex-col gap-1">
-                  <h4 class="text-sm sm:text-base leading-[20px] sm:leading-[24px]" style="font-family: Geist; font-weight: 600; color: #0B3947;">
-                    {{ embassy.embassyName || 'Embassy' }}
-                  </h4>
-                  <p v-if="embassy.destinationCountry" class="text-xs sm:text-sm leading-[18px] sm:leading-[20px]" style="font-family: Manrope; font-weight: 400; color: #6B7280;">
-                    {{ embassy.destinationCountry }}
-                  </p>
-                  <p v-if="embassy.address || embassy.location" class="text-xs leading-[16px] sm:leading-[18px]" style="font-family: Manrope; font-weight: 400; color: #9CA3AF;">
-                    {{ embassy.address || embassy.location }}
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <!-- Save Button -->
-            <div v-if="embassies && embassies.length > 0" class="mt-6 pt-6 border-t" style="border-color: #E5E7EB;">
-              <Button
-                @click="saveEmbassySelection"
-                :disabled="!selectedEmbassyId || isSavingEmbassy"
-                class="h-9 px-4 sm:px-6 rounded-md text-white font-medium text-xs sm:text-sm w-full sm:w-auto"
-                :style="
-                  selectedEmbassyId && !isSavingEmbassy
-                    ? 'background-color: #1ece84; font-family: Geist; min-width: 100px;'
-                    : 'background-color: #9ca3af; font-family: Geist; min-width: 100px; cursor: not-allowed;'
-                "
-              >
-                {{ isSavingEmbassy ? 'Saving...' : 'Save Embassy Selection' }}
-              </Button>
-            </div>
-          </div>
+          <EmbassySelector
+            v-if="activeMainTab === 'embassy' && requiresEmbassy"
+            :embassies="embassies"
+            :selected-id="selectedEmbassyId"
+            :loading="isLoadingEmbassies"
+            :saving="isSavingEmbassy"
+            :error="embassyError"
+            @select="selectEmbassy"
+            @save="saveEmbassySelection"
+            @retry="fetchEmbassies"
+          />
         </div>
       </div>
     </div>
@@ -726,13 +224,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onActivated, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import Input from "@/components/ui/Input.vue";
 import Button from "@/components/ui/button.vue";
-import Select from "@/components/ui/select/Select.vue";
-import SelectTrigger from "@/components/ui/select/SelectTrigger.vue";
-import SelectValue from "@/components/ui/select/SelectValue.vue";
-import SelectContent from "@/components/ui/select/SelectContent.vue";
-import SelectItem from "@/components/ui/select/SelectItem.vue";
+import ResubmissionAlert from "@/components/forms/ResubmissionAlert.vue";
+import MainTabsHeader from "@/components/forms/MainTabsHeader.vue";
+import TravelerTabs from "@/components/forms/TravelerTabs.vue";
+import EmbassySelector from "@/components/forms/EmbassySelector.vue";
+import FormFieldRenderer from "@/components/forms/FormFieldRenderer.vue";
 import {
   useVisaProductFieldsApi,
   type VisaProductFieldWithResponse,
@@ -783,9 +280,6 @@ const isSavingEmbassy = ref(false);
 // Traveler selection state
 const selectedTravelerId = ref<number | null>(null);
 const selectedTravelerIndex = ref(0);
-
-// File input refs
-const fileInputRefs = ref<Record<number, HTMLInputElement | null>>({});
 
 // Form responses state - keyed by field ID (can be number or string for passport fields)
 const formResponses = reactive<
@@ -1062,35 +556,6 @@ const clearFormDataFromStorage = () => {
     console.error('❌ Failed to clear form data from localStorage:', error);
   }
 };
-
-// Options arrays
-const dayOptions = Array.from({ length: 31 }, (_, i) => ({
-  value: String(i + 1),
-  label: String(i + 1),
-}));
-
-const monthOptions = [
-  { value: "1", label: "January" },
-  { value: "2", label: "February" },
-  { value: "3", label: "March" },
-  { value: "4", label: "April" },
-  { value: "5", label: "May" },
-  { value: "6", label: "June" },
-  { value: "7", label: "July" },
-  { value: "8", label: "August" },
-  { value: "9", label: "September" },
-  { value: "10", label: "October" },
-  { value: "11", label: "November" },
-  { value: "12", label: "December" },
-];
-
-const currentYear = new Date().getFullYear();
-const futureYears = 20; // For expiry dates
-const pastYears = 100;
-const yearOptions = Array.from({ length: futureYears + pastYears + 1 }, (_, i) => ({
-  value: String(currentYear + futureYears - i),
-  label: String(currentYear + futureYears - i),
-}));
 
 // Computed properties
 const sortedFields = computed(() => {
@@ -1687,6 +1152,19 @@ const isFieldDisabled = (field: any) => {
   return true; // Disabled
 };
 
+// Field value update handlers for FormFieldRenderer
+const updateFieldValue = (fieldId: number, value: string) => {
+  const resp = formResponses[fieldId];
+  if (resp) resp.value = value;
+};
+
+const updateDateValue = (fieldId: number, dateValue: { day: string; month: string; year: string }) => {
+  const resp = formResponses[fieldId];
+  if (resp && resp.date) {
+    resp.date = dateValue;
+  }
+};
+
 // Resubmission active helper
 const isResubmissionActive = computed(() => {
   const app = application.value as any;
@@ -1878,30 +1356,6 @@ const getTravelerName = (traveler: any, index: number): string => {
     );
   }
   return `Traveler ${index}`;
-};
-
-const getTravelerStatus = (
-  travelerId: number | null,
-  index: number
-): string => {
-  const key = travelerId ? `traveler-${travelerId}` : `traveler-${index}`;
-  const status = submissionStatus[key] || "not_started";
-
-  if (status === "submitted") return "Submitted";
-  if (status === "pending") return "In Progress";
-  return "To Fill";
-};
-
-const getTravelerStatusClass = (
-  travelerId: number | null,
-  index: number
-): string => {
-  const key = travelerId ? `traveler-${travelerId}` : `traveler-${index}`;
-  const status = submissionStatus[key] || "not_started";
-
-  if (status === "submitted") return "bg-green-100 text-green-700";
-  if (status === "pending") return "bg-yellow-100 text-yellow-700";
-  return "bg-gray-100 text-gray-700";
 };
 
 // Format file size
@@ -2852,32 +2306,6 @@ const selectTraveler = async (travelerId: number | null, index: number) => {
 
   // Fetch fields for selected traveler
   await fetchFields(travelerId);
-};
-
-// Set file input ref
-const setFileInputRef = (fieldId: number, el: any) => {
-  if (el && el instanceof HTMLInputElement) {
-    fileInputRefs.value[fieldId] = el;
-  } else if (!el) {
-    delete fileInputRefs.value[fieldId];
-  }
-};
-
-// Trigger file upload dialog
-const triggerFileUpload = (fieldId: number) => {
-  const fileInput = fileInputRefs.value[fieldId];
-  if (fileInput) {
-    fileInput.click();
-  } else {
-    const fallbackInput = document.getElementById(
-      `file-input-${fieldId}`
-    ) as HTMLInputElement;
-    if (fallbackInput) {
-      fallbackInput.click();
-    } else {
-      console.error("File input not found for field:", fieldId);
-    }
-  }
 };
 
 // Handle file upload
