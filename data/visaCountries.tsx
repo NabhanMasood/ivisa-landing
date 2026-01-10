@@ -16,6 +16,11 @@ export interface VisaType {
         title: string
         content: string
       }
+      whoNeeds?: {
+        title: string
+        content: string
+      }
+      goodToKnow?: string[]
       documents: string[]
       visaTypes: VisaType[]
       howToApply: string[]
@@ -25,81 +30,91 @@ export interface VisaType {
   
   export const visaCountries: Record<string, CountryData> = {
     Schengen: {
-      name: 'Schengen',
+      name: 'Schengen Visa',
       flag: '🇪🇺',
       heroImage: '/images/germany-bg.jpg',
-      title: 'Discover Europe with One Visa',
-      introduction: "Dreaming of your next European adventure? Whether it's gliding through Venice's canals, attending a conference in Paris, or reuniting with loved ones in Spain — the Schengen Visa (Type C) is your single ticket to 29 European countries.",
+      title: 'Schengen Visa (Type C)',
+      introduction: "Dreaming of a European getaway? Whether it is exploring the canals of Venice, attending a business meeting in Paris, or visiting family in Spain, the Schengen visa (Type C) makes it all possible with just one application.",
       sections: {
         whatIs: {
-          title: 'What is a Schengen Visa (Type C)?',
-          content: "The Schengen Visa (Type C) lets you travel freely across all countries in the Schengen Zone with one application. It's designed for travelers from nations that don't have visa-free access to Europe, allowing short stays for tourism, business, or personal visits."
+          title: 'What is a Schengen visa (Type C)?',
+          content: "A Schengen visa (Type C) allows short visits to countries in the Schengen Area without needing separate visas for each country. It is needed if you come from a country that does not have visa-free travel to Europe."
         },
         documents: [
-          'A completed visa application form',
-          'A valid passport (issued within the last 10 years and valid at least 3 months beyond your stay)',
-          'Two recent passport-size photos',
+          'Completed application form',
+          'Valid passport (issued in last 10 years, valid for 3 months after your trip)',
+          'Two recent passport photos',
           'Travel insurance covering at least €30,000',
-          'Confirmed flight booking or travel itinerary',
-          'Proof of accommodation (hotel reservation or invitation letter)',
-          'Evidence of financial stability (bank statements or payslips)',
-          'A brief cover letter explaining your travel purpose',
-          'Additional documents depending on your visit type'
+          'Flight tickets or reservation',
+          'Proof of accommodation (hotel bookings or invitation)',
+          'Proof of funds (bank statements or payslips)',
+          'Cover letter explaining your visit',
+          'Extra documents depending on your visit reason'
         ],
         visaTypes: [
-          { name: 'Tourist Visa', description: 'for vacations and sightseeing across Europe' },
-          { name: 'Business Visa', description: 'for meetings, events, and conferences' },
-          { name: 'Family Visit Visa', description: 'for visiting relatives or friends' },
-          { name: 'Cultural/Sports Visa', description: 'for attending events, performances, or competitions' },
-          { name: 'Medical Visa', description: 'for receiving medical treatment in Europe' }
+          { name: 'Tourist visa', description: 'for vacations and sightseeing' },
+          { name: 'Business visa', description: 'for meetings and conferences' },
+          { name: 'Family visit visa', description: 'to see relatives or friends' },
+          { name: 'Cultural and sports visa', description: 'for events and competitions' },
+          { name: 'Medical visa', description: 'for treatment in Europe' }
         ],
         howToApply: [
-          "Identify the country where you'll spend most of your trip and apply through its embassy or visa center.",
-          'Collect all the required documents listed above.',
-          'Fill out the Schengen visa application form carefully.',
-          'Book your appointment at the relevant visa center.',
-          'Attend your appointment and submit your biometrics.',
-          'Pay the visa fee as per embassy guidelines.',
-          'Wait for your visa decision.'
+          'Choose the country where you will spend most time & start your application',
+          'Collect all required documents',
+          'Fill out the application form',
+          'Book a visa appointment at the embassy or visa center',
+          'Attend the appointment and provide documents and biometrics',
+          'Pay the visa fee',
+          'Wait for the decision'
         ],
         whyVisa123: 'Visa123 simplifies the entire process with step-by-step guidance, document checks, and expert support — making your Schengen visa application faster and easier than ever.'
       }
     },
 
     UK: {
-      name: 'UK ETA',
+      name: 'UK Visit Visa',
       flag: '🇬🇧',
       heroImage: '/images/uk-bg.jpg',
-      title: 'Travel to the UK with ETA',
-      introduction: "Planning a trip to the United Kingdom? The UK ETA (Electronic Travel Authorisation) is your digital gateway to exploring England, Scotland, Wales, and Northern Ireland. Whether you're visiting for tourism, business, short-term study, or transit, this online authorization simplifies your entry process.",
+      title: 'UK Visit Visa',
+      introduction: "Travelling to the UK? Whether for fun, family, or business, the UK Visit Visa lets you step inside and explore.",
       sections: {
         whatIs: {
-          title: 'What is UK ETA?',
-          content: "The UK ETA (Electronic Travel Authorisation) is an online approval required for travelers from visa-free countries before visiting the UK. It allows you to enter the UK for short stays including tourism, business activities, short-term study, or transit purposes. Once approved, your ETA is electronically linked to your passport, eliminating the need for additional documents upon arrival."
+          title: 'UK Visit Visa explained',
+          content: "A UK Visit Visa, officially called a Standard Visitor Visa, allows people to travel to the United Kingdom for a short stay. It is meant for tourism, visiting family or friends, short business activities, academic reasons, medical treatment, or passing through the UK on the way to another country.\n\nThis visa usually allows you to stay in the UK for up to 6 months, though longer-term visit visas (2, 5, or 10 years) are available for frequent travelers.\n\nYou must leave the UK before your visa expires and cannot work or live permanently while on this visa."
         },
+        goodToKnow: [
+          'You cannot work, claim public funds, or stay longer than allowed',
+          'You must prove that you will leave the UK at the end of your visit',
+          'Your visa can be refused if you do not provide enough proof of your purpose or funds',
+          'If you are from a visa-free country, you may need an ETA (Electronic Travel Authorisation) before travel'
+        ],
         documents: [
-          'A valid passport from an eligible country',
-          'Digital copy of your passport\'s photo page',
-          'Recent headshot photo of yourself',
-          'Personal details including full name, date of birth, nationality, and contact information',
-          'Travel details including trip dates and purpose of visit',
-          'Access to a smartphone or computer to complete the online application'
+          'Have a valid passport (with at least one blank page)',
+          'Fill out the online visa application form',
+          'Provide a recent passport-sized photo',
+          'Show proof you can pay for your trip (bank statements, payslips, or sponsor\'s documents)',
+          'Provide details of where you will stay (hotel booking or invitation from family/friends)',
+          'Show your travel plans, including return flight tickets',
+          'Submit a letter from your employer or proof of self-employment',
+          'Add documents based on your visit purpose (like invitation letters, medical appointment confirmation, or business event details)'
         ],
         visaTypes: [
-          { name: 'Tourism', description: 'for sightseeing, visiting attractions, and exploring the UK' },
-          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
-          { name: 'Short-term Study', description: 'for educational courses and training programs up to 6 months' },
-          { name: 'Transit', description: 'for passing through the UK to another destination' }
+          { name: 'General Visit Visa', description: 'For tourism, visiting family/friends, or business activities' },
+          { name: 'Business Visit Visa', description: 'For business meetings, conferences, and professional activities' },
+          { name: 'Medical Visit Visa', description: 'For private medical treatment in the UK' },
+          { name: 'Student Visit', description: 'For short term study like an English language course' },
+          { name: 'Academic Visit Visa', description: 'For academic activities, research, or conferences' },
+          { name: 'Transit Visa', description: 'For passing through the UK to another country' }
         ],
         howToApply: [
-          'Start your application online through the official UK ETA portal.',
-          'Enter all your personal details accurately, including name, birthdate, nationality, and contact information.',
-          'Upload a clear digital copy of your passport\'s photo page and a recent headshot photo.',
-          'Answer all questions about your trip details and background information truthfully.',
-          'Pay the application fee securely using a credit card or mobile payment method.',
-          'Save your confirmation email. Your UK ETA will be electronically linked to your passport once approved.'
+          'Apply online',
+          'Pay the fee',
+          'Book a biometric appointment',
+          'Prepare documents',
+          'Attend your appointment',
+          'Wait for a decision'
         ],
-        whyVisa123: 'Visa123 streamlines your UK ETA application with expert guidance, document verification, and 24/7 support. Our experienced team ensures your application is complete and accurate, helping you avoid delays and get approved faster.'
+        whyVisa123: 'Visa123 streamlines your UK Visit Visa application with expert guidance, document verification, and 24/7 support. Our experienced team ensures your application is complete and accurate, helping you avoid delays and get approved faster.'
       }
     },
 
@@ -107,19 +122,22 @@ export interface VisaType {
       name: 'US ESTA',
       flag: '🇺🇸',
       heroImage: '/images/usa-bg.jpg',
-      title: 'Travel to the USA with ESTA',
-      introduction: "Ready to explore the United States? The US ESTA (Electronic System for Travel Authorization) is your digital travel authorization for visiting America. Whether you're planning a vacation, business trip, or transit through the US, ESTA allows eligible travelers from Visa Waiver Program countries to visit for up to 90 days without a traditional visa.",
+      title: 'US ESTA',
+      introduction: "US ESTA lets you visit the United States without a visa. It's fast, simple, and done completely online.",
       sections: {
         whatIs: {
           title: 'What is US ESTA?',
-          content: "ESTA (Electronic System for Travel Authorization) is a web-based system administered by the U.S. Department of Homeland Security. It determines the eligibility of visitors to travel to the United States under the Visa Waiver Program (VWP) without requiring a traditional visa. ESTA is not a visa, but rather a travel authorization that allows eligible travelers to visit the US for tourism, business, or transit purposes for up to 90 days."
+          content: "ESTA (Electronic System for Travel Authorization) is a web-based system administered by the U.S. Department of Homeland Security. It determines the eligibility of visitors to travel to the United States under the Visa Waiver Program (VWP) without requiring a traditional visa.\n\nESTA is not a visa, but rather a travel authorization that allows eligible travelers to visit the US for tourism, business, or transit purposes for up to 90 days."
+        },
+        whoNeeds: {
+          title: 'Who needs US ESTA?',
+          content: "You need ESTA if you are a citizen of a Visa Waiver Program (VWP) country. VWP countries include: United Kingdom, Germany, France, Japan, Australia, South Korea, and many others (42 countries total). You also need ESTA if you are traveling to the US for tourism, business, or transit, planning to stay for 90 days or less, and traveling by air or sea to the United States."
         },
         documents: [
-          'A valid electronic passport from a Visa Waiver Program (VWP) country',
-          'A valid email address for receiving your ESTA confirmation',
-          'Credit or debit card for payment of the application fee',
-          'Basic personal information including full name, date of birth, and nationality',
-          'Travel information including trip dates and purpose of visit',
+          'Valid electronic passport from a VWP country',
+          'Valid email address',
+          'Credit or debit card for payment',
+          'Basic personal and travel information',
           'Emergency contact details',
           'Employment information'
         ],
@@ -129,12 +147,11 @@ export interface VisaType {
           { name: 'Transit', description: 'for passing through the United States to another destination' }
         ],
         howToApply: [
-          'Apply online through the official ESTA portal or with Visa123\'s streamlined application service.',
-          'Enter your passport and travel information accurately, ensuring all details match your passport exactly.',
-          'Provide your personal details, emergency contact information, and employment details.',
-          'Pay the application fee securely using a credit or debit card.',
-          'Submit your application and wait for approval, which is typically processed within minutes to 72 hours.',
-          'Save your ESTA confirmation email. Your ESTA is electronically linked to your passport and valid for multiple trips over two years.'
+          'Apply online',
+          'Enter your passport and travel info accurately',
+          'Pay the fee using a credit or debit card',
+          'Submit your application and wait for approval',
+          'Save your ESTA confirmation, it\'s linked to your passport'
         ],
         whyVisa123: 'Visa123 makes your US ESTA application simple and stress-free. Our expert team guides you through every step, ensures your information is accurate, and provides 24/7 support. With our streamlined process, you can get approved quickly and travel to the USA with confidence.'
       }
@@ -144,20 +161,24 @@ export interface VisaType {
       name: 'Turkey e-Visa',
       flag: '🇹🇷',
       heroImage: '/images/turkey-article.jpg',
-      title: 'Travel to Turkey with e-Visa',
-      introduction: "Ready to explore the rich history and stunning landscapes of Turkey? The Turkey e-Visa is your electronic visa that's linked directly to your passport, allowing you to enter Turkey for up to 90 days. Whether you're visiting for tourism, business, or transit, the entire application process is quick and completed entirely online.",
+      title: 'Turkey e-Visa',
+      introduction: "Planning a trip to Turkey? Whether for tourism, business, or transit, getting a Turkey e-Visa makes your travel simple and fast.",
       sections: {
         whatIs: {
           title: 'What is a Turkey e-Visa?',
-          content: "A Turkey e-Visa is an electronic visa linked to your passport that allows you to enter Turkey for up to 90 days for tourism, business, or transit purposes. The whole process is completed online and is quick and straightforward. Once approved, your e-Visa is electronically linked to your passport, making travel to Turkey simple and convenient."
+          content: "A Turkey e-Visa is an electronic visa linked to your passport. It lets you enter Turkey for up to 90 days for tourism, business, or transit. The whole process is online and quick."
+        },
+        whoNeeds: {
+          title: 'Who needs Turkey e-Visa?',
+          content: "You need a Turkey e-Visa if you're from a country that isn't visa-free but is eligible for online application. This includes travelers from places like South Africa, China, Australia, and many others visiting Turkey for tourism, business, or transit. Some nationalities, such as India, Pakistan, or Bangladesh, can also apply, but only if they have a valid visa or residence permit from the US, UK, Schengen countries, or Ireland."
         },
         documents: [
-          'A valid passport with at least 6 months validity from your date of entry',
-          'A valid email address for receiving your e-Visa confirmation',
-          'Credit or debit card for payment of the visa fee',
-          'Travel itinerary including flight details and accommodation information',
+          'Valid passport with at least 6 months validity',
+          'Valid email address for receiving the e-Visa',
+          'Credit or debit card for payment',
+          'Travel itinerary (flight details, accommodation)',
           'Passport-sized digital photograph',
-          'Additional documents may be required based on your nationality'
+          'Additional documents may be required based on nationality'
         ],
         visaTypes: [
           { name: 'Tourism', description: 'for sightseeing, visiting historical sites, and exploring Turkey\'s beautiful destinations' },
@@ -165,11 +186,11 @@ export interface VisaType {
           { name: 'Transit', description: 'for passing through Turkey to another destination' }
         ],
         howToApply: [
-          'Start your application online through the official Turkey e-Visa portal or with Visa123\'s streamlined service.',
-          'Upload a clear scan of your passport\'s photo page, ensuring all details are visible and legible.',
-          'Pay the visa fee securely using your credit or debit card.',
-          'Get your e-Visa by email within 24 hours of submission. Most applications are processed much faster.',
-          'Print your e-Visa or save it on your mobile device and present it when you arrive in Turkey.'
+          'Start your application online',
+          'Upload your passport scan',
+          'Pay the visa fee with your card',
+          'Get your visa by email within 24 hours',
+          'Print your e-Visa and show it when you arrive in Turkey'
         ],
         whyVisa123: 'Visa123 simplifies your Turkey e-Visa application with expert guidance and document verification. Our experienced team ensures your application is complete and accurate, helping you get approved quickly. With our 24/7 support and streamlined process, you can travel to Turkey with confidence and peace of mind.'
       }
@@ -179,39 +200,42 @@ export interface VisaType {
       name: 'Morocco eVisa',
       flag: '🇲🇦',
       heroImage: '/images/morocco-bg.jpg',
-      title: 'Travel to Morocco with eVisa',
-      introduction: "Ready to explore the vibrant culture and stunning landscapes of Morocco? The Morocco eVisa is your fully online electronic visa that's digitally linked to your passport. With approval in as fast as 24 to 72 hours and no embassy visits required, getting your Morocco eVisa is quick, easy, and convenient.",
+      title: 'Morocco eVisa',
+      introduction: "Apply for your Morocco eVisa in minutes. The process is 100% online — no embassy visits, no paperwork. Ideal for tourists and business travelers from eligible countries.",
       sections: {
         whatIs: {
-          title: 'What is Morocco eVisa?',
-          content: "Morocco eVisa is a fully online electronic visa that's digitally linked to your passport. The entire application process is completed online with no need to visit an embassy. Your eVisa is valid for 180 days from issue and allows you to stay in Morocco for up to 30 days (can be extended). The application is quick, with approval typically received within 24 to 72 hours."
+          title: 'Why choose Morocco eVisa?',
+          content: "Fully online application with no need to visit an embassy. Approval in as fast as 24 to 72 hours. Visa is linked to your passport digitally. Valid for 180 days from issue. Stay up to 30 days (can be extended)."
+        },
+        whoNeeds: {
+          title: 'Who needs Morocco eVisa?',
+          content: "You need Morocco eVisa if you are from a country not visa-exempt, you have a valid residence permit from the US, UK, EU, Canada, Australia, etc., or you hold a valid multiple-entry visa for the US, UK, Schengen, Canada, Australia, etc. If your passport allows visa-free entry (like from the EU, UK, US), you don't need an eVisa for stays up to 90 days."
         },
         documents: [
-          'A valid passport with at least 6 months validity from your date of entry',
-          'Digital passport photo (recent, color photograph)',
-          'Confirmed accommodation details (hotel reservation or invitation letter)',
-          'Return flight tickets or travel itinerary',
-          'Proof of sufficient funds (bank statements or financial documents)',
-          'A valid email address for receiving your eVisa confirmation',
-          'Credit or debit card for payment of the visa fee'
+          'Valid passport with at least 6 months validity',
+          'Digital passport photo (recent, color)',
+          'Confirmed accommodation details',
+          'Return flight tickets',
+          'Proof of sufficient funds',
+          'Valid email address',
+          'Credit/debit card for payment'
         ],
         visaTypes: [
           { name: 'Tourism', description: 'for sightseeing, exploring Morocco\'s cities, and experiencing its rich culture' },
-          { name: 'Business', description: 'for attending meetings, conferences, and business activities' },
-          { name: 'Transit', description: 'for passing through Morocco to another destination' }
+          { name: 'Business', description: 'for attending meetings, conferences, and business activities' }
         ],
         howToApply: [
-          'Start your application online through the official Morocco eVisa portal or with Visa123\'s streamlined service.',
-          'Upload a clear scan of your passport and a recent digital passport photo, ensuring all details are visible.',
-          'Pay the visa fee securely using your credit or debit card.',
-          'Get a confirmation email with your application number for tracking your status.',
-          'Wait 1-3 working days for approval. Most applications are processed within 24 to 72 hours.',
-          'Download and print your eVisa PDF once approved. Apply at least 7 days before your travel date to ensure timely processing.'
+          'Start your application online',
+          'Upload passport scan and photo',
+          'Pay the visa fee with a card',
+          'Get a confirmation email with your application number',
+          'Wait 1–3 working days for approval',
+          'Download and print your eVisa PDF'
         ],
         whyVisa123: 'Visa123 makes your Morocco eVisa application simple and stress-free. With our fully online process, you can apply from anywhere without visiting an embassy. Our expert team guides you through every step, ensures your documents are complete, and provides 24/7 support. Get approved in as fast as 24 to 72 hours and travel to Morocco with confidence.'
       }
     },
- 
+
   }
   
   export const getCountryData = (slug: string): CountryData => {
