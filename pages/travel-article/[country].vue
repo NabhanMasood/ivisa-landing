@@ -9,15 +9,24 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Hero Container: responsive height and margin -->
                 <div class="relative w-full max-w-[1200px] h-[550px] sm:h-[500px] lg:h-[554px] mx-auto rounded-xl sm:rounded-2xl overflow-hidden mt-4 sm:mt-6 lg:mt-8">
+
+                <!-- Loading Skeleton -->
+                <div v-if="!heroImageLoaded" class="absolute inset-0 bg-gradient-to-br from-gray-300 via-gray-200 to-gray-300 animate-pulse">
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skeleton-shimmer"></div>
+                </div>
+
                 <!-- Background Image -->
-                <img 
-                    :src="countryData.heroImage" 
+                <img
+                    :src="countryData.heroImage"
                     :alt="countryData.name"
-                    class="absolute inset-0 w-full h-full object-cover"
+                    class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+                    :class="heroImageLoaded ? 'opacity-100' : 'opacity-0'"
+                    @load="heroImageLoaded = true"
+                    fetchpriority="high"
                 />
-                
+
                 <!-- Overlay -->
-                <div class="absolute inset-0 bg-black/30"></div>
+                <div class="absolute inset-0 bg-black/30" :class="heroImageLoaded ? 'opacity-100' : 'opacity-0'"></div>
                 
                 <!-- Container Content: responsive positioning and layout -->
                 <div class="absolute top-4 left-4 sm:top-8 sm:left-6 md:top-12 md:left-8 lg:top-[99px] lg:left-[89px] flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[54px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-[1012px]">
@@ -447,6 +456,39 @@
         </p>
       </div>
 
+      <!-- Who Needs Section (conditional): responsive gap -->
+      <div v-if="countryData.sections.whoNeeds" class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
+          {{ countryData.sections.whoNeeds.title }}
+        </h2>
+        <!-- Content: responsive font size -->
+        <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947] w-full">
+          {{ countryData.sections.whoNeeds.content }}
+        </p>
+      </div>
+
+      <!-- Good to Know Section (conditional): responsive gap -->
+      <div v-if="countryData.sections.goodToKnow && countryData.sections.goodToKnow.length > 0" class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+        <!-- Heading: responsive font size -->
+        <h2 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
+          Good to Know
+        </h2>
+        <!-- Bullets List -->
+        <ul class="space-y-2 sm:space-y-3">
+          <li
+            v-for="(item, index) in countryData.sections.goodToKnow"
+            :key="index"
+            class="flex items-start gap-2 sm:gap-3"
+          >
+            <span class="text-[#0B3947] mt-1">•</span>
+            <span class="font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-6 lg:leading-7 tracking-normal text-[#0B3947]">
+              {{ item }}
+            </span>
+          </li>
+        </ul>
+      </div>
+
       <!-- Documents Needed Section: responsive gap -->
       <div class="flex flex-col gap-3 sm:gap-4 lg:gap-5">
         <!-- Heading: responsive font size -->
@@ -590,6 +632,19 @@ const selectedFrom = ref<string>('')
 const selectedTo = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const heroImageLoaded = ref(false)
+
+// Preload hero image
+useHead({
+  link: [
+    {
+      rel: 'preload',
+      as: 'image',
+      href: countryData.value.heroImage,
+      fetchpriority: 'high'
+    }
+  ]
+})
 
 // API
 const { getCountries } = useCountriesApi()
@@ -830,5 +885,19 @@ onMounted(() => {
 
 .font-manrope {
   font-family: 'Manrope', sans-serif;
+}
+
+/* Skeleton shimmer animation */
+.skeleton-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 </style>
