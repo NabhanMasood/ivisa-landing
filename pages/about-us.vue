@@ -1,4 +1,4 @@
-<!-- pages/about-us.vue -->
+<!-- pages/about-uus.vue -->
 <template>
   <div class="min-h-screen bg-white">
     <!-- Header -->
