@@ -6,6 +6,7 @@
         !isLoadingProducts &&
         availableProducts.length === 0 &&
         !productError &&
+        !showInquiryForm &&
         formData.nationality &&
         destination
       "
@@ -416,8 +417,8 @@
         </Select>
       </div>
 
-      <!-- Visa Type - Dynamic from API -->
-      <div>
+      <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
+      <div v-if="!showInquiryForm">
         <Label htmlFor="visaType">
           <a
             href="#"
@@ -480,22 +481,363 @@
           </SelectContent>
         </Select>
 
-        <!-- No products message -->
-        <p
-          v-if="
-            !isLoadingProducts &&
-            availableProducts.length === 0 &&
-            !productError
-          "
-          class="mt-2 text-sm text-gray-500"
-        >
-          No visa products available for this nationality-destination
-          combination
-        </p>
       </div>
 
-      <!-- Number of Applicants -->
-      <div>
+      <!-- Inquiry Form - Show when no products configured (not free visa) -->
+      <div
+        v-if="showInquiryForm && !isLoadingProducts"
+        class="col-span-full mt-6"
+      >
+        <!-- Form Container with Border and Shadow -->
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <!-- Header Section -->
+          <div class="bg-gradient-to-r from-[#1ece84] to-[#17b374] px-6 py-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold text-lg" style="font-family: Manrope, sans-serif;">
+                  Submit a Visa Inquiry
+                </h3>
+                <p class="text-white/80 text-sm" style="font-family: Manrope, sans-serif;">
+                  Our team will assist you with your visa requirements
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div
+            v-if="inquirySuccess"
+            class="p-8 text-center"
+          >
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h4 class="text-xl font-semibold text-gray-900 mb-2" style="font-family: Manrope, sans-serif;">
+              Inquiry Submitted Successfully!
+            </h4>
+            <p class="text-gray-600" style="font-family: Manrope, sans-serif;">
+              Thank you for your inquiry. Our team will review your request and contact you within 24-48 hours.
+            </p>
+          </div>
+
+          <!-- Inquiry Form -->
+          <div v-else class="p-6">
+            <!-- Info Banner -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <div class="w-5 h-5 flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm text-amber-800" style="font-family: Manrope, sans-serif;">
+                Visa products are not currently available online for this route. Submit an inquiry and our visa experts will personally assist you with your application.
+              </p>
+            </div>
+
+            <!-- Row 1: Name, Email, Phone -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+              <div>
+                <Label
+                  htmlFor="inquiry-name"
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Full Name <span class="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="inquiry-name"
+                  v-model="inquiryFormData.name"
+                  type="text"
+                  class="w-full mt-1.5 h-11 border-gray-300 focus:border-[#1ECB84] focus:ring-[#1ECB84]"
+                  placeholder="Your full name"
+                  required
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="inquiry-email"
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Email <span class="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="inquiry-email"
+                  v-model="inquiryFormData.email"
+                  type="email"
+                  class="w-full mt-1.5 h-11 border-gray-300 focus:border-[#1ECB84] focus:ring-[#1ECB84]"
+                  placeholder="your.email@example.com"
+                  required
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="inquiry-phone"
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Phone Number <span class="text-gray-400 font-normal">(Optional)</span>
+                </Label>
+                <Input
+                  id="inquiry-phone"
+                  v-model="inquiryFormData.phone"
+                  type="tel"
+                  class="w-full mt-1.5 h-11 border-gray-300 focus:border-[#1ECB84] focus:ring-[#1ECB84]"
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
+            </div>
+
+            <!-- Row 2: Subject -->
+            <div class="mb-5">
+              <Label
+                htmlFor="inquiry-subject"
+                class="text-sm font-medium text-gray-700"
+                style="font-family: Manrope, sans-serif;"
+              >
+                Subject <span class="text-red-500">*</span>
+              </Label>
+              <Input
+                id="inquiry-subject"
+                v-model="inquiryFormData.subject"
+                type="text"
+                class="w-full mt-1.5 h-11 border-gray-300 focus:border-[#1ECB84] focus:ring-[#1ECB84]"
+                placeholder="e.g., Tourist Visa Inquiry, Business Visa Requirements"
+                required
+              />
+            </div>
+
+            <!-- Row 3: Nationality, Travelling From, Travelling To -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+              <!-- Nationality Dropdown -->
+              <div>
+                <Label
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Nationality <span class="text-red-500">*</span>
+                </Label>
+                <Select v-model="inquiryFormData.nationality">
+                  <SelectTrigger
+                    variant="form"
+                    class="w-full mt-1.5 h-11"
+                    style="font-family: Manrope, sans-serif; font-size: 14px;"
+                  >
+                    <SelectValue>
+                      <div v-if="inquiryFormData.nationality" class="flex items-center gap-2">
+                        <img
+                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.nationality)?.logoUrl"
+                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.nationality)?.logoUrl || '')"
+                          :alt="inquiryFormData.nationality"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ inquiryFormData.nationality }}</span>
+                      </div>
+                      <span v-else class="text-gray-400">Select nationality</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent class="max-h-[250px] overflow-y-auto">
+                    <SelectItem
+                      v-for="country in nationalityOptions"
+                      :key="'inq-nat-' + country.id"
+                      :value="country.countryName"
+                    >
+                      <div class="flex items-center gap-2">
+                        <img
+                          v-if="country.logoUrl"
+                          :src="getFullLogoUrl(country.logoUrl)"
+                          :alt="country.countryName"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ country.countryName }}</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <!-- Travelling From Dropdown -->
+              <div>
+                <Label
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Travelling From <span class="text-red-500">*</span>
+                </Label>
+                <Select v-model="inquiryFormData.travellingFrom">
+                  <SelectTrigger
+                    variant="form"
+                    class="w-full mt-1.5 h-11"
+                    style="font-family: Manrope, sans-serif; font-size: 14px;"
+                  >
+                    <SelectValue>
+                      <div v-if="inquiryFormData.travellingFrom" class="flex items-center gap-2">
+                        <img
+                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.travellingFrom)?.logoUrl"
+                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.travellingFrom)?.logoUrl || '')"
+                          :alt="inquiryFormData.travellingFrom"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ inquiryFormData.travellingFrom }}</span>
+                      </div>
+                      <span v-else class="text-gray-400">Select country</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent class="max-h-[250px] overflow-y-auto">
+                    <SelectItem
+                      v-for="country in nationalityOptions"
+                      :key="'inq-from-' + country.id"
+                      :value="country.countryName"
+                    >
+                      <div class="flex items-center gap-2">
+                        <img
+                          v-if="country.logoUrl"
+                          :src="getFullLogoUrl(country.logoUrl)"
+                          :alt="country.countryName"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ country.countryName }}</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <!-- Travelling To Dropdown -->
+              <div>
+                <Label
+                  class="text-sm font-medium text-gray-700"
+                  style="font-family: Manrope, sans-serif;"
+                >
+                  Travelling To <span class="text-red-500">*</span>
+                </Label>
+                <Select v-model="inquiryFormData.destinationCountry">
+                  <SelectTrigger
+                    variant="form"
+                    class="w-full mt-1.5 h-11"
+                    style="font-family: Manrope, sans-serif; font-size: 14px;"
+                  >
+                    <SelectValue>
+                      <div v-if="inquiryFormData.destinationCountry" class="flex items-center gap-2">
+                        <img
+                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.destinationCountry)?.logoUrl"
+                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.destinationCountry)?.logoUrl || '')"
+                          :alt="inquiryFormData.destinationCountry"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ inquiryFormData.destinationCountry }}</span>
+                      </div>
+                      <span v-else class="text-gray-400">Select destination</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent class="max-h-[250px] overflow-y-auto">
+                    <SelectItem
+                      v-for="country in nationalityOptions"
+                      :key="'inq-to-' + country.id"
+                      :value="country.countryName"
+                    >
+                      <div class="flex items-center gap-2">
+                        <img
+                          v-if="country.logoUrl"
+                          :src="getFullLogoUrl(country.logoUrl)"
+                          :alt="country.countryName"
+                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
+                          @error="handleFlagError"
+                        />
+                        <span>{{ country.countryName }}</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <!-- Row 4: Message (Optional) -->
+            <div class="mb-5">
+              <Label
+                htmlFor="inquiry-message"
+                class="text-sm font-medium text-gray-700"
+                style="font-family: Manrope, sans-serif;"
+              >
+                Message <span class="text-gray-400 font-normal">(Optional)</span>
+              </Label>
+              <textarea
+                id="inquiry-message"
+                v-model="inquiryFormData.message"
+                class="w-full mt-1.5 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent min-h-[120px] resize-none"
+                style="font-family: Manrope, sans-serif; font-size: 14px;"
+                placeholder="Please describe your visa requirements, travel dates, purpose of visit, and any questions you have..."
+              ></textarea>
+            </div>
+
+            <!-- Privacy Policy Checkbox -->
+            <div class="mb-5">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="inquiryFormData.privacyAgreed"
+                  class="mt-1 w-4 h-4 text-[#1ece84] border-gray-300 rounded focus:ring-[#1ece84] focus:ring-2 cursor-pointer"
+                />
+                <span class="text-sm text-gray-600" style="font-family: Manrope, sans-serif;">
+                  I agree that my personal data may be processed to process my contact request. For more information, read our
+                  <a href="/terms-and-conditions" target="_blank" class="text-[#1ece84] hover:underline font-medium">Privacy Policy</a>.
+                </span>
+              </label>
+            </div>
+
+            <!-- Error Message -->
+            <div v-if="inquiryError" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-5 flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-red-700" style="font-family: Manrope, sans-serif;">{{ inquiryError }}</p>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between pt-2">
+              <p class="text-xs text-gray-500" style="font-family: Manrope, sans-serif;">
+                <span class="text-red-500">*</span> Required fields
+              </p>
+              <Button
+                @click="handleInquirySubmit"
+                :disabled="inquiryLoading || !isInquiryFormValid"
+                class="h-11 px-8 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style="
+                  background-color: #1ece84;
+                  font-family: Manrope, sans-serif;
+                  font-size: 14px;
+                "
+              >
+                <span v-if="inquiryLoading" class="flex items-center gap-2">
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Submitting...
+                </span>
+                <span v-else class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Submit Inquiry
+                </span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Number of Applicants - Hidden when no products -->
+      <div v-if="availableProducts.length > 0">
         <Label
           htmlFor="applicants"
           style="
@@ -519,8 +861,8 @@
         />
       </div>
 
-      <!-- Email Address - Capture on first step -->
-      <div>
+      <!-- Email Address - Hidden when no products -->
+      <div v-if="availableProducts.length > 0">
         <Label
           htmlFor="email"
           style="
@@ -569,30 +911,32 @@
         </p>
       </div>
 
-        <Button
-          @click="handleNext"
-          :disabled="
-            !formData.visaType ||
-            !formData.email ||
-            emailError ||
-            isLoadingProducts ||
-            availableProducts.length === 0
-          "
-          class="w-full sm:w-[143px] h-9"
-          style="
-            background-color: #1ece84;
-            color: white;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-family: Geist, sans-serif;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 20px;
-            text-align: center;
-          "
-        >
-          Start Application
-        </Button>
+      <!-- Start Application Button - Hidden when no products -->
+      <Button
+        v-if="availableProducts.length > 0"
+        @click="handleNext"
+        :disabled="
+          !formData.visaType ||
+          !formData.email ||
+          emailError ||
+          isLoadingProducts ||
+          availableProducts.length === 0
+        "
+        class="w-full sm:w-[143px] h-9"
+        style="
+          background-color: #1ece84;
+          color: white;
+          border-radius: 6px;
+          padding: 8px 16px;
+          font-family: Geist, sans-serif;
+          font-weight: 500;
+          font-size: 14px;
+          line-height: 20px;
+          text-align: center;
+        "
+      >
+        Start Application
+      </Button>
       </div>
     </div>
   </div>
@@ -615,6 +959,7 @@ import { useCountriesApi } from "@/composables/useCountries";
 import { useVisaProductsApi } from "@/composables/useVisaProducts";
 import { useCurrency } from "@/composables/useCurrency";
 import { useAuthApi } from "@/composables/useAuth";
+import { useInquiry } from "@/composables/useInquiry";
 import { parseVisaType, formatVisaTypeForDisplay, formatEntryTypeForDisplay, constructVisaType, getEntryTypeDisplay } from "@/lib/visaTypeUtils";
 
 const props = defineProps<{
@@ -675,7 +1020,56 @@ const availableProducts = ref<
 >([]);
 const isLoadingProducts = ref(false);
 const productError = ref<string | null>(null);
+const showInquiryForm = ref(false); // True when no products configured (not free visa)
 const emailError = ref<string>("");
+
+// Inquiry form state
+const { submitInquiry, loading: inquiryLoading, error: inquiryError, success: inquirySuccess, resetInquiry } = useInquiry();
+const inquiryFormData = ref({
+  name: "",
+  email: "",
+  phone: "",
+  subject: "",
+  nationality: props.nationality,
+  travellingFrom: "",
+  destinationCountry: props.destination,
+  message: "",
+  privacyAgreed: false,
+});
+
+// Computed: Check if inquiry form is valid
+const isInquiryFormValid = computed(() => {
+  return (
+    inquiryFormData.value.name.trim() !== "" &&
+    inquiryFormData.value.email.trim() !== "" &&
+    inquiryFormData.value.subject.trim() !== "" &&
+    inquiryFormData.value.nationality.trim() !== "" &&
+    inquiryFormData.value.travellingFrom.trim() !== "" &&
+    inquiryFormData.value.destinationCountry.trim() !== "" &&
+    inquiryFormData.value.privacyAgreed === true
+  );
+});
+
+// Handle inquiry form submission
+const handleInquirySubmit = async () => {
+  if (!isInquiryFormValid.value) return;
+
+  try {
+    await submitInquiry({
+      name: inquiryFormData.value.name,
+      email: inquiryFormData.value.email,
+      phone: inquiryFormData.value.phone || undefined,
+      subject: inquiryFormData.value.subject,
+      nationality: inquiryFormData.value.nationality,
+      travellingFrom: inquiryFormData.value.travellingFrom,
+      destinationCountry: inquiryFormData.value.destinationCountry,
+      message: inquiryFormData.value.message,
+    });
+  } catch (err) {
+    // Error is handled by the composable
+    console.error("Failed to submit inquiry:", err);
+  }
+};
 
 // ✅ Computed property to get selected country with flag
 const selectedCountry = computed(() => {
@@ -799,6 +1193,7 @@ const enrichProductWithProcessingFees = async (product: any) => {
 const fetchVisaProducts = async (nationality: string, destination: string, forceRefresh: boolean = false) => {
   isLoadingProducts.value = true;
   productError.value = null;
+  showInquiryForm.value = false;
   availableProducts.value = [];
 
   // ✅ Save current visaType before resetting
@@ -957,27 +1352,28 @@ const fetchVisaProducts = async (nationality: string, destination: string, force
         }
       }
     } else {
-      // ✅ CRITICAL: If response.success is false, it means NO PRODUCTS ARE CONFIGURED
-      // This is NOT a free visa case - it's an error/not configured case
-      console.log("❌ API returned error or no products configured:", response.message);
-      productError.value = response.message || "No visa products are configured for this nationality-destination combination. Please contact support or try a different destination.";
+      // No products configured for this nationality-destination combination
+      // Show inquiry form instead of error
+      console.log("ℹ️ No products configured - showing inquiry form:", response.message);
+      showInquiryForm.value = true;
       emit('freeVisa', false);
       availableProducts.value = [];
     }
   } catch (error: any) {
     console.error("❌ Error fetching visa products:", error);
-    
+
     // Check if it's a 404/400 error (no products configured)
     const errorStatus = error?.response?.status || error?.statusCode || error?.status
     if (errorStatus === 404 || errorStatus === 400) {
       // HTTP 404/400 means no products configured for this pair
-      productError.value = "No visa products are configured for this nationality-destination combination. Please contact support or try a different destination.";
-      console.log("⚠️ No products configured (HTTP error):", errorStatus);
+      // Show inquiry form instead of error
+      console.log("ℹ️ No products configured (HTTP error) - showing inquiry form:", errorStatus);
+      showInquiryForm.value = true;
     } else {
       // Other errors (network, server error, etc.)
       productError.value = "Failed to load visa products. Please try again.";
     }
-    
+
     emit('freeVisa', false);
     availableProducts.value = [];
   } finally {
@@ -1097,6 +1493,14 @@ const handleNext = () => {
 watch(() => formData.value.nationality, () => {
   nationalitySearchQuery.value = '';
 });
+
+// Watch for props changes to update inquiry form data
+watch(() => [props.nationality, props.destination], () => {
+  inquiryFormData.value.nationality = props.nationality;
+  inquiryFormData.value.destinationCountry = props.destination;
+  // Reset inquiry success state when destination changes
+  resetInquiry();
+}, { immediate: true });
 
 onMounted(async () => {
   await initializeRates()
