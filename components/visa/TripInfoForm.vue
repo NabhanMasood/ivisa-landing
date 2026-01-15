@@ -419,6 +419,8 @@
 
       <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
       <div v-if="!showInquiryForm">
+      <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
+      <div v-if="!showInquiryForm">
         <Label htmlFor="visaType">
           <a
             href="#"
