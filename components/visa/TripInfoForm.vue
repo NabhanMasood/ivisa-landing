@@ -419,6 +419,8 @@
 
       <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
       <div v-if="!showInquiryForm">
+      <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
+      <div v-if="!showInquiryForm">
         <Label htmlFor="visaType">
           <a
             href="#"
@@ -537,7 +539,7 @@
                 </svg>
               </div>
               <p class="text-sm text-amber-800" style="font-family: Manrope, sans-serif;">
-                Visa products are not currently available online for this route. Submit an inquiry and our visa experts will personally assist you with your application.
+                We can deal with this certain type of visa through manual inquiry
               </p>
             </div>
 
