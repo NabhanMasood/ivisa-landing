@@ -537,7 +537,7 @@
                 </svg>
               </div>
               <p class="text-sm text-amber-800" style="font-family: Manrope, sans-serif;">
-                Visa products are not currently available online for this route. Submit an inquiry and our visa experts will personally assist you with your application.
+                We can deal with this certain type of visa through manual inquiry
               </p>
             </div>
 
