@@ -13,6 +13,7 @@ export interface VisaProductField {
   displayOrder: number
   isActive: boolean
   options?: string[] // For dropdown fields
+  useCountriesList?: boolean // If true, populate dropdown from countries API
   minLength?: number // For text/number fields
   maxLength?: number // For text/number fields
   allowedFileTypes?: string[] // For upload fields
