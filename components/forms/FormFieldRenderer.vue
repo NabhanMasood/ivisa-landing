@@ -111,17 +111,18 @@
     <!-- Dropdown -->
     <Select
       v-else-if="field.fieldType === 'dropdown'"
+      :key="`dropdown-${field.id}-${dropdownOptions.length}`"
       :model-value="modelValue ?? ''"
       @update:model-value="(val: string) => { $emit('update:modelValue', val); $emit('blur'); }"
       :required="field.isRequired"
-      :disabled="disabled"
+      :disabled="disabled || isLoadingCountries"
       :class="highlightClass"
     >
       <SelectTrigger variant="form">
-        <SelectValue :placeholder="placeholder" />
+        <SelectValue :placeholder="isLoadingCountries ? 'Loading...' : placeholder" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="option in field.options" :key="option" :value="option">
+        <SelectItem v-for="option in dropdownOptions" :key="option" :value="option">
           {{ option }}
         </SelectItem>
       </SelectContent>
@@ -203,13 +204,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/select/Select.vue';
 import SelectTrigger from '@/components/ui/select/SelectTrigger.vue';
 import SelectValue from '@/components/ui/select/SelectValue.vue';
 import SelectContent from '@/components/ui/select/SelectContent.vue';
 import SelectItem from '@/components/ui/select/SelectItem.vue';
+import { useCountriesApi } from '@/composables/useCountries';
 
 interface FieldResponse {
   value: string | null;
@@ -231,6 +233,7 @@ interface Field {
   minLength?: number;
   maxLength?: number;
   options?: string[];
+  useCountriesList?: boolean;
   allowedFileTypes?: string[];
   maxFileSize?: number;
 }
@@ -256,6 +259,58 @@ const emit = defineEmits<{
 }>();
 
 const fileInput = ref<HTMLInputElement | null>(null);
+
+// Countries API for dropdowns with useCountriesList
+const { getCountries } = useCountriesApi();
+const countriesOptions = ref<string[]>([]);
+const isLoadingCountries = ref(false);
+
+// Load countries if useCountriesList is true
+const loadCountries = async () => {
+  if (props.field.fieldType === 'dropdown' && props.field.useCountriesList && countriesOptions.value.length === 0) {
+    try {
+      isLoadingCountries.value = true;
+      console.log('🌍 Loading countries for field:', props.field.id, props.field.useCountriesList);
+      const response = await getCountries();
+      console.log('🌍 Countries API response:', response);
+      if (response.success && response.data) {
+        countriesOptions.value = response.data.map(country => country.countryName);
+        console.log('🌍 Countries loaded:', countriesOptions.value.length, 'countries');
+      }
+    } catch (error) {
+      console.error('Failed to load countries:', error);
+    } finally {
+      isLoadingCountries.value = false;
+    }
+  }
+};
+
+// Computed property for dropdown options
+const dropdownOptions = computed(() => {
+  if (props.field.useCountriesList) {
+    console.log('🌍 dropdownOptions computed - using countries:', countriesOptions.value.length);
+    return countriesOptions.value;
+  }
+  return props.field.options || [];
+});
+
+// Load countries on mount if needed
+onMounted(() => {
+  if (props.field.fieldType === 'dropdown') {
+    console.log('🌍 [DROPDOWN MOUNT] field:', props.field.id, 'question:', props.field.question?.substring(0, 30), 'useCountriesList:', props.field.useCountriesList, 'options:', props.field.options?.length || 0);
+  }
+  loadCountries();
+});
+
+// Watch for field changes (including when field data loads after mount)
+watch(() => props.field, (newField) => {
+  if (newField.fieldType === 'dropdown') {
+    console.log('🌍 [DROPDOWN WATCH] field:', newField.id, 'question:', newField.question?.substring(0, 30), 'useCountriesList:', newField.useCountriesList, 'options:', newField.options?.length || 0);
+  }
+  if (newField.useCountriesList) {
+    loadCountries();
+  }
+}, { deep: true, immediate: true });
 
 // Date options
 const dayOptions = Array.from({ length: 31 }, (_, i) => ({
