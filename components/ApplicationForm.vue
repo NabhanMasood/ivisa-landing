@@ -132,11 +132,11 @@
                     </Select>
                   </div>
 
-                  <!-- To Country Dropdown (Countries with Visa Products) -->
+                  <!-- To Country Dropdown (Countries with Visa Products) - Locked when countrySlug is provided -->
                   <div class="space-y-2">
-                    <Select v-model="selectedTo">
-                      <SelectTrigger 
-                        class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
+                    <Select v-model="selectedTo" :disabled="!!props.countrySlug && !isDestinationChangeable">
+                      <SelectTrigger
+                        class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all disabled:!bg-white disabled:!opacity-100 disabled:cursor-default"
                       >
                         <!-- Custom content instead of SelectValue -->
                         <div class="flex-1 text-left">
@@ -163,9 +163,6 @@
                           </div>
                           <span v-else class="text-gray-400 py-2 pl-4">Traveling to</span>
                         </div>
-                        <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
-                          <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
                       </SelectTrigger>
                       <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
                         <!-- Search Input -->
@@ -265,15 +262,21 @@ const getCountryNameFromSlug = (slug: string): string[] => {
   if (!slug) return []
   const slugLower = slug.toLowerCase()
   const mappings: Record<string, string[]> = {
-    'uk': ['United Kingdom', 'UK', 'U.K.', 'United Kingdom (UK)'],
-    'schengen': ['Schengen', 'Europe', 'Schengen Area', 'Schengen Zone'],
-    'usa': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
-    'us': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
+    'uk': ['United Kingdom'],  // Exact match only to avoid matching "Ukraine"
+    'schengen': ['Germany'],   // Schengen defaults to Germany but user can change
+    'usa': ['United States', 'United States of America'],
+    'us': ['United States', 'United States of America'],
     'turkey': ['Turkey', 'Türkiye', 'Turkiye'],
-    'morocco': ['Morocco', 'Moroccan', 'Kingdom of Morocco']
+    'morocco': ['Morocco']
   }
   return mappings[slugLower] || [slug]
 }
+
+// Check if destination should be changeable (Schengen covers multiple countries)
+const isDestinationChangeable = computed(() => {
+  const slug = getCountrySlug()
+  return slug?.toLowerCase() === 'schengen'
+})
 
 // State
 const countries = ref<Country[]>([])
@@ -404,14 +407,13 @@ const fetchDestinationCountries = async () => {
       const countrySlug = getCountrySlug()
       if (countrySlug) {
         const possibleNames = getCountryNameFromSlug(countrySlug)
-        const matchedCountry = countries.value.find(country => 
-          possibleNames.some(name => 
-            country.countryName.toLowerCase() === name.toLowerCase() ||
-            country.countryName.toLowerCase().includes(name.toLowerCase()) ||
-            name.toLowerCase().includes(country.countryName.toLowerCase())
+        // Use exact matching to avoid partial matches (e.g., "UK" matching "Ukraine")
+        const matchedCountry = countries.value.find(country =>
+          possibleNames.some(name =>
+            country.countryName.toLowerCase() === name.toLowerCase()
           )
         )
-        
+
         if (matchedCountry) {
           selectedTo.value = String(matchedCountry.id)
           console.log('✅ Pre-selected destination country in ApplicationForm:', matchedCountry.countryName)

@@ -36,10 +36,13 @@
     <!-- Guide Content -->
     <div v-else-if="guide" class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-16">
       <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
-        
-        <!-- Left Sidebar - Fixed on desktop -->
-        <aside class="w-full lg:w-[350px] xl:w-[380px] flex-shrink-0 order-2 lg:order-1">
-          <div class="lg:fixed lg:top-32 lg:w-[350px] xl:w-[380px] lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-4">
+
+        <!-- Left Sidebar - Sticky on desktop, stops at "Need more help?" section -->
+        <aside class="w-full lg:w-[350px] xl:w-[380px] flex-shrink-0 order-2 lg:order-1 sidebar-container">
+          <div
+            ref="sidebarRef"
+            class="sidebar-inner lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-4 lg:sticky lg:top-24"
+          >
             <!-- Application Form Card -->
             <div class="w-full rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[25px] bg-[#F1F9FC] shadow-lg mb-6">
               <h2 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-[26px] sm:leading-[28px] lg:leading-[30px] text-[#1a1a1a] mb-4 sm:mb-6">
@@ -49,22 +52,22 @@
               <div class="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div class="space-y-2">
                   <Select v-model="selectedNationality">
-                    <SelectTrigger 
+                    <SelectTrigger
                       class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
                     >
                       <SelectValue placeholder="Select country">
                         <div class="flex items-center gap-2 pl-4" v-if="selectedNationality">
                           <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                            <img
                               v-if="getCountryLogo(selectedNationality)"
-                              :src="getCountryLogo(selectedNationality)" 
+                              :src="getCountryLogo(selectedNationality)"
                               :alt="getCountryName(selectedNationality)"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleLogoError"
                             />
-                            <div 
+                            <div
                               v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                             >
                               <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -80,24 +83,24 @@
                       </svg>
                     </SelectTrigger>
                     <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
-                      <SelectItem 
-                        v-for="country in countries" 
-                        :key="country.id" 
+                      <SelectItem
+                        v-for="country in countries"
+                        :key="country.id"
                         :value="String(country.id)"
                         class="pl-4"
                       >
                         <div class="flex items-center gap-2">
                           <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                            <img
                               v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)" 
+                              :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleLogoError"
                             />
-                            <div 
+                            <div
                               v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                             >
                               <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -111,25 +114,25 @@
                   </Select>
                 </div>
 
-                <!-- To Country Dropdown (Countries with Visa Products) -->
+                <!-- To Country Dropdown (All Countries - changeable) -->
                 <div class="space-y-2">
                   <Select v-model="selectedDestination">
-                    <SelectTrigger 
+                    <SelectTrigger
                       class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
                     >
                       <SelectValue placeholder="Select country">
                         <div class="flex items-center gap-2 pl-4" v-if="selectedDestination">
                           <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                            <img
                               v-if="getCountryLogo(selectedDestination)"
-                              :src="getCountryLogo(selectedDestination)" 
+                              :src="getCountryLogo(selectedDestination)"
                               :alt="getCountryName(selectedDestination)"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleLogoError"
                             />
-                            <div 
+                            <div
                               v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                             >
                               <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -145,24 +148,24 @@
                       </svg>
                     </SelectTrigger>
                     <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
-                      <SelectItem 
-                        v-for="country in destinationCountries" 
-                        :key="country.id" 
+                      <SelectItem
+                        v-for="country in countries"
+                        :key="country.id"
                         :value="String(country.id)"
                         class="pl-4"
                       >
                         <div class="flex items-center gap-2">
                           <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img 
+                            <img
                               v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)" 
+                              :src="getFullLogoUrl(country.logoUrl)"
                               :alt="country.countryName"
-                              class="max-w-full max-h-full object-contain"
+                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
                               @error="handleLogoError"
                             />
-                            <div 
+                            <div
                               v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                             >
                               <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -273,8 +276,8 @@
             ></div>
           </div>
 
-          <!-- Need More Help Section -->
-          <div class="mt-12 bg-blue-50 rounded-lg p-6 sm:p-8 text-center">
+          <!-- Need More Help Section - marks the end of article content -->
+          <div id="sidebar-stop-point" class="mt-12 bg-blue-50 rounded-lg p-6 sm:p-8 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-blue-900 mb-4">
               Need more help?
             </h2>
@@ -378,7 +381,12 @@ const countries = ref<any[]>([])
 const destinationCountries = ref<any[]>([])
 const selectedNationality = ref<string>('')
 const selectedDestination = ref<string>('')
-  const activeHeading = ref<number>(0)
+const activeHeading = ref<number>(0)
+
+// Sidebar positioning state
+const sidebarRef = ref<HTMLElement | null>(null)
+const sidebarStopped = ref(false)
+const sidebarStopOffset = ref(0)
 
 const contentHeadings = computed(() => {
   if (!guide.value?.content || typeof window === 'undefined') return []
@@ -694,24 +702,57 @@ const updateActiveHeading = () => {
   activeHeading.value = 0
 }
 
+// Update sidebar positioning - stop at "Need more help?" section
+const updateSidebarPosition = () => {
+  const sidebar = sidebarRef.value
+  const stopPoint = document.getElementById('sidebar-stop-point')
+
+  if (!sidebar || !stopPoint) return
+
+  const sidebarRect = sidebar.getBoundingClientRect()
+  const stopPointRect = stopPoint.getBoundingClientRect()
+  const headerOffset = 96 // top-24 = 6rem = 96px
+
+  // Calculate when sidebar bottom would overlap with stop point top
+  const sidebarBottom = sidebarRect.bottom
+  const stopPointTop = stopPointRect.top
+
+  // If sidebar bottom would go past the stop point, stop the sidebar
+  if (sidebarBottom >= stopPointTop && !sidebarStopped.value) {
+    sidebarStopped.value = true
+    // Calculate offset from top of aside to position sidebar absolutely
+    const asideElement = sidebar.parentElement
+    if (asideElement) {
+      const asideRect = asideElement.getBoundingClientRect()
+      sidebarStopOffset.value = stopPointTop - asideRect.top - sidebarRect.height
+    }
+  } else if (stopPointTop > sidebarBottom + 50) {
+    // Add some buffer before un-stopping
+    sidebarStopped.value = false
+  }
+}
+
 onMounted(async () => {
   await Promise.all([fetchGuide(), fetchCountries()])
-  
+
   if (process.client) {
     nextTick(() => {
       processImagesInContent()
     })
-    
-    // Add scroll listener for active heading tracking
+
+    // Add scroll listener for active heading tracking and sidebar positioning
     window.addEventListener('scroll', updateActiveHeading)
-    // Initial check
+    window.addEventListener('scroll', updateSidebarPosition)
+    // Initial checks
     updateActiveHeading()
+    updateSidebarPosition()
   }
 })
 
 onUnmounted(() => {
   if (process.client) {
     window.removeEventListener('scroll', updateActiveHeading)
+    window.removeEventListener('scroll', updateSidebarPosition)
   }
 })
 

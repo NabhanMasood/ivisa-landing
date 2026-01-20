@@ -239,7 +239,13 @@ export interface VisaType {
   }
   
   export const getCountryData = (slug: string): CountryData => {
-    // Normalize slug to match keys (handle case variations)
+    // Handle special uppercase cases (UK, USA)
+    const upperSlug = slug.toUpperCase()
+    if (visaCountries[upperSlug]) {
+      return visaCountries[upperSlug]
+    }
+
+    // Normalize slug to match keys (handle case variations like Turkey, Morocco)
     const normalizedSlug = slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase()
     const country = visaCountries[normalizedSlug] || visaCountries[slug]
     if (!country) {

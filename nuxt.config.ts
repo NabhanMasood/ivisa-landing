@@ -44,6 +44,13 @@ export default defineNuxtConfig({
           href: "/svg/payment-strip.svg",
           as: "image",
           type: "image/svg+xml"
+        },
+        // 👇 Preload custom cursor (diagonal)
+        {
+          rel: "preload",
+          href: "/cursor/cursor-diagonal.png",
+          as: "image",
+          type: "image/png"
         }
       ],
     },

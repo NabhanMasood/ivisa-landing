@@ -15,32 +15,32 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   JPY: '¥',
   CNY: '¥',
   INR: '₹',
-  PKR: 'Rs',
-  AED: 'AED',
-  SAR: 'SAR',
-  QAR: 'QAR',
-  OMR: 'OMR',
-  KWD: 'KWD',
-  BHD: 'BHD',
+  PKR: 'Rs ',
+  AED: 'د.إ',
+  SAR: 'ر.س ',
+  QAR: 'ر.ق ',
+  OMR: 'ر.ع ',
+  KWD: 'د.ك ',
+  BHD: 'د.ب ',
   CAD: 'C$',
-  AUD: 'AUD',
-  NZD: 'NZD',
-  CHF: 'CHF',
-  SEK: 'kr',
-  NOK: 'NOK',
-  DKK: 'DKK',
+  AUD: 'A$',
+  NZD: 'NZ$',
+  CHF: 'CHF ',
+  SEK: 'kr ',
+  NOK: 'kr ',
+  DKK: 'kr ',
   RUB: '₽',
   TRY: '₺',
   BRL: 'R$',
   MXN: 'Mex$',
-  ZAR: 'ZAR',
-  KRW: 'KRW',
-  THB: 'THB',
-  SGD: 'SGD',
-  MYR: 'MYR',
-  IDR: 'IDR',
-  PHP: 'PHP',
-  VND: 'VND',
+  ZAR: 'R ',
+  KRW: '₩',
+  THB: '฿',
+  SGD: 'S$',
+  MYR: 'RM ',
+  IDR: 'Rp ',
+  PHP: '₱',
+  VND: '₫',
 }
 
 // Currency names
@@ -442,8 +442,13 @@ export const useCurrency = () => {
 
       if (savedCurrency && hasManualSelection) {
         try {
-          selectedCurrency.value = JSON.parse(savedCurrency)
-          console.log('💰 Restored manual currency preference:', selectedCurrency.value.code)
+          const parsed = JSON.parse(savedCurrency)
+          // Always use fresh symbol from CURRENCY_SYMBOLS to ensure updates are reflected
+          const freshCurrency = getCurrencyObject(parsed.code)
+          selectedCurrency.value = freshCurrency
+          // Update localStorage with fresh symbol
+          localStorage.setItem('selected-currency', JSON.stringify(freshCurrency))
+          console.log('💰 Restored manual currency preference:', selectedCurrency.value.code, 'with symbol:', freshCurrency.symbol)
         } catch (e) {
           console.error('❌ Error parsing saved currency:', e)
           const detectedCurrencyCode = await detectCountryCurrency()
@@ -516,11 +521,13 @@ export const useCurrency = () => {
       maximumFractionDigits: 2
     })
 
+    const symbol = selectedCurrency.value.symbol.trim()
+
     if (showCurrencyCode) {
-      return `${selectedCurrency.value.symbol}${formatted} ${selectedCurrency.value.code}`
+      return `${symbol} ${formatted} ${selectedCurrency.value.code}`
     }
 
-    return `${selectedCurrency.value.symbol}${formatted}`
+    return `${symbol} ${formatted}`
   }
 
   // Get current exchange rate for selected currency
