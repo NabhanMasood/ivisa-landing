@@ -65,16 +65,16 @@
                               <div class="flex items-center gap-2 pl-4" v-if="selectedFrom">
                                 <!-- Logo with fallback -->
                                 <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                  <img 
+                                  <img
                                     v-if="getCountryLogo(selectedFrom)"
-                                    :src="getCountryLogo(selectedFrom)" 
+                                    :src="getCountryLogo(selectedFrom)"
                                     :alt="getCountryName(selectedFrom)"
-                                    class="max-w-full max-h-full object-contain"
+                                    class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                     @error="handleLogoError"
                                   />
-                                  <div 
+                                  <div
                                     v-else
-                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                    class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                                   >
                                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -85,27 +85,41 @@
                               </div>
                               <span v-else class="text-gray-500 pl-4">Select your country</span>
                             </SelectValue>
+                            <svg class="w-3 h-2 mr-3 flex-shrink-0" viewBox="0 0 12 8" fill="none">
+                              <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                           </SelectTrigger>
                           <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
-                            <SelectItem 
-                              v-for="country in countries" 
-                              :key="country.id" 
+                            <!-- Search Input -->
+                            <div class="p-2 border-b sticky top-0 bg-white z-10">
+                              <input
+                                v-model="fromSearchQuery"
+                                type="text"
+                                placeholder="Search countries..."
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                                @click.stop
+                                @keydown.stop
+                              />
+                            </div>
+                            <SelectItem
+                              v-for="country in filteredFromCountries"
+                              :key="country.id"
                               :value="String(country.id)"
                               class="pl-4"
                             >
                               <div class="flex items-center gap-2">
                                 <!-- Logo with fallback -->
                                 <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                  <img 
+                                  <img
                                     v-if="country.logoUrl"
-                                    :src="getFullLogoUrl(country.logoUrl)" 
+                                    :src="getFullLogoUrl(country.logoUrl)"
                                     :alt="country.countryName"
-                                    class="max-w-full max-h-full object-contain"
+                                    class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                     @error="handleLogoError"
                                   />
-                                  <div 
+                                  <div
                                     v-else
-                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                    class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                                   >
                                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -119,27 +133,27 @@
                         </Select>
                       </div>
 
-                      <!-- Where are you going (Countries with Visa Products) -->
+                      <!-- Where are you going (Countries with Visa Products) - Locked on travel article pages -->
                       <div>
                         <label class="font-manrope text-sm font-medium text-white/90 mb-2 block">
                           Where are you going?
                         </label>
-                        <Select v-model="selectedTo" :disabled="isLoading && !destinationCountries.length">
-                          <SelectTrigger class="!h-12 sm:!h-[50px] !bg-white !rounded-lg !border !border-gray-300">
+                        <Select v-model="selectedTo" :disabled="!isDestinationChangeable">
+                          <SelectTrigger class="!h-12 sm:!h-[50px] !bg-white !rounded-lg !border !border-gray-300 disabled:!bg-white disabled:!opacity-100 disabled:cursor-default">
                             <SelectValue placeholder="Select destination">
                               <div class="flex items-center gap-2 pl-4" v-if="selectedTo">
                                 <!-- Logo with fallback -->
                                 <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                  <img 
+                                  <img
                                     v-if="getCountryLogo(selectedTo)"
-                                    :src="getCountryLogo(selectedTo)" 
+                                    :src="getCountryLogo(selectedTo)"
                                     :alt="getCountryName(selectedTo)"
-                                    class="max-w-full max-h-full object-contain"
+                                    class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                     @error="handleLogoError"
                                   />
-                                  <div 
+                                  <div
                                     v-else
-                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                    class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                                   >
                                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -152,25 +166,36 @@
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent class="!rounded-lg !bg-white max-h-[300px] overflow-y-auto">
-                            <SelectItem 
-                              v-for="country in destinationCountries" 
-                              :key="country.id" 
+                            <!-- Search Input -->
+                            <div class="p-2 border-b sticky top-0 bg-white z-10">
+                              <input
+                                v-model="toSearchQuery"
+                                type="text"
+                                placeholder="Search countries..."
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
+                                @click.stop
+                                @keydown.stop
+                              />
+                            </div>
+                            <SelectItem
+                              v-for="country in filteredToCountries"
+                              :key="country.id"
                               :value="String(country.id)"
                               class="pl-4"
                             >
                               <div class="flex items-center gap-2">
                                 <!-- Logo with fallback -->
                                 <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                  <img 
+                                  <img
                                     v-if="country.logoUrl"
-                                    :src="getFullLogoUrl(country.logoUrl)" 
+                                    :src="getFullLogoUrl(country.logoUrl)"
                                     :alt="country.countryName"
-                                    class="max-w-full max-h-full object-contain"
+                                    class="w-6 h-6 object-cover rounded-full border border-gray-200"
                                     @error="handleLogoError"
                                   />
-                                  <div 
+                                  <div
                                     v-else
-                                    class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                    class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
                                   >
                                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
@@ -588,7 +613,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCountryData } from '~/data/visaCountries'
 
@@ -616,14 +641,20 @@ const countryData = computed(() => getCountryData(countrySlug.value))
 const getCountryNameFromSlug = (slug: string): string[] => {
   const slugLower = slug.toLowerCase()
   const mappings: Record<string, string[]> = {
-    'uk': ['United Kingdom', 'UK', 'U.K.', 'United Kingdom (UK)'],
-    'schengen': ['Schengen', 'Europe', 'Schengen Area', 'Schengen Zone'],
-    'usa': ['United States', 'USA', 'U.S.A.', 'United States of America', 'US'],
+    'uk': ['United Kingdom'],  // Exact match only to avoid matching "Ukraine"
+    'schengen': ['Germany'],   // Schengen defaults to Germany but user can change
+    'usa': ['United States', 'United States of America'],
+    'us': ['United States', 'United States of America'],
     'turkey': ['Turkey', 'Türkiye', 'Turkiye'],
-    'morocco': ['Morocco', 'Moroccan', 'Kingdom of Morocco']
+    'morocco': ['Morocco']
   }
   return mappings[slugLower] || [slug]
 }
+
+// Check if destination should be changeable (Schengen covers multiple countries)
+const isDestinationChangeable = computed(() => {
+  return countrySlug.value?.toLowerCase() === 'schengen'
+})
 
 // State
 const countries = ref<Country[]>([])
@@ -633,6 +664,30 @@ const selectedTo = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const heroImageLoaded = ref(false)
+const fromSearchQuery = ref('')
+const toSearchQuery = ref('')
+
+// Filtered countries for "From" dropdown - matches from start
+const filteredFromCountries = computed(() => {
+  if (!fromSearchQuery.value || !fromSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = fromSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
+
+// Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
+const filteredToCountries = computed(() => {
+  if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = toSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
 
 // Preload hero image
 useHead({
@@ -775,25 +830,20 @@ const fetchAllData = async () => {
       console.log('📍 Available destinations:', destinationCountries.value.map(c => c.countryName))
       
       // Try to pre-select the country based on route parameter
+      // Search in ALL countries since dropdown is locked on travel article pages
       const possibleNames = getCountryNameFromSlug(countrySlug.value)
-      const matchedCountry = destinationCountries.value.find(country => 
-        possibleNames.some(name => 
-          country.countryName.toLowerCase() === name.toLowerCase() ||
-          country.countryName.toLowerCase().includes(name.toLowerCase()) ||
-          name.toLowerCase().includes(country.countryName.toLowerCase())
+      // Use exact matching to avoid partial matches (e.g., "UK" matching "Ukraine")
+      const matchedCountry = countries.value.find(country =>
+        possibleNames.some(name =>
+          country.countryName.toLowerCase() === name.toLowerCase()
         )
       )
-      
+
       if (matchedCountry) {
         selectedTo.value = String(matchedCountry.id)
         console.log('✅ Pre-selected destination country:', matchedCountry.countryName)
-      } else {
-        // Set default "To" value
-        const firstDestination = destinationCountries.value[0]
-        if (firstDestination && !selectedTo.value) {
-          selectedTo.value = String(firstDestination.id)
-        }
       }
+      // Don't set a default if no match found - leave empty rather than show wrong country
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load data'
@@ -847,33 +897,37 @@ const loadCachedData = () => {
     console.log('✅ Loaded destination countries from cache:', destinationCountries.value.length)
     
     // Try to pre-select the country based on route parameter
+    // Search in ALL countries since dropdown is locked on travel article pages
     const possibleNames = getCountryNameFromSlug(countrySlug.value)
-    const matchedCountry = destinationCountries.value.find(country => 
-      possibleNames.some(name => 
-        country.countryName.toLowerCase() === name.toLowerCase() ||
-        country.countryName.toLowerCase().includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(country.countryName.toLowerCase())
+    // Use exact matching to avoid partial matches (e.g., "UK" matching "Ukraine")
+    const matchedCountry = countries.value.find(country =>
+      possibleNames.some(name =>
+        country.countryName.toLowerCase() === name.toLowerCase()
       )
     )
-    
+
     if (matchedCountry) {
       selectedTo.value = String(matchedCountry.id)
       console.log('✅ Pre-selected destination country from cache:', matchedCountry.countryName)
-    } else {
-      // Set default "To" value
-      const firstDestination = destinationCountries.value[0]
-      if (firstDestination && !selectedTo.value) {
-        selectedTo.value = String(firstDestination.id)
-      }
     }
+    // Don't set a default if no match found - leave empty rather than show wrong country
   }
 }
+
+// Watch for selection changes to reset search queries
+watch(() => selectedFrom.value, () => {
+  fromSearchQuery.value = ''
+})
+
+watch(() => selectedTo.value, () => {
+  toSearchQuery.value = ''
+})
 
 // Fetch data on component mount
 onMounted(() => {
   // Load cached data first (synchronously) to avoid showing skeleton loaders
   loadCachedData()
-  
+
   // Then fetch fresh data in background (will update cache)
   fetchAllData()
 })

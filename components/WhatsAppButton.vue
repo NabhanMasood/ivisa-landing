@@ -1,8 +1,36 @@
 <template>
   <div class="fixed bottom-6 right-6 z-50">
-    <!-- Chat bubble positioned diagonally (top-left of button) -->
-    <div class="chat-bubble absolute -top-9 -left-20 bg-white text-gray-800 px-4 py-2 rounded-full shadow-lg text-sm font-medium border border-gray-200">
-      Let's chat!
+    <!-- Chat bubble with QR code - expands on hover, positioned diagonally top-left -->
+    <div
+      class="chat-bubble absolute bg-white text-gray-800 rounded-2xl shadow-lg text-base font-medium border border-gray-200 flex flex-col items-center cursor-pointer overflow-hidden transition-all duration-300 ease-in-out"
+      :class="isHovered ? 'px-4 py-4 min-w-[140px] -top-28 -left-40' : 'px-4 py-2 -top-16 -left-40'"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
+    >
+      <span class="whitespace-nowrap" :class="isHovered ? 'mb-3' : 'mb-0'">Let's chat!</span>
+
+      <!-- Scan QR hint - shows when not hovered -->
+      <div v-if="!isHovered" class="scan-hint flex items-center gap-1.5 mt-1.5 px-2 py-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-full border border-green-200">
+        <!-- Mini QR icon -->
+        <div class="qr-icon relative">
+          <svg class="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zm-6 4h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v2h-2v-2zm2 2h2v2h-2v-2zm0-4h2v2h-2v-2zm2-2h2v2h-2v-2zM3 21h8v-8H3v8zm2-6h4v4H5v-4z"/>
+          </svg>
+          <span class="pulse-ring"></span>
+        </div>
+        <span class="text-[10px] font-semibold text-green-700 uppercase tracking-wide">Scan</span>
+      </div>
+
+      <div
+        class="transition-all duration-300 ease-in-out overflow-hidden"
+        :class="isHovered ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'"
+      >
+        <img
+          src="/Qr/qr.jpeg"
+          alt="WhatsApp QR Code"
+          class="w-28 h-28 rounded-lg object-contain"
+        />
+      </div>
     </div>
 
     <a
@@ -28,7 +56,11 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 const phoneNumber = '+971585743188'
+const isHovered = ref(false)
+
 // WhatsApp URL format: https://wa.me/971585743188 (country code + number without + or spaces)
 const whatsappUrl = computed(() => {
   const cleanNumber = phoneNumber.replace(/[\s\+]/g, '')
@@ -47,6 +79,48 @@ const whatsappUrl = computed(() => {
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+/* Scan hint animation */
+.scan-hint {
+  animation: hint-glow 2s ease-in-out infinite;
+}
+
+@keyframes hint-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.3);
+  }
+}
+
+/* Pulse ring around QR icon */
+.qr-icon {
+  position: relative;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 197, 94, 0.6);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
   }
 }
 </style>

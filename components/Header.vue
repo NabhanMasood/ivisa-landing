@@ -1,6 +1,6 @@
 <!-- components/Header.vue -->
 <template>
-  <header v-if="isMyAccountRoute" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+  <header v-if="isMyAccountRoute" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200" style="cursor: url('data:image/png;base64,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') 2 2, auto !important;">
     <div class="px-3 sm:px-4 md:px-6 lg:px-8">
       <div class="flex items-center justify-between h-14 sm:h-16">
         <!-- Left Section - Logo and Search Bar -->
@@ -59,7 +59,7 @@
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" class="h-[32px] sm:h-[34px] px-2 sm:px-3 font-normal text-xs sm:text-sm text-gray-700 hover:text-gray-900 hover:bg-transparent">
                 <span class="hidden sm:inline">{{ selectedCurrency.code }}</span>
-                <span class="sm:hidden">{{ selectedCurrency.code.length > 3 ? selectedCurrency.code.substring(0, 3) : selectedCurrency.code }}</span>
+                <span class="sm:hidden">{{ selectedCurrency.code }}</span>
                 <ChevronDown class="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -224,7 +224,7 @@
   </header>
 
   <!-- Original Header (for other routes) - UPDATED COMPACT LAYOUT -->
-  <header v-else class="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200">
+  <header v-else class="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200" style="cursor: url('data:image/png;base64,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') 2 2, auto !important;">
     <div class="container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 sm:h-20">
         <!-- Logo Section - Left aligned -->
@@ -387,9 +387,9 @@
           <!-- Currency Dropdown - Compact -->
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 class="h-9 px-3 font-normal text-sm text-gray-700 hover:text-gray-900 border-gray-300 rounded-full"
               >
                 <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1076,3 +1076,22 @@ watch(() => route.path, (newPath, oldPath) => {
   }
 })
 </script>
+
+<style scoped>
+/* Force custom cursor on all header elements */
+header,
+header *,
+header *::before,
+header *::after {
+  cursor: url('data:image/png;base64,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') 2 2, auto !important;
+}
+
+/* Deep selector to target child components */
+header :deep(*),
+header :deep(*::before),
+header :deep(*::after),
+header :deep(*:hover),
+header :deep(*:focus) {
+  cursor: url('data:image/png;base64,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') 2 2, auto !important;
+}
+</style>

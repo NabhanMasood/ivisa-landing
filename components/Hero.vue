@@ -314,6 +314,7 @@ import SelectValue from '@/components/ui/select/SelectValue.vue'
 import Skeleton from '@/components/ui/skeleton.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
+import { useGeolocation } from '@/composables/useGeolocation'
 
 const route = useRoute()
 
@@ -330,6 +331,7 @@ const toSearchQuery = ref('')
 // API
 const { getCountries } = useCountriesApi()
 const { getGroupedVisaProductsByCountries } = useVisaProductsApi()
+const { detectCountry } = useGeolocation()
 const config = useRuntimeConfig()
 
 // Debug: Log config on load
@@ -452,9 +454,46 @@ const fetchAllData = async () => {
     const countriesResponse = await fetchCountries()
     if (countriesResponse.success && countriesResponse.data) {
       countries.value = countriesResponse.data.sort((a, b) => a.countryName.localeCompare(b.countryName))
-      const firstCountry = countries.value[0]
-      if (firstCountry && !selectedFrom.value) {
-        selectedFrom.value = String(firstCountry.id)
+
+      // Auto-select origin country based on user's IP location
+      if (!selectedFrom.value) {
+        const geolocation = await detectCountry()
+
+        if (geolocation?.countryCode) {
+          // Find country by code (e.g., "IN" for India, "PK" for Pakistan)
+          const matchedCountry = countries.value.find(
+            c => c.code?.toUpperCase() === geolocation.countryCode
+          )
+
+          if (matchedCountry) {
+            selectedFrom.value = String(matchedCountry.id)
+            console.log('🌍 Auto-selected origin country based on IP:', matchedCountry.countryName)
+          } else {
+            // Fallback: try to match by country name
+            const matchedByName = countries.value.find(
+              c => c.countryName.toUpperCase() === geolocation.countryName?.toUpperCase()
+            )
+
+            if (matchedByName) {
+              selectedFrom.value = String(matchedByName.id)
+              console.log('🌍 Auto-selected origin country by name:', matchedByName.countryName)
+            } else {
+              // Final fallback: select first country
+              const firstCountry = countries.value[0]
+              if (firstCountry) {
+                selectedFrom.value = String(firstCountry.id)
+                console.log('🌍 No matching country found, selected first country:', firstCountry.countryName)
+              }
+            }
+          }
+        } else {
+          // No geolocation data, select first country
+          const firstCountry = countries.value[0]
+          if (firstCountry) {
+            selectedFrom.value = String(firstCountry.id)
+            console.log('🌍 Geolocation unavailable, selected first country:', firstCountry.countryName)
+          }
+        }
       }
     }
     
