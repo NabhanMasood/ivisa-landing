@@ -529,17 +529,7 @@
 
           <!-- Inquiry Form -->
           <div v-else class="p-6">
-            <!-- Info Banner -->
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-              <div class="w-5 h-5 flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-amber-800" style="font-family: Manrope, sans-serif;">
-                We can deal with this certain type of visa through manual inquiry
-              </p>
-            </div>
+       
 
             <!-- Row 1: Name, Email, Phone -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
