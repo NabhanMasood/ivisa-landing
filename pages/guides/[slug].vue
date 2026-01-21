@@ -276,8 +276,8 @@
             ></div>
           </div>
 
-          <!-- Need More Help Section - marks the end of article content -->
-          <div id="sidebar-stop-point" class="mt-12 bg-blue-50 rounded-lg p-6 sm:p-8 text-center">
+          <!-- Need More Help Section -->
+          <div class="mt-12 bg-blue-50 rounded-lg p-6 sm:p-8 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-blue-900 mb-4">
               Need more help?
             </h2>
@@ -383,10 +383,8 @@ const selectedNationality = ref<string>('')
 const selectedDestination = ref<string>('')
 const activeHeading = ref<number>(0)
 
-// Sidebar positioning state
+// Sidebar ref (for potential future use)
 const sidebarRef = ref<HTMLElement | null>(null)
-const sidebarStopped = ref(false)
-const sidebarStopOffset = ref(0)
 
 const contentHeadings = computed(() => {
   if (!guide.value?.content || typeof window === 'undefined') return []
@@ -702,36 +700,6 @@ const updateActiveHeading = () => {
   activeHeading.value = 0
 }
 
-// Update sidebar positioning - stop at "Need more help?" section
-const updateSidebarPosition = () => {
-  const sidebar = sidebarRef.value
-  const stopPoint = document.getElementById('sidebar-stop-point')
-
-  if (!sidebar || !stopPoint) return
-
-  const sidebarRect = sidebar.getBoundingClientRect()
-  const stopPointRect = stopPoint.getBoundingClientRect()
-  const headerOffset = 96 // top-24 = 6rem = 96px
-
-  // Calculate when sidebar bottom would overlap with stop point top
-  const sidebarBottom = sidebarRect.bottom
-  const stopPointTop = stopPointRect.top
-
-  // If sidebar bottom would go past the stop point, stop the sidebar
-  if (sidebarBottom >= stopPointTop && !sidebarStopped.value) {
-    sidebarStopped.value = true
-    // Calculate offset from top of aside to position sidebar absolutely
-    const asideElement = sidebar.parentElement
-    if (asideElement) {
-      const asideRect = asideElement.getBoundingClientRect()
-      sidebarStopOffset.value = stopPointTop - asideRect.top - sidebarRect.height
-    }
-  } else if (stopPointTop > sidebarBottom + 50) {
-    // Add some buffer before un-stopping
-    sidebarStopped.value = false
-  }
-}
-
 onMounted(async () => {
   await Promise.all([fetchGuide(), fetchCountries()])
 
@@ -740,19 +708,16 @@ onMounted(async () => {
       processImagesInContent()
     })
 
-    // Add scroll listener for active heading tracking and sidebar positioning
+    // Add scroll listener for active heading tracking
     window.addEventListener('scroll', updateActiveHeading)
-    window.addEventListener('scroll', updateSidebarPosition)
-    // Initial checks
+    // Initial check
     updateActiveHeading()
-    updateSidebarPosition()
   }
 })
 
 onUnmounted(() => {
   if (process.client) {
     window.removeEventListener('scroll', updateActiveHeading)
-    window.removeEventListener('scroll', updateSidebarPosition)
   }
 })
 
