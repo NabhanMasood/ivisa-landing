@@ -55,78 +55,17 @@
                 <div v-if="isLoading && !countries.length" class="space-y-2">
                   <Skeleton size="lg" width="w-full" className="!h-[45px] !rounded-[16px]" />
                 </div>
-                <Select v-else v-model="selectedFrom" :disabled="isLoading && !countries.length">
-                  <SelectTrigger 
-                    id="from" 
-                    class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
-                  >
-                    <SelectValue>
-                      <div class="flex items-center gap-3 py-3 pl-2" v-if="selectedFrom">
-                        <!-- Logo with fallback -->
-                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <img 
-                            v-if="getCountryLogo(selectedFrom)"
-                            :src="getCountryLogo(selectedFrom)" 
-                            :alt="getCountryName(selectedFrom)"
-                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                            @error="handleLogoError"
-                          />
-                          <div 
-                            v-else
-                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                          >
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                            </svg>
-                          </div>
-                        </div>
-                        <span class="text-base">{{ getCountryName(selectedFrom) }}</span>
-                      </div>
-                      <span v-else class="text-gray-500 py-3 pl-2">Select your country</span>
-                    </SelectValue>
-                    <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
-                  </SelectTrigger>
-                  <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
-                    <!-- Search Input -->
-                    <div class="p-2 border-b sticky top-0 bg-white z-10">
-                      <input
-                        v-model="fromSearchQuery"
-                        type="text"
-                        placeholder="Search countries..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                        @click.stop
-                        @keydown.stop
-                      />
-                    </div>
-                    <SelectItem 
-                      v-for="country in filteredFromCountries" 
-                      :key="country.id" 
-                      :value="String(country.id)"
-                    >
-                      <div class="flex items-center gap-3">
-                        <!-- Logo with fallback -->
-                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <img 
-                            v-if="country.logoUrl"
-                            :src="getFullLogoUrl(country.logoUrl)" 
-                            :alt="country.countryName"
-                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                            @error="handleLogoError"
-                          />
-                          <div 
-                            v-else
-                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                          >
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                            </svg>
-                          </div>
-                        </div>
-                        <span>{{ country.countryName }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  v-else
+                  v-model="selectedFrom"
+                  :countries="countries"
+                  :api-base="config.public.apiBase"
+                  value-key="id"
+                  placeholder="Select your country"
+                  :disabled="isLoading && !countries.length"
+                  trigger-class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px]"
+                  class="w-full"
+                />
               </div>
 
               <!-- To Select (Countries with Visa Products) -->
@@ -138,78 +77,18 @@
                 <div v-if="isLoading && !destinationCountries.length" class="space-y-2">
                   <Skeleton size="lg" width="w-full" className="!h-[45px] !rounded-[16px]" />
                 </div>
-                <Select v-else v-model="selectedTo" :disabled="isLoading && !destinationCountries.length">
-                  <SelectTrigger 
-  id="to" 
-  class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px] !border !border-gray-200 hover:!border-gray-300 transition-all w-full"
->
-  <!-- Custom content instead of SelectValue -->
-  <div class="flex-1 text-left">
-    <div v-if="selectedTo" class="flex items-center gap-3 pl-2">
-      <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-        <img 
-          v-if="getCountryLogo(selectedTo)"
-          :src="getCountryLogo(selectedTo)" 
-          :alt="getCountryName(selectedTo)"
-          class="w-6 h-6 object-cover rounded-full border border-gray-200"
-          @error="handleLogoError"
-        />
-        <div 
-          v-else
-          class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-        >
-          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-          </svg>
-        </div>
-      </div>
-      <span class="text-base text-gray-900">{{ getCountryName(selectedTo) }}</span>
-    </div>
-    <span v-else class="text-gray-400 py-3 pl-6">Traveling to</span>
-    </div>
-  <img src="/svg/arrow-down.svg" alt="" class="w-3 h-3 mr-3" />
-</SelectTrigger>
-                  <SelectContent class="!rounded-[20px] !bg-white max-h-[300px] overflow-y-auto">
-                    <!-- Search Input -->
-                    <div class="p-2 border-b sticky top-0 bg-white z-10">
-                      <input
-                        v-model="toSearchQuery"
-                        type="text"
-                        placeholder="Search countries..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                        @click.stop
-                        @keydown.stop
-                      />
-                    </div>
-                    <SelectItem 
-                      v-for="country in filteredToCountries" 
-                      :key="country.id" 
-                      :value="String(country.id)"
-                    >
-                      <div class="flex items-center gap-3">
-                        <!-- Logo with fallback -->
-                        <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                          <img 
-                            v-if="country.logoUrl"
-                            :src="getFullLogoUrl(country.logoUrl)" 
-                            :alt="country.countryName"
-                            class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                            @error="handleLogoError"
-                          />
-                          <div 
-                            v-else
-                            class="w-8 h-8 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                          >
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                            </svg>
-                          </div>
-                        </div>
-                        <span>{{ country.countryName }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  v-else
+                  v-model="selectedTo"
+                  :countries="countries"
+                  :api-base="config.public.apiBase"
+                  value-key="id"
+                  placeholder="Traveling to"
+                  :disabled="isLoading && !destinationCountries.length"
+                  trigger-class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px]"
+                  class="w-full"
+                  :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                />
               </div>
 
               <!-- Get Started Button -->
@@ -311,6 +190,7 @@ import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
 import SelectContent from '@/components/ui/select/SelectContent.vue'
 import SelectItem from '@/components/ui/select/SelectItem.vue'
 import SelectValue from '@/components/ui/select/SelectValue.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import Skeleton from '@/components/ui/skeleton.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'

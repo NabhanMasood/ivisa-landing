@@ -12,7 +12,7 @@
       :style="{ width: 'var(--radix-select-trigger-width)' }"
       v-bind="$attrs"
     >
-      <SelectViewport class="p-1 max-h-60 overflow-y-auto">
+      <SelectViewport ref="viewportRef" class="px-1 pb-1 max-h-60 overflow-y-auto">
         <slot />
       </SelectViewport>
     </SelectContent>
@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { SelectContent, SelectPortal, SelectViewport } from 'radix-vue'
 import { cn } from '@/lib/utils'
 
@@ -28,5 +29,12 @@ const props = defineProps({
     type: String,
     default: ''
   }
+})
+
+const emit = defineEmits(['mounted'])
+const viewportRef = ref(null)
+
+onMounted(() => {
+  emit('mounted')
 })
 </script>

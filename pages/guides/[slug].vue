@@ -50,133 +50,27 @@
               </h2>
 
               <div class="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <!-- From Country Dropdown -->
                 <div class="space-y-2">
-                  <Select v-model="selectedNationality">
-                    <SelectTrigger
-                      class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
-                    >
-                      <SelectValue placeholder="Select country">
-                        <div class="flex items-center gap-2 pl-4" v-if="selectedNationality">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img
-                              v-if="getCountryLogo(selectedNationality)"
-                              :src="getCountryLogo(selectedNationality)"
-                              :alt="getCountryName(selectedNationality)"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleLogoError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span class="text-[15px] text-gray-700">{{ getCountryName(selectedNationality) }}</span>
-                        </div>
-                        <span v-else class="text-gray-500 pl-4">Select your country</span>
-                      </SelectValue>
-                      <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </SelectTrigger>
-                    <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
-                      <SelectItem
-                        v-for="country in countries"
-                        :key="country.id"
-                        :value="String(country.id)"
-                        class="pl-4"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img
-                              v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)"
-                              :alt="country.countryName"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleLogoError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span>{{ country.countryName }}</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    v-model="selectedNationality"
+                    :countries="countries"
+                    :api-base="config.public.apiBase"
+                    value-key="id"
+                    placeholder="Select your country"
+                  />
                 </div>
 
-                <!-- To Country Dropdown (All Countries - changeable) -->
+                <!-- To Country Dropdown -->
                 <div class="space-y-2">
-                  <Select v-model="selectedDestination">
-                    <SelectTrigger
-                      class="!h-[48px] !bg-white !rounded-[10px] !border !border-gray-200 hover:!border-gray-300 transition-all"
-                    >
-                      <SelectValue placeholder="Select country">
-                        <div class="flex items-center gap-2 pl-4" v-if="selectedDestination">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img
-                              v-if="getCountryLogo(selectedDestination)"
-                              :src="getCountryLogo(selectedDestination)"
-                              :alt="getCountryName(selectedDestination)"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleLogoError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span class="text-[15px] text-gray-700">{{ getCountryName(selectedDestination) }}</span>
-                        </div>
-                        <span v-else class="text-gray-500 pl-4">Select destination</span>
-                      </SelectValue>
-                      <svg class="w-3 h-2 mr-3" viewBox="0 0 12 8" fill="none">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </SelectTrigger>
-                    <SelectContent class="!rounded-[10px] !bg-white max-h-[300px] overflow-y-auto">
-                      <SelectItem
-                        v-for="country in countries"
-                        :key="country.id"
-                        :value="String(country.id)"
-                        class="pl-4"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                            <img
-                              v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)"
-                              :alt="country.countryName"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleLogoError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span>{{ country.countryName }}</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    v-model="selectedDestination"
+                    :countries="countries"
+                    :api-base="config.public.apiBase"
+                    value-key="id"
+                    placeholder="Select destination"
+                    :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                  />
                 </div>
               </div>
 
@@ -359,11 +253,7 @@ import { useGuidesApi, type Guide } from '@/composables/useGuides'
 import { useCountriesApi } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
 import Header from '@/components/Header.vue'
-import Select from '@/components/ui/select/Select.vue'
-import SelectContent from '@/components/ui/select/SelectContent.vue'
-import SelectItem from '@/components/ui/select/SelectItem.vue'
-import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
-import SelectValue from '@/components/ui/select/SelectValue.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 
 const route = useRoute()
 const router = useRouter()
