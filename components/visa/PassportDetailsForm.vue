@@ -71,68 +71,15 @@
                 Loading countries...
               </div>
 
-              <Select v-else v-model="passportDetails[0].nationality">
-                <SelectTrigger
-                  variant="form"
-                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
-                >
-                  <SelectValue placeholder="Select nationality" />
-                </SelectTrigger>
-                <SelectContent
-                  class="max-h-[300px] overflow-y-auto"
-                  position="popper"
-                >
-                  <!-- Search Input -->
-                  <div class="p-2 border-b sticky top-0 bg-white z-10">
-                    <input
-                      v-model="nationalitySearchQueries[0]"
-                      type="text"
-                      placeholder="Search countries..."
-                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                      @click.stop
-                      @keydown.stop
-                    />
-                  </div>
-                  <SelectItem
-                    v-for="country in getFilteredNationalityCountries(0)"
-                    :key="country.id"
-                    :value="country.countryName"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                      >
-                        <img
-                          v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)"
-                          :alt="country.countryName"
-                          class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <div
-                          v-else
-                          class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                        >
-                          <svg
-                            class="w-3 h-3 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <span>{{ country.countryName }}</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                v-else
+                v-model="passportDetails[0].nationality"
+                :countries="countries"
+                :api-base="config.public.apiBase"
+                value-key="countryName"
+                placeholder="Select nationality"
+                trigger-class="!h-[42px] sm:!h-[45px]"
+              />
             </div>
           </div>
 
@@ -306,68 +253,15 @@
                 Loading countries...
               </div>
 
-              <Select v-else v-model="passportDetails[0].residenceCountry">
-                <SelectTrigger
-                  variant="form"
-                  class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
-                >
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent
-                  class="max-h-[300px] overflow-y-auto"
-                  position="popper"
-                >
-                  <!-- Search Input -->
-                  <div class="p-2 border-b sticky top-0 bg-white z-10">
-                    <input
-                      v-model="residenceCountrySearchQueries[0]"
-                      type="text"
-                      placeholder="Search countries..."
-                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                      @click.stop
-                      @keydown.stop
-                    />
-                  </div>
-                  <SelectItem
-                    v-for="country in getFilteredResidenceCountries(0)"
-                    :key="country.id"
-                    :value="country.countryName"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                      >
-                        <img
-                          v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)"
-                          :alt="country.countryName"
-                          class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <div
-                          v-else
-                          class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                        >
-                          <svg
-                            class="w-3 h-3 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <span>{{ country.countryName }}</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                v-else
+                v-model="passportDetails[0].residenceCountry"
+                :countries="countries"
+                :api-base="config.public.apiBase"
+                value-key="countryName"
+                placeholder="Select country"
+                trigger-class="!h-[42px] sm:!h-[45px]"
+              />
             </div>
           </div>
 
@@ -481,68 +375,15 @@
                     Loading countries...
                   </div>
 
-                  <Select v-else v-model="traveler.nationality">
-                    <SelectTrigger
-                      variant="form"
-                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
-                    >
-                      <SelectValue placeholder="Select nationality" />
-                    </SelectTrigger>
-                    <SelectContent
-                      class="max-h-[300px] overflow-y-auto"
-                      position="popper"
-                    >
-                      <!-- Search Input -->
-                      <div class="p-2 border-b sticky top-0 bg-white z-10">
-                        <input
-                          v-model="nationalitySearchQueries[index]"
-                          type="text"
-                          placeholder="Search countries..."
-                          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                          @click.stop
-                          @keydown.stop
-                        />
-                      </div>
-                      <SelectItem
-                        v-for="country in getFilteredNationalityCountries(index)"
-                        :key="country.id"
-                        :value="country.countryName"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div
-                            class="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                          >
-                            <img
-                              v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)"
-                              :alt="country.countryName"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleFlagError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg
-                                class="w-3 h-3 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span>{{ country.countryName }}</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    v-else
+                    v-model="traveler.nationality"
+                    :countries="countries"
+                    :api-base="config.public.apiBase"
+                    value-key="countryName"
+                    placeholder="Select nationality"
+                    trigger-class="!h-[42px] sm:!h-[45px]"
+                  />
                 </div>
               </div>
 
@@ -716,68 +557,15 @@
                     Loading countries...
                   </div>
 
-                  <Select v-else v-model="traveler.residenceCountry">
-                    <SelectTrigger
-                      variant="form"
-                      class="!h-[42px] sm:!h-[45px] !bg-white w-full px-2 sm:px-3 md:px-4"
-                    >
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent
-                      class="max-h-[300px] overflow-y-auto"
-                      position="popper"
-                    >
-                      <!-- Search Input -->
-                      <div class="p-2 border-b sticky top-0 bg-white z-10">
-                        <input
-                          v-model="residenceCountrySearchQueries[index]"
-                          type="text"
-                          placeholder="Search countries..."
-                          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                          @click.stop
-                          @keydown.stop
-                        />
-                      </div>
-                      <SelectItem
-                        v-for="country in getFilteredResidenceCountries(index)"
-                        :key="country.id"
-                        :value="country.countryName"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div
-                            class="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                          >
-                            <img
-                              v-if="country.logoUrl"
-                              :src="getFullLogoUrl(country.logoUrl)"
-                              :alt="country.countryName"
-                              class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                              @error="handleFlagError"
-                            />
-                            <div
-                              v-else
-                              class="w-6 h-6 rounded border border-gray-200 bg-gray-100 flex items-center justify-center"
-                            >
-                              <svg
-                                class="w-3 h-3 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                          <span>{{ country.countryName }}</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    v-else
+                    v-model="traveler.residenceCountry"
+                    :countries="countries"
+                    :api-base="config.public.apiBase"
+                    value-key="countryName"
+                    placeholder="Select country"
+                    trigger-class="!h-[42px] sm:!h-[45px]"
+                  />
                 </div>
               </div>
 
@@ -838,6 +626,7 @@ import SelectTrigger from "@/components/ui/select/SelectTrigger.vue";
 import SelectContent from "@/components/ui/select/SelectContent.vue";
 import SelectItem from "@/components/ui/select/SelectItem.vue";
 import SelectValue from "@/components/ui/select/SelectValue.vue";
+import SearchableSelect from "@/components/ui/SearchableSelect.vue";
 import PriceSummaryCard from "@/components/visa/price-card.vue";
 import Checkbox from "@/components/ui/Checkbox.vue";
 import { useCountriesApi, type Country } from "@/composables/useCountries";

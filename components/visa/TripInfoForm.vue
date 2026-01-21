@@ -149,61 +149,16 @@
               </div>
 
               <!-- Countries Dropdown -->
-              <Select v-else v-model="formData.nationality">
-                <SelectTrigger
-                  variant="form"
-                  class="w-full mt-2 h-11 !bg-white/90 !rounded-[16px] !border !border-gray-200 hover:!border-gray-300 transition-all"
-                  style="
-                    font-family: Manrope, sans-serif;
-                    font-size: 14px;
-                    padding-left: 0.75rem !important;
-                    padding-right: 1rem !important;
-                  "
-                >
-                  <SelectValue>
-                    <div v-if="selectedCountry" class="flex items-center gap-2">
-                      <img
-                        v-if="selectedCountry.logoUrl"
-                        :src="getFullLogoUrl(selectedCountry.logoUrl)"
-                        :alt="selectedCountry.countryName"
-                        class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                        @error="handleFlagError"
-                      />
-                      <span>{{ selectedCountry.countryName }}</span>
-                    </div>
-                    <span v-else>Select your nationality</span>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent class="max-h-[300px] overflow-y-auto">
-                  <!-- Search Input -->
-                  <div class="p-2 border-b sticky top-0 bg-white z-10">
-                    <input
-                      v-model="nationalitySearchQuery"
-                      type="text"
-                      placeholder="Search countries..."
-                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                      @click.stop
-                      @keydown.stop
-                    />
-                  </div>
-            <SelectItem
-              v-for="country in filteredNationalityOptions"
-              :key="country.id"
-              :value="country.countryName"
-            >
-              <div class="flex items-center gap-2">
-                <img
-                  v-if="country.logoUrl"
-                  :src="getFullLogoUrl(country.logoUrl)"
-                  :alt="country.countryName"
-                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                  @error="handleFlagError"
-                />
-                <span>{{ country.countryName }}</span>
-              </div>
-            </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                v-if="!isLoadingCountries"
+                v-model="formData.nationality"
+                :countries="nationalityOptions"
+                :api-base="config.public.apiBase"
+                value-key="countryName"
+                placeholder="Select your nationality"
+                trigger-class="mt-2 h-11 !bg-white/90 !rounded-[16px]"
+                class="w-full"
+              />
               
               <p
                 style="
@@ -360,61 +315,16 @@
         </div>
 
         <!-- Countries Dropdown -->
-        <Select v-else v-model="formData.nationality">
-          <SelectTrigger
-            variant="form"
-            class="w-full mt-2 h-10"
-            style="
-              font-family: Manrope, sans-serif;
-              font-size: 14px;
-              padding-left: 0.75rem !important;
-              padding-right: 1rem !important;
-            "
-          >
-            <SelectValue>
-              <div v-if="selectedCountry" class="flex items-center gap-2">
-                <img
-                  v-if="selectedCountry.logoUrl"
-                  :src="getFullLogoUrl(selectedCountry.logoUrl)"
-                  :alt="selectedCountry.countryName"
-                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                  @error="handleFlagError"
-                />
-                <span>{{ selectedCountry.countryName }}</span>
-              </div>
-              <span v-else>Select your nationality</span>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent class="max-h-[300px] overflow-y-auto">
-            <!-- Search Input -->
-            <div class="p-2 border-b sticky top-0 bg-white z-10">
-              <input
-                v-model="nationalitySearchQuery"
-                type="text"
-                placeholder="Search countries..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1ECB84] focus:border-transparent"
-                @click.stop
-                @keydown.stop
-              />
-            </div>
-            <SelectItem
-              v-for="country in filteredNationalityOptions"
-              :key="country.id"
-              :value="country.countryName"
-            >
-              <div class="flex items-center gap-2">
-                <img
-                  v-if="country.logoUrl"
-                  :src="getFullLogoUrl(country.logoUrl)"
-                  :alt="country.countryName"
-                  class="w-6 h-6 object-cover rounded-full border border-gray-200"
-                  @error="handleFlagError"
-                />
-                <span>{{ country.countryName }}</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          v-if="!isLoadingCountries"
+          v-model="formData.nationality"
+          :countries="nationalityOptions"
+          :api-base="config.public.apiBase"
+          value-key="countryName"
+          placeholder="Select your nationality"
+          trigger-class="mt-2 h-10"
+          class="w-full"
+        />
       </div>
 
       <!-- Visa Type - Dynamic from API (Hidden when showing inquiry form) -->
@@ -614,45 +524,15 @@
                 >
                   Nationality <span class="text-red-500">*</span>
                 </Label>
-                <Select v-model="inquiryFormData.nationality">
-                  <SelectTrigger
-                    variant="form"
-                    class="w-full mt-1.5 h-11"
-                    style="font-family: Manrope, sans-serif; font-size: 14px;"
-                  >
-                    <SelectValue>
-                      <div v-if="inquiryFormData.nationality" class="flex items-center gap-2">
-                        <img
-                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.nationality)?.logoUrl"
-                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.nationality)?.logoUrl || '')"
-                          :alt="inquiryFormData.nationality"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ inquiryFormData.nationality }}</span>
-                      </div>
-                      <span v-else class="text-gray-400">Select nationality</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent class="max-h-[250px] overflow-y-auto">
-                    <SelectItem
-                      v-for="country in nationalityOptions"
-                      :key="'inq-nat-' + country.id"
-                      :value="country.countryName"
-                    >
-                      <div class="flex items-center gap-2">
-                        <img
-                          v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)"
-                          :alt="country.countryName"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ country.countryName }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  v-model="inquiryFormData.nationality"
+                  :countries="nationalityOptions"
+                  :api-base="config.public.apiBase"
+                  value-key="countryName"
+                  placeholder="Select nationality"
+                  trigger-class="mt-1.5 h-11"
+                  class="w-full"
+                />
               </div>
 
               <!-- Travelling From Dropdown -->
@@ -663,45 +543,15 @@
                 >
                   Travelling From <span class="text-red-500">*</span>
                 </Label>
-                <Select v-model="inquiryFormData.travellingFrom">
-                  <SelectTrigger
-                    variant="form"
-                    class="w-full mt-1.5 h-11"
-                    style="font-family: Manrope, sans-serif; font-size: 14px;"
-                  >
-                    <SelectValue>
-                      <div v-if="inquiryFormData.travellingFrom" class="flex items-center gap-2">
-                        <img
-                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.travellingFrom)?.logoUrl"
-                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.travellingFrom)?.logoUrl || '')"
-                          :alt="inquiryFormData.travellingFrom"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ inquiryFormData.travellingFrom }}</span>
-                      </div>
-                      <span v-else class="text-gray-400">Select country</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent class="max-h-[250px] overflow-y-auto">
-                    <SelectItem
-                      v-for="country in nationalityOptions"
-                      :key="'inq-from-' + country.id"
-                      :value="country.countryName"
-                    >
-                      <div class="flex items-center gap-2">
-                        <img
-                          v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)"
-                          :alt="country.countryName"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ country.countryName }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  v-model="inquiryFormData.travellingFrom"
+                  :countries="nationalityOptions"
+                  :api-base="config.public.apiBase"
+                  value-key="countryName"
+                  placeholder="Select country"
+                  trigger-class="mt-1.5 h-11"
+                  class="w-full"
+                />
               </div>
 
               <!-- Travelling To Dropdown -->
@@ -712,45 +562,16 @@
                 >
                   Travelling To <span class="text-red-500">*</span>
                 </Label>
-                <Select v-model="inquiryFormData.destinationCountry">
-                  <SelectTrigger
-                    variant="form"
-                    class="w-full mt-1.5 h-11"
-                    style="font-family: Manrope, sans-serif; font-size: 14px;"
-                  >
-                    <SelectValue>
-                      <div v-if="inquiryFormData.destinationCountry" class="flex items-center gap-2">
-                        <img
-                          v-if="nationalityOptions.find(c => c.countryName === inquiryFormData.destinationCountry)?.logoUrl"
-                          :src="getFullLogoUrl(nationalityOptions.find(c => c.countryName === inquiryFormData.destinationCountry)?.logoUrl || '')"
-                          :alt="inquiryFormData.destinationCountry"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ inquiryFormData.destinationCountry }}</span>
-                      </div>
-                      <span v-else class="text-gray-400">Select destination</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent class="max-h-[250px] overflow-y-auto">
-                    <SelectItem
-                      v-for="country in nationalityOptions"
-                      :key="'inq-to-' + country.id"
-                      :value="country.countryName"
-                    >
-                      <div class="flex items-center gap-2">
-                        <img
-                          v-if="country.logoUrl"
-                          :src="getFullLogoUrl(country.logoUrl)"
-                          :alt="country.countryName"
-                          class="w-5 h-5 object-cover rounded-full border border-gray-200"
-                          @error="handleFlagError"
-                        />
-                        <span>{{ country.countryName }}</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  v-model="inquiryFormData.destinationCountry"
+                  :countries="nationalityOptions"
+                  :api-base="config.public.apiBase"
+                  value-key="countryName"
+                  placeholder="Select destination"
+                  trigger-class="mt-1.5 h-11"
+                  class="w-full"
+                  :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                />
               </div>
             </div>
 
@@ -944,6 +765,7 @@ import SelectContent from "@/components/ui/select/SelectContent.vue";
 import SelectItem from "@/components/ui/select/SelectItem.vue";
 import SelectTrigger from "@/components/ui/select/SelectTrigger.vue";
 import SelectValue from "@/components/ui/select/SelectValue.vue";
+import SearchableSelect from "@/components/ui/SearchableSelect.vue";
 import { useNationalitiesApi } from "@/composables/useNationalities";
 import { useCountriesApi } from "@/composables/useCountries";
 import { useVisaProductsApi } from "@/composables/useVisaProducts";
@@ -972,6 +794,7 @@ const { formatPrice, initializeRates, selectedCurrency, getCurrentRate } =
   useCurrency();
 const { currentUser, isAuthenticated } = useAuthApi();
 const router = useRouter();
+const config = useRuntimeConfig();
 
 // State
 const formData = ref({
@@ -1385,7 +1208,6 @@ const getFullLogoUrl = (logoUrl: string) => {
   }
 
   // Construct local URL
-  const config = useRuntimeConfig();
   const baseUrl = config.public.apiBase.replace(/\/+$/, "");
   const path = logoUrl.startsWith("/") ? logoUrl : `/${logoUrl}`;
 
