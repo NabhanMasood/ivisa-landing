@@ -1,6 +1,6 @@
 <!-- components/Footer.vue -->
 <template>
-  <footer class="w-full bg-gray-50 border-t border-gray-200 mt-auto relative z-50">
+  <footer class="w-full bg-gray-50 border-t border-gray-200 mt-auto relative z-0">
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Main Footer Content -->
       <div class="py-8 sm:py-12">

@@ -4,19 +4,19 @@
     <div
       class="relative flex items-center cursor-pointer"
       :class="[
-        'h-[48px] bg-white rounded-[10px] border transition-all',
-        isOpen ? 'border-[#1ECB84] ring-2 ring-[#1ECB84]/20' : 'border-gray-200 hover:border-gray-300',
-        disabled ? 'opacity-60 cursor-not-allowed' : '',
-        triggerClass
+        triggerClass || 'h-[48px]',
+        'bg-white rounded-md sm:rounded-lg lg:rounded-[10px] border transition-all',
+        isOpen ? 'border-[#1ECB84] ring-1 sm:ring-2 ring-[#1ECB84]/20' : 'border-gray-200 hover:border-gray-300',
+        disabled ? 'opacity-60 cursor-not-allowed' : ''
       ]"
       @click="!disabled && toggleDropdown()"
     >
       <!-- Country Flag -->
-      <div v-if="selectedCountry?.logoUrl" class="pl-3 flex-shrink-0">
+      <div v-if="selectedCountry?.logoUrl" class="pl-1.5 sm:pl-2 lg:pl-3 flex-shrink-0">
         <img
           :src="getFullLogoUrl(selectedCountry.logoUrl)"
           :alt="selectedCountry.countryName"
-          class="w-6 h-6 object-cover rounded-full border border-gray-200"
+          class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 object-cover rounded-full border border-gray-200"
           @error="handleLogoError"
         />
       </div>
@@ -28,7 +28,7 @@
         :value="isOpen ? searchQuery : (selectedCountry?.countryName || '')"
         :placeholder="placeholder"
         :disabled="disabled"
-        class="flex-1 h-full px-3 text-[15px] text-gray-700 bg-transparent outline-none placeholder:text-gray-400"
+        class="flex-1 min-w-0 h-full px-1.5 sm:px-2 lg:px-3 text-[11px] sm:text-xs md:text-sm lg:text-[15px] text-gray-700 bg-transparent outline-none placeholder:text-gray-400 truncate"
         :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
         @input="handleInput"
         @focus="openDropdown"
@@ -39,9 +39,9 @@
       />
 
       <!-- Chevron -->
-      <div class="pr-3 flex-shrink-0">
+      <div class="pr-1.5 sm:pr-2 lg:pr-3 flex-shrink-0">
         <svg
-          class="w-3 h-2 text-gray-500 transition-transform duration-200"
+          class="w-2 h-1.5 sm:w-2.5 sm:h-2 lg:w-3 lg:h-2 text-gray-500 transition-transform duration-200"
           :class="isOpen ? 'rotate-180' : ''"
           viewBox="0 0 12 8"
           fill="none"
@@ -62,7 +62,7 @@
     >
       <div
         v-if="isOpen"
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[240px] overflow-y-auto"
+        class="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[240px] overflow-y-auto"
       >
         <!-- No results -->
         <div v-if="filteredCountries.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">

@@ -3,11 +3,9 @@
     <ApplicationProcess />
     <WhyChooseUs />
     <WorldWide />
-    <section class="py-8 sm:py-12 lg:py-16 bg-white">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-[1200px] min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] mx-auto rounded-2xl sm:rounded-[30px] overflow-hidden">
-          <ApplicationForm />
-        </div>
+    <section class="pb-8 sm:pb-12 lg:pb-16 bg-white relative z-10">
+      <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <ApplicationForm />
       </div>
     </section>
 

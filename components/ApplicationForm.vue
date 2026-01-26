@@ -1,72 +1,72 @@
 <template>
   <!-- Your Visa Our Priority Section -->
-  <section 
-    class="relative overflow-hidden w-full min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] rounded-2xl sm:rounded-[30px]"
-    style="background: linear-gradient(90deg, #31B560 0%, #0582A2 33.14%, #2567BE 51.18%, #5051DA 69.41%, #2C229B 100%);"
+  <section
+    class="relative w-full"
   >
-      <div class="w-full h-full relative">
-      <!-- Logo in top right corner - moved to background -->
-      <div class="absolute top-0 -right-2 lg:-right-4 w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] z-0 opacity-30 sm:opacity-40 lg:opacity-50">
+      <!-- Banner Image Container -->
+      <div class="overflow-hidden rounded-2xl sm:rounded-[30px]">
         <img
-          src="/svg/half-logo.svg"
-          alt="Visa123 Logo"
-          class="w-full h-full object-contain"
+          :key="imageKey"
+          :src="`/images/banners/visa-banner.png?v=${imageKey}`"
+          alt="Visa Banner"
+          class="w-full h-auto block"
+          loading="eager"
+          fetchpriority="high"
         />
       </div>
 
-      <div class="max-w-[1440px] mx-auto h-full flex items-center min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]">
-        <!-- Content - Full Width -->
-        <div class="w-full px-4 sm:px-6 lg:pl-[60px] lg:pr-[80px]">
-          
-          <!-- Left Content -->
-          <div class="text-white z-10 relative max-w-[676px] py-6 sm:py-8 lg:py-12">
-            <!-- Heading and Subtext Container -->
-            <div class="mb-6 sm:mb-8">
-              <!-- Main Heading - Single Line -->
-              <h1 class="font-manrope font-extrabold text-2xl sm:text-3xl md:text-[40px] lg:text-[47px] leading-[32px] sm:leading-[40px] md:leading-[48px] lg:leading-[56px] mb-3 sm:mb-4 uppercase">
-                Your Visa. Our Priority
-              </h1>
-              
-              <!-- Subtext -->
-              <p class="font-manrope font-semibold text-sm sm:text-base md:text-[18px] lg:text-[20px] leading-[20px] sm:leading-[24px] md:leading-[26px] lg:leading-[30px] max-w-[500px]">
-                Thailand ETA, Morocco eVisa, or Egypt Standard Visa<br class="hidden sm:block">
-                - we're here to make your travel dreams stress-free.
-              </p>
-            </div>
+      <!-- Content Overlay -->
+      <div class="absolute inset-0 w-full h-full">
+        <div class="max-w-[1440px] mx-auto h-full">
+          <!-- Content - positioned in colored banner area, vertically balanced -->
+          <div class="w-full h-full px-3 sm:px-6 lg:pl-[60px] flex flex-col justify-end pb-[2%] sm:pb-[3%] md:pb-[4%] lg:pb-[4%]">
 
-            <!-- Application Form Card -->
-            <div class="w-full max-w-[585px] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-[25px] bg-[#F1F9FC] shadow-lg">
-              <h2 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-[26px] sm:leading-[28px] lg:leading-[30px] text-[#1a1a1a] mb-4 sm:mb-6">
+            <!-- Left content wrapper - keeps text and form on left side of banner -->
+            <div class="w-[65%] sm:w-[55%] md:w-[50%] lg:w-[45%]">
+              <!-- Heading and Subtext (on banner) -->
+              <div class="text-white mb-1 sm:mb-2 lg:mb-4">
+                <h1 class="inline-block px-2 py-0.5 sm:px-3 sm:py-1 font-manrope font-extrabold text-[10px] sm:text-sm md:text-lg lg:text-[26px] leading-tight sm:leading-snug md:leading-[24px] lg:leading-[32px] mb-0.5 sm:mb-1 lg:mb-1.5 uppercase">
+                  Your Visa. Our Priority
+                </h1>
+                <p class="font-manrope font-medium text-[7px] sm:text-[10px] md:text-xs lg:text-sm leading-tight sm:leading-normal">
+                  Thailand ETA, Morocco eVisa, or Egypt Standard Visa - we're here to make your travel dreams stress-free.
+                </p>
+              </div>
+
+              <!-- Application Form Card -->
+              <div class="w-full max-w-[480px] rounded-lg sm:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-3.5 lg:p-4 bg-[#F1F9FC] shadow-lg relative z-50">
+              <h2 class="font-manrope font-bold text-sm sm:text-base lg:text-lg leading-tight sm:leading-[22px] lg:leading-[24px] text-[#1a1a1a] mb-2 sm:mb-2.5 lg:mb-3">
                 Start your application
               </h2>
 
               <!-- Loading State -->
-              <div v-if="isLoading" class="flex items-center justify-center py-6 sm:py-8">
-                <div class="text-gray-600 text-sm sm:text-base">Loading countries...</div>
+              <div v-if="isLoading" class="flex items-center justify-center py-3 sm:py-6">
+                <div class="text-gray-600 text-xs sm:text-sm">Loading countries...</div>
               </div>
 
               <!-- Error State -->
-              <div v-else-if="error" class="flex items-center justify-center py-6 sm:py-8">
-                <div class="text-red-600 text-sm sm:text-base">{{ error }}</div>
+              <div v-else-if="error" class="flex items-center justify-center py-3 sm:py-6">
+                <div class="text-red-600 text-xs sm:text-sm">{{ error }}</div>
               </div>
 
               <!-- Form Content -->
               <div v-else>
                 <!-- Country Selectors Row -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div class="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3 mb-2 sm:mb-3">
                   <!-- From Country Dropdown (All Countries) -->
-                  <div class="space-y-2">
+                  <div>
                     <SearchableSelect
                       v-model="selectedFrom"
                       :countries="countries"
                       :api-base="config.public.apiBase"
                       value-key="id"
-                      placeholder="Select your country"
+                      placeholder="Your country"
+                      trigger-class="h-[32px] sm:h-[36px] md:h-[40px] lg:h-[42px]"
                     />
                   </div>
 
                   <!-- To Country Dropdown (Countries with Visa Products) - Locked when countrySlug is provided -->
-                  <div class="space-y-2">
+                  <div>
                     <SearchableSelect
                       v-model="selectedTo"
                       :countries="countries"
@@ -75,6 +75,7 @@
                       placeholder="Traveling to"
                       :disabled="!!props.countrySlug && !isDestinationChangeable"
                       :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                      trigger-class="h-[32px] sm:h-[36px] md:h-[40px] lg:h-[42px]"
                     />
                   </div>
                 </div>
@@ -83,18 +84,16 @@
                 <button
                   @click="handleApply"
                   :disabled="!selectedFrom || !selectedTo || isLoading"
-                  class="w-full h-[44px] sm:h-[50px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-sm sm:text-base rounded-[8px] sm:rounded-[10px] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="w-full h-[32px] sm:h-[36px] md:h-[40px] lg:h-[44px] bg-[#08D07A] hover:bg-[#06B869] active:scale-98 text-white font-manrope font-semibold text-xs sm:text-sm rounded-md sm:rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                 
                   <span>Apply Now!</span>
                 </button>
               </div>
             </div>
+            </div>
           </div>
-
         </div>
       </div>
-    </div>
   </section>
 </template>
 
@@ -158,6 +157,7 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 const fromSearchQuery = ref('')
 const toSearchQuery = ref('')
+const imageKey = ref(Date.now()) // Force image reload on navigation
 
 // Refs for search inputs (auto-focus when dropdown opens)
 const fromSearchInput = ref<HTMLInputElement | null>(null)
@@ -188,7 +188,6 @@ const handleLogoError = (event: Event) => {
   img.style.display = 'none'
 }
 
-// Filtered countries for "From" dropdown - matches from start
 const filteredFromCountries = computed(() => {
   if (!fromSearchQuery.value || !fromSearchQuery.value.trim()) {
     return countries.value
@@ -199,7 +198,6 @@ const filteredFromCountries = computed(() => {
   )
 })
 
-// Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
 const filteredToCountries = computed(() => {
   if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
     return countries.value
@@ -363,6 +361,7 @@ watch(() => selectedTo.value, () => {
 
 // Fetch data on component mount
 onMounted(() => {
+  imageKey.value = Date.now() // Force image reload on navigation
   fetchAllData()
 })
 </script>
