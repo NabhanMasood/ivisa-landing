@@ -8,7 +8,7 @@
             <section class="relative w-full">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Hero Container: responsive height and margin -->
-                <div class="relative w-full max-w-[1200px] h-[500px] sm:h-[520px] lg:h-[554px] mx-auto rounded-xl sm:rounded-2xl overflow-hidden mt-4 sm:mt-6 lg:mt-8">
+                <div class="relative w-full max-w-[1200px] h-[550px] sm:h-[500px] lg:h-[554px] mx-auto rounded-xl sm:rounded-2xl overflow-hidden mt-4 sm:mt-6 lg:mt-8">
 
                 <!-- Loading Skeleton -->
                 <div v-if="!heroImageLoaded" class="absolute inset-0 bg-gradient-to-br from-gray-300 via-gray-200 to-gray-300 animate-pulse">
@@ -27,12 +27,12 @@
 
                 <!-- Overlay -->
                 <div class="absolute inset-0 bg-black/30" :class="heroImageLoaded ? 'opacity-100' : 'opacity-0'"></div>
-
+                
                 <!-- Container Content: responsive positioning and layout -->
-                <div class="absolute inset-x-4 sm:inset-x-6 lg:inset-x-12 top-4 sm:top-8 lg:top-16 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
-
+                <div class="absolute top-4 left-4 sm:top-8 sm:left-6 md:top-12 md:left-8 lg:top-[99px] lg:left-[89px] flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[54px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-[1012px]">
+                    
                     <!-- Left Section: responsive width and padding -->
-                    <div class="w-full lg:w-[55%] flex flex-col gap-4 sm:gap-6 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 bg-[#68919C80] backdrop-blur-[20px]">
+                    <div class="w-full lg:w-[585px] flex flex-col gap-4 sm:gap-6 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-[25px] bg-[#68919C80] backdrop-blur-[20px]">
                     <!-- Start your application text: responsive font size -->
                     <h2 class="w-full font-manrope font-bold text-xl sm:text-2xl lg:text-[28px] leading-tight sm:leading-[32px] text-white">
                         Start your application
@@ -99,7 +99,7 @@
                     </div>
 
                     <!-- Right Section: responsive width and spacing -->
-                <div class="w-full lg:w-[45%] flex flex-col gap-3 sm:gap-4 lg:gap-5">
+                <div class="w-full lg:w-[373px] flex flex-col gap-3 sm:gap-4 lg:gap-5">
                     <!-- Heading -->
                     <div class="w-full">
                         <h1 class="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
@@ -112,17 +112,18 @@
                         Plan your trip to {{ countryData.name === 'UK ETA' ? 'the UK' : countryData.name === 'US ESTA' ? 'the USA' : countryData.name === 'Turkey e-Visa' ? 'Turkey' : countryData.name === 'Morocco eVisa' ? 'Morocco' : countryData.name }} confidently, easy, online, and optimised for travellers just like you.
                     </p>
                 </div>
-              </div>
+
+                </div>
+                </div>
             </div>
-          </div>
-        </section>
+            </section>
 
 
 <!-- Streamlined Application Process - Same for all countries -->
 <section class="py-8 sm:py-12 lg:py-16 bg-gray-50">
   <div class="container mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Container: responsive gap -->
-    <div class="max-w-[1200px] mx-auto flex flex-col gap-6 sm:gap-8 lg:gap-10">
+    <div class="max-w-[1002px] mx-auto flex flex-col gap-6 sm:gap-8 lg:gap-10">
       
       <!-- Heading: responsive font size -->
       <h2 class="font-manrope font-bold text-2xl sm:text-3xl lg:text-[32px] leading-tight sm:leading-[36px] lg:leading-[40px] tracking-normal text-center text-[#0A3D3F]">
@@ -133,66 +134,81 @@
       <div class="flex flex-col gap-6 sm:gap-8 lg:gap-10">
         
         <!-- Steps Row with Icons and Separators - responsive layout -->
-        <div class="flex items-center justify-center">
+        <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-4 lg:gap-8">
           <!-- Step 1 Icon -->
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] text-white">1</span>
+          <div class="flex flex-col items-center">
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">1</span>
             </div>
           </div>
 
-          <!-- Separator 1 -->
-          <div class="flex-1 max-w-[80px] sm:max-w-[120px] lg:max-w-[180px] h-0 border-t-2 border-[#1ECE84] mx-2 sm:mx-4"></div>
+          <!-- Separator: responsive width -->
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t-2 border-[#1ECE84]"></div>
+
+          <!-- Gap after separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
 
           <!-- Step 2 Icon -->
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] text-white">2</span>
+          <div class="flex flex-col items-center">
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">2</span>
             </div>
           </div>
 
-          <!-- Separator 2 -->
-          <div class="flex-1 max-w-[80px] sm:max-w-[120px] lg:max-w-[180px] h-0 border-t-2 border-[#1ECE84] mx-2 sm:mx-4"></div>
+          <!-- Gap before separator - responsive -->
+          <div class="w-2 sm:w-4 lg:w-8"></div>
+
+          <!-- Separator: responsive width -->
+          <div class="w-12 sm:w-24 md:w-32 lg:w-[182px] h-0 border-t-2 border-[#1ECE84]"></div>
 
           <!-- Step 3 Icon -->
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
-              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] text-white">3</span>
+          <div class="flex flex-col items-center">
+            <!-- Numeric Icon: responsive size -->
+            <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-[44px] lg:h-[44px] bg-[#00D474] rounded-full flex items-center justify-center relative shadow-[0_0.93px_1.4px_rgba(26,25,37,0.12),0_1.87px_3.73px_rgba(26,25,37,0.12)]">
+              <!-- Number: responsive font size -->
+              <span class="font-manrope font-medium text-base sm:text-lg lg:text-[20px] leading-tight lg:leading-[28px] tracking-[-0.02em] text-white text-center">3</span>
             </div>
           </div>
         </div>
 
         <!-- Cards Container: responsive layout -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-
-          <!-- Card 1 -->
-          <div class="flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg">
-            <h3 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight text-center text-[#0B3947]">
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-[45px] justify-center">
+          
+          <!-- Card 1: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[160px] sm:h-[180px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Travel information
             </h3>
-            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed text-center text-[#0B3947] opacity-70">
-              Enter travel dates, purpose, and destination.
-            </p>
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+              Enter travel dates, purpose, and destination.</p>
           </div>
 
-          <!-- Card 2 -->
-          <div class="flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg">
-            <h3 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight text-center text-[#0B3947]">
+          <!-- Card 2: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[160px] sm:h-[180px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Payment process
             </h3>
-            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed text-center text-[#0B3947] opacity-70">
-              Pay the visa fee and government fee through our secure system.
-            </p>
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+              Pay the visa fee and government fee through our secure system.</p>
           </div>
 
-          <!-- Card 3 -->
-          <div class="flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg">
-            <h3 class="font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight text-center text-[#0B3947]">
+          <!-- Card 3: responsive width and height -->
+          <div class="w-full sm:w-[280px] lg:w-[304px] min-h-[160px] sm:h-[180px] flex flex-col items-center gap-3 sm:gap-4 rounded-xl sm:rounded-2xl bg-[#F1F9FC] px-4 sm:px-5 py-5 sm:py-6 lg:py-7 shadow-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-1px_rgba(0,0,0,0.06)]">
+            <!-- Heading: responsive width and font size -->
+            <h3 class="w-full sm:w-[264px] font-manrope font-bold text-lg sm:text-xl lg:text-[22px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-[-0.02em] text-center text-[#0B3947]">
               Your details
             </h3>
-            <p class="font-manrope font-normal text-sm sm:text-base leading-relaxed text-center text-[#0B3947] opacity-70">
-              Upload your documents and fill visa application form.
-            </p>
+            <!-- Subtext: responsive width and font size -->
+            <p class="w-full sm:w-[264px] font-manrope font-normal text-sm sm:text-base leading-relaxed sm:leading-5 tracking-[-0.006em] text-center text-[#0B3947] opacity-70">
+              Upload your documents and fill visa application form.</p>
           </div>
 
         </div>
@@ -312,7 +328,7 @@
     <div class="max-w-[1200px] mx-auto flex flex-col gap-8 sm:gap-12 lg:gap-[60px]">
       
       <!-- Country Title - NO GRADIENT LINE -->
-      <div class="mb-0">
+      <div class="mb-0 mt-4 sm:mt-6 lg:mt-8">
         <!-- Title: responsive font size -->
         <h1 class="font-manrope font-bold text-xl sm:text-2xl lg:text-[24px] leading-tight sm:leading-[28px] lg:leading-[32px] tracking-normal text-[#0B3947]">
           {{ countryData.title }}
@@ -471,13 +487,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCountryData } from '~/data/visaCountries'
 
 // Import components
 import HeaderLoggedIn from '@/components/HeaderLoggedIn.vue'
+import Footer from '@/components/Footer.vue'
+import Button from '@/components/ui/button.vue'
 import ApplicationForm from '@/components/ApplicationForm.vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue'
+import SelectContent from '@/components/ui/select/SelectContent.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import SelectValue from '@/components/ui/select/SelectValue.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import { useCountriesApi, type Country } from '@/composables/useCountries'
 import { useVisaProductsApi } from '@/composables/useVisaProducts'
@@ -516,6 +539,47 @@ const selectedTo = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const heroImageLoaded = ref(false)
+const fromSearchQuery = ref('')
+const toSearchQuery = ref('')
+
+// Refs for search inputs (auto-focus when dropdown opens)
+const fromSearchInput = ref<HTMLInputElement | null>(null)
+const toSearchInput = ref<HTMLInputElement | null>(null)
+
+// Focus functions for search inputs
+const focusFromSearch = () => {
+  setTimeout(() => {
+    fromSearchInput.value?.focus()
+  }, 50)
+}
+
+const focusToSearch = () => {
+  setTimeout(() => {
+    toSearchInput.value?.focus()
+  }, 50)
+}
+
+// Filtered countries for "From" dropdown - matches from start
+const filteredFromCountries = computed(() => {
+  if (!fromSearchQuery.value || !fromSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = fromSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
+
+// Filtered countries for "To" dropdown - matches from start (using all countries, same as "From")
+const filteredToCountries = computed(() => {
+  if (!toSearchQuery.value || !toSearchQuery.value.trim()) {
+    return countries.value
+  }
+  const query = toSearchQuery.value.toLowerCase().trim()
+  return countries.value.filter((country) =>
+    country.countryName.toLowerCase().startsWith(query)
+  )
+})
 
 // Preload hero image
 useHead({
@@ -534,10 +598,57 @@ const { getCountries } = useCountriesApi()
 const { getGroupedVisaProductsByCountries } = useVisaProductsApi()
 const config = useRuntimeConfig()
 
-// Helper function to get country name from ID
+// Error handler for logo images
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.error('❌ Logo failed to load:', img.src)
+  img.style.display = 'none'
+}
+
+// Helper functions for "From" dropdown (Countries table)
 const getCountryName = (countryId: string) => {
   const country = countries.value.find(c => String(c.id) === countryId)
   return country?.countryName || ''
+}
+
+const getCountryLogo = (countryId: string): string | undefined => {
+  const country = countries.value.find(c => String(c.id) === countryId)
+  if (!country?.logoUrl) {
+    return undefined
+  }
+  // logoUrl is defined, but could still be null per the type definition
+  // Filter out null explicitly
+  const logoUrl = country.logoUrl
+  if (logoUrl === null || logoUrl === '') {
+    return undefined
+  }
+  // Now logoUrl is definitely a non-empty string
+  return getFullLogoUrl(logoUrl)
+}
+
+const getFullLogoUrl = (logoUrl: string): string => {
+  if (!logoUrl) {
+    console.warn('⚠️ Empty logo URL')
+    return ''
+  }
+  
+  // Check if it's already a full URL (Cloudinary)
+  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    return logoUrl
+  }
+  
+  // Otherwise, construct local URL
+  const baseUrl = config.public.apiBase.replace(/\/+$/, '')
+  const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`
+  
+  const fullUrl = `${baseUrl}${path}`
+  console.log('🔗 Constructed URL:', {
+    baseUrl,
+    logoPath: path,
+    fullUrl
+  })
+  
+  return fullUrl
 }
 
 // Fetch countries for "From" dropdown - uses cached data from plugin
@@ -694,6 +805,15 @@ const loadCachedData = () => {
     // Don't set a default if no match found - leave empty rather than show wrong country
   }
 }
+
+// Watch for selection changes to reset search queries
+watch(() => selectedFrom.value, () => {
+  fromSearchQuery.value = ''
+})
+
+watch(() => selectedTo.value, () => {
+  toSearchQuery.value = ''
+})
 
 // Fetch data on component mount
 onMounted(() => {
