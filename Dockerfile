@@ -8,13 +8,14 @@ RUN npm install -g pnpm
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install ALL dependencies (including devDependencies for build)
+# Install ALL dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Build the app
+# Build for Node.js server (not Vercel)
+ENV NITRO_PRESET=node-server
 RUN pnpm run build
 
 # Production stage
