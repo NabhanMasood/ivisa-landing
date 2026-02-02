@@ -570,7 +570,7 @@
                   placeholder="Select destination"
                   trigger-class="mt-1.5 h-11"
                   class="w-full"
-                  :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                  :priority-countries="['Egypt', 'India', 'Kenya', 'Morocco', 'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Vietnam']"
                 />
               </div>
             </div>

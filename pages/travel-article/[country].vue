@@ -83,7 +83,7 @@
                           placeholder="Select destination"
                           :disabled="!isDestinationChangeable"
                           trigger-class="!h-12 sm:!h-[50px] !rounded-lg"
-                          :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                          :priority-countries="['Egypt', 'India', 'Kenya', 'Morocco', 'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Vietnam']"
                         />
                       </div>
 

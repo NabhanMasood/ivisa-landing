@@ -69,7 +69,7 @@
                     :api-base="config.public.apiBase"
                     value-key="id"
                     placeholder="Select destination"
-                    :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                    :priority-countries="['Egypt', 'India', 'Kenya', 'Morocco', 'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Vietnam']"
                   />
                 </div>
               </div>
