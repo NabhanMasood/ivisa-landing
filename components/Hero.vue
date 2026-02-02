@@ -87,7 +87,7 @@
                   :disabled="isLoading && !destinationCountries.length"
                   trigger-class="!h-[45px] !bg-white/90 !rounded-[16px] sm:!rounded-[20px]"
                   class="w-full"
-                  :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                  :priority-countries="['Egypt', 'India', 'Kenya', 'Morocco', 'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Vietnam']"
                 />
               </div>
 

@@ -74,7 +74,7 @@
                       value-key="id"
                       placeholder="Traveling to"
                       :disabled="!!props.countrySlug && !isDestinationChangeable"
-                      :priority-countries="['United Kingdom', 'Kenya', 'United States', 'India', 'Thailand', 'Morocco', 'Turkey', 'Egypt', 'Vietnam']"
+                      :priority-countries="['Egypt', 'India', 'Kenya', 'Morocco', 'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Vietnam']"
                       trigger-class="h-[32px] sm:h-[36px] md:h-[40px] lg:h-[42px]"
                     />
                   </div>
